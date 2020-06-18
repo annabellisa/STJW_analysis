@@ -1,5 +1,8 @@
 # updating script
 
+dir()
+
+
 dir("Data")
 
 
