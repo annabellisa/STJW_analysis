@@ -1,8 +1,12 @@
 # updating script
+<<<<<<< HEAD
 
 dir()
 
 
+=======
+# Lacey
+>>>>>>> 455b0e3794d4b25501690abfb053f556dae98ea2
 dir("Data")
 
 
