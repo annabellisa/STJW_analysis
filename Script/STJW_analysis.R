@@ -3,7 +3,6 @@
 dir()
 dir("Data")
 
-
 pn<-read.table("Data/Plant_info.txt",header=T)
 s17<-read.table("Data/Survey_data_observed_sp_2017.txt",header=F)
 s18<-read.table("Data/Survey_data_observed_sp_2018.txt",header=F)
@@ -13,7 +12,6 @@ c18<-read.table("Data/Count_and_cover_sheet_2018.txt",header=F)
 c19<-read.table("Data/Count_and_cover_sheet_2019.txt",header=F)
 count17<-read.table("Data/Not_fixed_count_sheet_2017.txt",header=T)
 d1<-read.table("Data/DAT.txt",header=T)
-
 
 head(pn); dim(pn)
 head(s17[,1:10],8); dim(s17)
