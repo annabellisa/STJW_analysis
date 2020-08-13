@@ -11,6 +11,7 @@ s19<-read.table("Data/Survey_data_observed_sp_2019.txt",header=F)
 c17<-read.table("Data/Count_and_cover_sheet_2017.txt",header=F)
 c18<-read.table("Data/Count_and_cover_sheet_2018.txt",header=F)
 c19<-read.table("Data/Count_and_cover_sheet_2019.txt",header=F)
+count17<-read.table("Data/Not_fixed_count_sheet_2017.txt",header=F)
 
 
 head(pn); dim(pn)
