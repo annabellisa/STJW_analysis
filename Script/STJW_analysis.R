@@ -46,3 +46,7 @@ head(count17[,1:10],3)
 count17[,length(count17)]
 
 colSums(count17[,which(colnames(count17)=="Air_sp"):ncol(count17)])
+
+
+
+

@@ -14,7 +14,7 @@ Files:
 
 ## Authors
 
-Annabel Smith, Emily Hedger and Richard Milner
+Annabel Smith and Richard Milner
 
 ## Manuscript
 
@@ -22,6 +22,6 @@ TBA
 
 ## License
 
-STJW_analysis by Annabel Smith, Emily Hedger and Richard Milner is licensed under a Creative Commons Attribution-NonCommercial 4.0 International License.
+STJW_analysis by Annabel Smith and Richard Milner is licensed under a Creative Commons Attribution-NonCommercial 4.0 International License.
 Based on a work at https://github.com/annabellisa/STJW_analysis.
 
