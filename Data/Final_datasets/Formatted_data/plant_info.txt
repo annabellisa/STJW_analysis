@@ -1,0 +1,119 @@
+Species	Sp	Duration	Grass	Legume	Herb	func_grp	Significance	Status	Indicator	rare
+"Acaena ovina"	Aca_ovi	Perennial	0	0	1	Herb	C	N	NA	NA
+"Aira sp."	Air_sp.	Annual	1	0	0	C3	Z	E	NA	NA
+"Anthosachne scaber (Elymus)"	Ant_sca	Perennial	1	0	0	C3	C	N	NA	NA
+"Aristida ramosa"	Ari_ram	Perennial	1	0	0	C4	C	N	NA	NA
+"Arthropodium fimbriatum"	Art_fim	Perennial	0	0	1	Herb	A	N	1	NA
+"Asperula conferta"	Asp_con	Perennial	0	0	1	Herb	B	N	1	NA
+"Austrostipa bigeniculata"	Aus_big	Perennial	1	0	0	C3	C	N	NA	NA
+"Austrostipa densiflora"	Aus_den	Perennial	1	0	0	C3	C	N	NA	NA
+"Austrostipa scabra"	Aus_sca	Perennial	1	0	0	C3	C	N	NA	NA
+"Avena sp."	Ave_sp.	Annual	1	0	0	C3	Z	E	NA	NA
+"Bothriochloa macra"	Bot_mac	Perennial	1	0	0	C4	C	N	NA	NA
+"Briza minor"	Bri_min	Annual	1	0	0	C3	Z	E	NA	NA
+"Bromus diandrus"	Bro_dia	Annual	1	0	0	C3	Z	E	NA	NA
+"Bromus hordeaceus"	Bro_hor	Annual	1	0	0	C3	Z	E	NA	NA
+"Bromus rubens"	Bro_rub	Annual	1	0	0	C3	Z	E	NA	NA
+"Carex breviculmis"	Car_bre	Perennial	0	0	0	Sedge_Rush	C	N	NA	NA
+"Carex inversa"	Car_inv	Perennial	0	0	0	Sedge_Rush	C	N	NA	NA
+"Carex sp."	Car_sp.	Perennial	0	0	0	Sedge_Rush	C	N	NA	NA
+"Carthamus lanatus"	Car_lan	Annual	0	0	1	Herb	Y	E	NA	NA
+"Centaurium erythraea"	Cen_ery	Annual	0	0	1	Herb	Z	E	NA	NA
+"Centaurium tenuiflorum "	Cen_ten	Annual	0	0	1	Herb	Z	E	NA	NA
+"Chamaesyce drummondii"	Cha_dru	Perennial	0	0	1	Herb	C	N	NA	NA
+"Cheilanthes sieberi"	Che_sie	Perennial	0	0	0	Fern	A	N	1	NA
+"Cheilanthes sp. "	Chei_sp	Perennial	0	0	0	Fern	A	N	1	NA
+"Chloris truncata"	Chl_tru	Perennial	1	0	0	C4	C	N	NA	NA
+"Chondrilla juncea "	Cho_jun	Perennial	0	0	1	Herb	Y	E	NA	NA
+"Chrysocephalum apiculatum"	Chr_api	Perennial	0	0	1	Herb	A	N	1	NA
+"Cirsium vulgare"	Cir_vul	Annual	0	0	1	Herb	Y	E	NA	NA
+"Convolvulus angustissimus"	Con_ang	Perennial	0	0	1	Herb	B	N	1	NA
+"Crassula sieberana"	Cra_sie	Perennial	0	0	1	Herb	C	N	NA	NA
+"Cymbonotus lawsonianus"	Cym_law	Annual	0	0	1	Herb	B	N	1	NA
+"Cynoglossum suaveolens"	Cyn_sua	Perennial	0	0	1	Herb	B	N	1	NA
+"Desmodium varians"	Des_var	Perennial	0	1	1	Legume	A	N	1	NA
+"Dichelachne crinita"	Dic_cri	Perennial	1	0	0	C3	C	N	NA	NA
+"Dichelachne sp "	Dic_sp.	Perennial	1	0	0	C3	C	N	NA	NA
+"Enneapogon nigricans"	Enn_nig	Perennial	1	0	0	C4	C	N	NA	NA
+"Eragrostis brownii"	Era_bro	Perennial	1	0	0	C4	C	N	NA	NA
+"Eragrostis sp. (native)"	Eran_sp	Perennial	1	0	0	C4	C	N	NA	NA
+"Eryngium ovinum"	Ery_ovi	Annual	0	0	1	Herb	A	N	1	NA
+"Euchiton japonicus "	Euc_jap	Perennial	0	0	1	Herb	C	N	NA	NA
+"Euchiton sphaericus"	Euc_sph	Annual	0	0	1	Herb	C	N	NA	NA
+"Euphorbia dallachyana "	Eup_dal	Perennial	0	0	1	Herb	C	N	NA	NA
+"Galium sp (exotic) "	Gal_sp.	Annual	0	0	1	Herb	Z	E	NA	NA
+"Gallium divaricatum"	Gal_div	Annual	0	0	1	Herb	Z	E	NA	NA
+"Gamochaeta calviceps  "	Gam_cal	Annual	0	0	1	Herb	Z	E	NA	NA
+"Gamochaeta purpurea "	Gam_pur	Perennial	0	0	1	Herb	Z	E	NA	NA
+"Gamochaeta sp."	Gam_sp.	Annual	0	0	1	Herb	Z	E	NA	NA
+"Glycine clandestina"	Gly_cla	Perennial	0	1	1	Leguminous_herb	A	N	1	NA
+"Glycine tabacina"	Gly_tab	Perennial	0	1	1	Leguminous_herb	A	N	1	NA
+"Goodenia pinnatifida"	Goo_pin	Perennial	0	0	1	Herb	A	N	1	NA
+"Haloragis heterophylla"	Hal_het	Perennial	0	0	1	Herb	A	N	1	NA
+"Hordeum sp. (Critesion)"	Hor_sp.	Annual	1	0	0	C3	Z	E	NA	NA
+"Hypericum gramineum"	Hyp_gra	Perennial	0	0	1	Herb	A	N	1	NA
+"Hypericum perforatum"	Hyp_per	Perennial	0	0	1	Herb	Y	E	NA	NA
+"Hypochaeris glabra"	Hyp_gla	Annual	0	0	1	Herb	Z	E	NA	NA
+"Hypochaeris radicata"	Hyp_rad	Perennial	0	0	1	Herb	Y	E	NA	NA
+"Juncus sp. (native)"	Jun_sp.	Perennial	0	0	0	Sedge_Rush	C	N	NA	NA
+"Juncus subsecundus"	Jun_sub	Perennial	0	0	0	Sedge_Rush	C	N	NA	NA
+"Leptorhynchos squamatus"	Lep_squ	Perennial	0	0	1	Herb	A	N	1	NA
+"Linaria pelisserana"	Lin_pel	Annual	0	0	1	Herb	Z	E	NA	NA
+"Linaria sp. (arvensis?)"	Lina_sp	Annual	0	0	1	Herb	Z	E	NA	NA
+"Linum trigynum"	Lin_tri	Perennial	NA	NA	NA	NA	Z	E	NA	NA
+"Lomandra coriacea filiformis"	Lom_cor	Perennial	0	0	1	Herb	A	N	1	NA
+"Lomandra bracteata"	Lom_bra	Perennial	0	0	1	Herb	A	N	1	NA
+"Lomandra filiformis"	Lom_fil	Perennial	0	0	1	Herb	A	N	1	NA
+"Lomandra multiflora"	Lom_mul	Perennial	0	0	1	Herb	A	N	1	NA
+"Lythrum hyssopifolia"	Lyt_hys	Annual	0	0	1	Herb	C	N	NA	NA
+"Microlaena stipoides"	Mic_sti	Perennial	1	0	0	C3	C	N	NA	NA
+"Microtis sp"	Mic_sp.	Perennial	0	0	1	Herb	A	N	1	NA
+"Myosotis discolor"	Myo_dis	Annual	0	0	1	Herb	Z	E	NA	NA
+"Nassella trichotoma"	Nas_tri	Perennial	1	0	0	C3	X	E	NA	NA
+"Oxalis perennans"	Oxa_per	Perennial	0	0	1	Herb	C	N	NA	NA
+"Panicum effusum"	Pan_eff	Perennial	1	0	0	C4	C	N	NA	NA
+"Petrorhagia nanteuilii"	Pet_nan	Annual	0	0	1	Herb	Z	E	NA	NA
+"Pimelia curviflora"	Pim_cur	Perennial	0	0	0	Woody_shrub	A	N	1	NA
+"Plantago lanceolata"	Pla_lan	Annual	0	0	1	Herb	Y	E	NA	NA
+"Plantago varia"	Pla_var	Perennial	0	0	1	Herb	A	N	1	NA
+"Poa sieberiana"	Poa_sie	Perennial	1	0	0	C3	A	N	1	NA
+"Psilurus incurvus"	Psi_inc	Annual	1	0	0	NA	Z	E	NA	NA
+"Rumex brownii"	Rum_bro	Perennial	0	0	1	Herb	C	N	NA	NA
+"Rytidosperma caespitosum"	Ryt_cae	Perennial	1	0	0	C3	C	N	NA	NA
+"Rytidosperma carphoides"	Ryt_car	Perennial	1	0	0	C3	C	N	NA	NA
+"Rytidosperma laevis"	Ryt_lae	Perennial	1	0	0	C3	C	N	NA	NA
+"Rytidosperma racemosum"	Ryt_rac	Perennial	1	0	0	C3	C	N	NA	NA
+"Rytidosperma sp "	Ryt_sp.	Perennial	1	0	0	C3	C	N	NA	NA
+"Rytidosperma sp 3. large"	Ryt_sp3	Perennial	1	0	0	C3	C	N	NA	NA
+"Rytidosperma sp. 4 "	Ryt_sp4	Perennial	1	0	0	C3	C	N	NA	NA
+"Rytidosperma sp2"	Ryt_sp2	Perennial	1	0	0	C3	C	N	NA	NA
+"Sanguisorba minor"	San_min	Perennial	0	0	1	Herb	Y	E	NA	NA
+"Schoenus apogon"	Sch_apo	Annual	0	0	0	Sedge_Rush	C	N	NA	NA
+"Senecio sp."	Sen_sp.	Perennial	0	0	1	Herb	C	N	NA	NA
+"Solenogyne dominii"	Sol_dom	Perennial	0	0	1	Herb	C	N	NA	NA
+"Sonchus oleruceus"	Son_ole	Annual	0	0	1	Herb	Z	E	NA	NA
+"Sonchus sp."	Son_sp.	Annual	0	0	1	Herb	Z	E	NA	NA
+"Themeda triandra"	The_tri	Perennial	1	0	0	C4	A	N	1	NA
+"Tolpis barbata"	Tol_bar	Annual	0	0	1	Herb	Z	E	NA	NA
+"Tragopogon porrifolius"	Tra_por	Annual	0	0	1	Herb	Y	E	NA	NA
+"Tricoryne elatior"	Tri_ela	Perennial	0	0	1	Herb	A	N	1	NA
+"Trifolium arvense"	Tri_arv	Annual	0	1	1	Leguminous_herb	Z	E	NA	NA
+"Trifolium campestre"	Tri_cam	Annual	0	1	1	Leguminous_herb	Z	E	NA	NA
+"Trifolium dubium"	Tri_dub	Annual	0	1	1	Leguminous_herb	Z	E	NA	NA
+"Trifolium glomeratum"	Tri_glo	Annual	0	1	1	Leguminous_herb	Z	E	NA	NA
+"Trifolium sp."	Tri_sp.	Annual	0	1	1	Leguminous_herb	Z	E	NA	NA
+"Trifolium striatum"	Tri_str	Annual	0	1	1	Leguminous_herb	Z	E	NA	NA
+"Trifolium subterraneum"	Tri_sub	Annual	0	1	1	Leguminous_herb	Y	E	NA	NA
+"Triptilodiscus pygmaeus"	Tri_pyg	Annual	0	0	1	Herb	B	N	1	NA
+"Vittadinia cuneata"	Vit_cun	Annual	0	0	1	Herb	B	N	1	NA
+"Vittadinia gracilis"	Vit_gra	Perennial	0	0	0	Woody_shrub	B	N	1	NA
+"Vittadinia green cuneata"	Vit_gre	Annual	0	0	1	Herb	B	N	1	NA
+"Vittadinia muelleri"	Vit_mue	Perennial	0	0	1	Herb	B	N	1	NA
+"Vulpia sp."	Vul_sp.	Annual	1	0	0	C3	Z	E	NA	NA
+"Wahlenbergia communis"	Wah_com	Perennial	0	0	1	Herb	B	N	1	NA
+"Wahlenbergia luteola"	Wah_lut	Perennial	0	0	1	Herb	B	N	1	NA
+"Wahlenbergia sp. 2"	Wah_sp2	Perennial	0	0	1	Herb	C	N	NA	NA
+"Wahlenbergia sp."	Wah_sp.	Perennial	0	0	1	Herb	B	N	1	NA
+"Wahlenbergia stricta"	Wah_str	Perennial	0	0	1	Herb	B	N	1	NA
+"Wurmbea dioica"	Wur_dio	Perennial	0	0	1	Herb	A	N	1	NA
+"Zornia dyctocarpa"	Zor_dyc	Perennial	0	1	1	Leguminous_herb	A	N	1	R
