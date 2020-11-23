@@ -255,9 +255,16 @@ repdf<-data.frame(oldval=c("W","X","Y"), newval=c(35, 75, 100))
 repdf        
 replace(ct17d$Air_sp., which(repdf$oldval==))
 
-ct18d<-ct18[,5:ncol(ct18)]
+
 rahead(ct18,3,15)
+ct18d<-as.matrix(ct18[,5:ncol(ct18)])
+ct18d[which(ct18d=="W")]<-35
+ct18d[which(ct18d=="X")]<-75
+ct18d[which(ct18d=="Z")]<-100
+ct18d<-data.frame(ct18d)
 rahead(ct18d,3,15)
+ct18d$Air_sp.
+
 
 apply(ct18d,2,function(x)length(which(x%in%LETTERS [23:25]))) #which sp. has letters like W and need to be replaced
 
