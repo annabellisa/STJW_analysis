@@ -23,8 +23,15 @@ colnames(ct17)[5:ncol(ct17)] #col names of all plants
 colnames(ct17[,5:ncol(ct17)]) 
 colnames(ct17[,5:ncol(ct17)])%in% pinfo$Sp
 which(!colnames(ct17[,5:ncol(ct17)])%in% pinfo$Sp) 
-colnames(ct17)[which(!colnames(ct17[,5:ncol(ct17)])%in% pinfo$Sp)] #wihch sp was not (!) in there
+
+colnames(ct19)[which(!colnames(ct19[,5:ncol(ct19)])%in% pinfo$Sp)] #wihch sp was not (!) in there
 head(ct17[,1:10])
+
+#23rd nov
+which(colnames(ct17)=="Dic_cri")
+which(!colnames(ct17[,5:ncol(ct17)])%in% pinfo$Sp)
+which(pinfo$Sp=="Dic_cri")
+
 
 ct17d<-ct17[,5:ncol(ct17)]
 head(ct17d[,1:10])
@@ -108,6 +115,8 @@ colnames(ct19)[which(!colnames(ct19[,5:ncol(ct19)])%in% pinfo$Sp)]
 head(ct19)[.1:10]
 #tried changing Dic_cri; running again to check 
 colnames(ct19)[which(!colnames(ct19[,5:ncol(ct19)])%in% pinfo$Sp)]
+colnames(ct17)[which(!colnames(ct17[,5:ncol(ct17)])%in% pinfo$Sp)]
+
 
 head(ct19[,1:10])
 ct19d<-ct19[,1:ncol(ct19)]
@@ -221,3 +230,21 @@ colnames(cv19[,6:ncol(cv19)])
 colnames(cv19[,6:ncol(cv19)]) %in% pinfo$Sp
 colnames(cv19[,1:ncol(cv19)]) %in% pinfo$Sp #sp. names start only after column 6
 #col names correspond b/w pinfo and cover 2019
+
+
+
+
+#23d nov
+
+ct17d<-ct17[,5:ncol(ct17)]
+head(ct17d[,1:10])
+grep(LETTERS[23:25],ct17d[,1])
+LETTERS[23:25]
+length(which(ct17d[,1]%in%LETTERS [23:25])) #which has letters in them
+apply(ct17d,2,function(x)length(which(x%in%LETTERS [23:25]))) #which sp. has letters like W and need to be replaced
+ct17d$Air_sp.
+replace(ct17d$Air_sp.,list = c("W","X","Y"),values=c(35, 75, 100))
+replace(ct17d$Air_sp., lapply())
+repdf<-data.frame(oldval=c("W","X","Y"), newval=c(35, 75, 100))
+repdf        
+replace(ct17d$Air_sp., which(repdf$oldval==
