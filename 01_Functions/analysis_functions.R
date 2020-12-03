@@ -5,25 +5,6 @@
 
 # author: Annabel Smith
 
-# Simple genotype converter, generalised from convert genepop and structure functions:
-
-convert_geno<-function(data, het_ds, snp_ds, ref_ds, het_new, snp_new, ref_new, na_input){ 
-
-# data = a data frame with snp data only, no site or individual columns
-# het_ds, snp_ds, ref_ds = in quotes, the DartSeq codes for genotypes
-# het_new, snp_new, ref_new = in quotes, what you want the new codes to be
-# na_input = if NA, input as NA (no quotes), if something else (e.g. "-9 -9") then use quotes 
-
-apply(
-data,2,function(x)
-ifelse(is.na(x),na_input,
-ifelse(x==het_ds,het_new,
-ifelse(x==snp_ds,snp_new,
-ifelse(x==ref_ds,ref_new,x
-))))
-)
-}
-
 # Drop levels and re-assign rownames to subsetted data frames:
 tidy.df<-function(df){
 df<-droplevels(df)

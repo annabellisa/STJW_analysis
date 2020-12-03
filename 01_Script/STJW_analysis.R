@@ -6,66 +6,62 @@
 ### Analysis of chemical control experiment from STJW project
 ### Author: Annabel Smith & Raagini Muddaiah
 
-# load functions:
+# Load functions:
 invisible(lapply(paste("01_Functions/",dir("01_Functions"),sep=""),function(x) source(x)))
 
+# Load libraries:
+library(lme4)
 
+# Load workspace
+load("03_workspaces/xx.RData")
 
-# updating script
+#  IMPORT data:    	# ----
 
-Data_dir<-"Data/Final_datasets/Formatted_data"
-Data_dir
-dir(Data_dir)
+data_dir<-"00_Data/Formatted_data/"
+dir(data_dir)
 
+# COUNT DATA:
 
-pinfo<-read.table(paste(Data_dir,"plant_info.txt",sep="/"),header=T)
-head(pinfo)
-which(duplicated(pinfo$Sp))
-levels(pinfo$Duration)
-str(pinfo)
-unique(pinfo$Duration)
+ct17<-read.table(paste(data_dir,"count_2017.txt",sep=""),header=T)
+ct18<-read.table(paste(data_dir,"count_2018.txt",sep=""),header=T)
+ct19<-read.table(paste(data_dir,"count_2019.txt",sep=""),header=T)
+rahead(ct17,3,7)
+rahead(ct18,3,7)
+rahead(ct19,3,7)
 
-
-c17<-read.table(paste(Data_dir,"2017_count.txt",sep="/"),header=T)
-head(c17[,1:10],3)
-c17$QUAD_ID
-length(c17$QUAD_ID)
-which(duplicated(c17$QUAD_ID))
-c17sp<-colnames(c17)[6:length(c17)]
-dim(c17)
-c17sp[order(c17sp)]
-
-#Nov 14th - updated count and cover sheets
-Data_dir<-"Data/Final_datasets/copies to edit"
-Data_dir
-dir(Data_dir)
-
-ct17<-read.table(paste(Data_dir,"count_2017.txt",sep="/"),header=T)
-head(ct17[,1:10])
-which(duplicated(colnames(ct17))) #check for duplicated  sp names
-nchar(colnames(ct17)) #no of characters - 7
-
-pinfo<-read.table(paste(Data_dir,"plant_info.txt",sep="/"),header=T)
+# PLANT INFO:
+pinfo<-read.table(paste(data_dir,"plant_info.txt",sep="/"),header=T)
 head(pinfo,3)
+length(which(duplicated(pinfo$Sp))) # should be zero
 
-which(duplicated(pinfo$Sp)) 
-levels(pinfo$Duration) #
-str(pinfo)
-pinfo$Duration<-as.factor(pinfo$Duration) #turning ch variable into a factor
-colnames(ct17)[5:ncol(ct17)] #col names of all plants
-#to check theure all in pinfo
-colnames(ct17[,5:ncol(ct17)]) 
-colnames(ct17[,5:ncol(ct17)])%in% pinfo$Sp
-which(!colnames(ct17[,5:ncol(ct17)])%in% pinfo$Sp) 
-colnames(ct17)[which(!colnames(ct17[,5:ncol(ct17)])%in% pinfo$Sp)] #wihch sp was not (!) in there
-head(ct17[,1:10])
+# CHECK:
 
-ct17d<-ct17[,5:ncol(ct17)]
-head(ct17d[,1:10])
-grep(LETTERS[23:25],ct17d[,1])
-LETTERS[23:25]
-length(which(ct17d[,1]%in%LETTERS [23:25])) #which has letters in them
-apply(ct17d,2,function(x)length(which(x%in%LETTERS [23:25]))) #which sp. has letters like W and need to be replaced
+cnames17<-colnames(ct17)[which(colnames(ct17)=="Aca_ovi"):ncol(ct17)]
+cnames18<-colnames(ct18)[which(colnames(ct18)=="Aca_ovi"):ncol(ct18)]
+cnames19<-colnames(ct19)[which(colnames(ct19)=="Aca_ovi"):ncol(ct19)]
+
+# these should all be TRUE:
+
+# Are all names matching across years?
+length(cnames17)==length(cnames18)
+length(cnames17)==length(cnames19)
+length(cnames18)==length(cnames19)
+
+table(cnames17 %in% cnames18)
+table(cnames17 %in% cnames19)
+table(cnames18 %in% cnames19)
+
+# Are all names in the data present in plant_info?
+table(cnames17 %in% pinfo$Sp)
+table(cnames18 %in% pinfo$Sp)
+table(cnames19 %in% pinfo$Sp)
+
+# close import data ----
+
+
+rahead(ct17,3,7)
+rahead(ct18,3,7)
+rahead(ct19,3,7)
 
 
 
