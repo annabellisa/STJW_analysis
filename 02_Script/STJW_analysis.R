@@ -10,7 +10,7 @@
 invisible(lapply(paste("01_Functions/",dir("01_Functions"),sep=""),function(x) source(x)))
 
 # Load libraries:
-library(lme4); library(vegan)
+library(lme4); library(vegan); library(AICcmodavg); library(lmerTest)
 
 # Load workspace
 load("03_workspaces/xx.RData")
@@ -318,7 +318,7 @@ rahead(rich,4,7); dim(rich)
 shan<-rbind(shan17, shan18, shan19)
 rahead(shan,4,7); dim(shan)
 
-# If we want to use a sensible cut-off for analysis, we could say there must be more records (i.e. number of species recorded) than the number of quadrats (48) or the number of observations (within years?). Number of quadrats would cut out two responses (exotic_perengrass and sed_rus)
+# We need to decide the cut-off for analysis. We could say there must be more records (i.e. number of species recorded) than the number of quadrats (48)? Or the number of observations (within years?). Number of quadrats would cut out two responses (exotic_perengrass and sed_rus)
 group_df$rich_records<-colSums(rich[,5:length(rich)])
 gdf<-group_df
 gdf<-tidy.df(gdf)
@@ -326,13 +326,139 @@ gdf
 
 gdf$ylab<-c("All","Native","Exotic","Indicator","Significance A","Significance B","Common/Increaser","Significance X/Y","Significance Z","Native forb", "Exotic forb","Exotic annual forb","Exotic perennial forb","Native annual forb","Native perennial forb","Native non-leg. forb","Exotic non-leg. forb","Native leg. forb","Exotic leg. forb","Native grass","Exotic grass","Exotic annual grass","Exotic perennial grass","C3 grass","Native C3 grass","Native C4 grass","Exotic C3 grass","Sedge/Rush")
 
+save.image("03_Workspaces/stjw_analysis.RData")
+
 # close diversity calculation ----
 
-#  ANALYSIS:    	# ----
+#  VISUALISE raw data:    	# ----
 
-head(gdf)
+head(gdf); dim(gdf)
 
 rahead(rich,4,7); dim(rich)
 rahead(shan,4,7); dim(shan)
 
+# visualise raw data:
+
+# year effects on species richness:
+
+dev.new(width=11.69,height=8.27,noRStudioGD = T,dpi=80, pointsize=12)
+par(mfrow=c(5,6), mar=c(4,4,1,1), mgp=c(2.5,1,0))
+
+for(i in 1:nrow(gdf)){
+  
+  resp.thisrun<-gdf$group[i]
+  resp.dat<-rich[,which(colnames(rich)==resp.thisrun)]
+  ylab.thisrun<-gdf$ylab[i]
+  
+  boxplot(resp.dat~rich$reserve+as.factor(rich$DATE), cex.axis=1, col=c("darkturquoise","darkolivegreen2"), ylab=ylab.thisrun, xlab="", las=1, xaxt="n")
+  axis(side=1, at=c(1.5,3.5,5.5), labels=c(2017, 2018, 2019), cex.axis=0.8)
+  arrows(c(2.5,4.5),0,c(2.5,4.5),40, length=0, col="grey70")
+}
+plot(1:10, 1:10, type="n", bty="o", xaxt="n", yaxt="n", xlab="", ylab="")
+legend(1,9,legend=c("Jerrabomberra","Mulangari"), col=c("darkturquoise","darkolivegreen2"), pch=15, bty="n", pt.cex = 3)
+
+# treatement effects on species richness:
+
+dev.new(width=11.69,height=8.27,noRStudioGD = T,dpi=80, pointsize=12)
+par(mfrow=c(5,6), mar=c(4,4,1,1), mgp=c(2.5,1,0))
+
+for(i in 1:nrow(gdf)){
+  
+  resp.thisrun<-gdf$group[i]
+  resp.dat<-rich[,which(colnames(rich)==resp.thisrun)]
+  ylab.thisrun<-gdf$ylab[i]
+  
+  boxplot(resp.dat~rich$reserve+as.factor(rich$Treatment), cex.axis=1, col=c("darkturquoise","darkolivegreen2"), ylab=ylab.thisrun, xlab="", las=1, xaxt="n")
+  axis(side=1, at=c(1.5,3.5,5.5), labels=c("C", "A", "B"), cex.axis=0.8)
+  arrows(c(2.5,4.5),0,c(2.5,4.5),40, length=0, col="grey70")
+}
+plot(1:10, 1:10, type="n", bty="o", xaxt="n", yaxt="n", xlab="", ylab="")
+legend(1,9,legend=c("Jerrabomberra","Mulangari"), col=c("darkturquoise","darkolivegreen2"), pch=15, bty="n", pt.cex = 3)
+
+# close visualise ----
+
+#  ANALYSIS:    	# ----
+
+head(gdf); dim(gdf)
+
+rahead(rich,4,7); dim(rich)
+rahead(shan,4,7); dim(shan)
+
+# scale date only:
+rich_sc<-rich
+rich_sc$DATE<-rich_sc$DATE-2017
+rahead(rich_sc,4,7); dim(rich_sc)
+
+# new data for model estimates:
+nd1<-data.frame(DATE=rep(c(0,1,2),rep(3,3)),Treatment=as.factor(c("C","A","B")))
+
+# lists for storing coefficients, anova tables and model estimates:
+coef.out<-list()
+anova.out<-list()
+preds.out<-list()
+
+# run models and generate model estimates:
+
+for (i in 1:nrow(gdf)){
+  
+  resp.thisrun<-gdf$group[i]
+  form.thisrun<-paste(resp.thisrun,"~Treatment*DATE+(1|reserve/PLOT_ID)", sep="")
+  
+  m1<-lmer(formula = form.thisrun, data=rich_sc)
+  summary(m1)
+
+  m1_coef<-coef.ext(m1)
+  m1_anova<-anova.ext(m1)
+  coef.out[[i]]<-m1_coef
+  anova.out[[i]]<-m1_anova
+  
+  p1<-pred(model=m1, new.data = nd1,se.fit = T, type = "response")
+  preds.out[[i]]<-p1
+
+} # close models
+
+
+## PLOT:
+
+dev.new(width=11.69,height=8.27,noRStudioGD = T,dpi=80, pointsize=12)
+par(mfrow=c(5,6), mar=c(2,4,4,1), mgp=c(2.5,1,0))
+
+for(i in 1:nrow(gdf)){
+  
+  resp.thisrun<-gdf$group[i]
+  pred.thisrun<-preds.out[[i]]
+  anova.thisrun<-anova.out[[i]]
+  ylab.thisrun<-gdf$ylab[i]
+  xofs<-0.2
+  arrowlgth<-0.02
+  
+  plot(pred.thisrun$DATE[pred.thisrun$Treatment=="C"]-xofs,pred.thisrun$fit[pred.thisrun$Treatment=="C"], pch=15, ylim=c(min(pred.thisrun$lci), max(pred.thisrun$uci)), xlim=c(-0.3,2.3), xaxt="n", xlab="", ylab=ylab.thisrun, las=1)
+  axis(side = 1, at=c(0,1,2), labels=c(2017,2018,2019))
+  arrows(pred.thisrun$DATE[pred.thisrun$Treatment=="C"]-xofs,pred.thisrun$lci[pred.thisrun$Treatment=="C"],pred.thisrun$DATE[pred.thisrun$Treatment=="C"]-xofs,pred.thisrun$uci[pred.thisrun$Treatment=="C"], code=3, angle=90, length=arrowlgth)
+  points(pred.thisrun$DATE[pred.thisrun$Treatment=="A"],pred.thisrun$fit[pred.thisrun$Treatment=="A"], pch=15, col="red")
+  arrows(pred.thisrun$DATE[pred.thisrun$Treatment=="A"],pred.thisrun$lci[pred.thisrun$Treatment=="A"],pred.thisrun$DATE[pred.thisrun$Treatment=="A"],pred.thisrun$uci[pred.thisrun$Treatment=="A"], code=3, angle=90, length=arrowlgth, col="red")
+  points(pred.thisrun$DATE[pred.thisrun$Treatment=="B"]+xofs,pred.thisrun$fit[pred.thisrun$Treatment=="B"], pch=15, col="blue")
+  arrows(pred.thisrun$DATE[pred.thisrun$Treatment=="B"]+xofs,pred.thisrun$lci[pred.thisrun$Treatment=="B"],pred.thisrun$DATE[pred.thisrun$Treatment=="B"]+xofs,pred.thisrun$uci[pred.thisrun$Treatment=="B"], code=3, angle=90, length=arrowlgth, col="blue")
+  
+  p.trt<-round(anova.thisrun$p[1],4)
+  p.yr<-round(anova.thisrun$p[2],4)
+  p.int<-round(anova.thisrun$p[3],4)
+  
+  if(p.trt>0.01) p.trt<-round(p.trt,2) else p.trt<-"<0.01"
+  if(p.yr>0.01) p.yr<-round(p.yr,2) else p.yr<-"<0.01"
+  if(p.int>0.01) p.int<-round(p.int,2) else p.int<-"<0.01"
+  
+  title(main=paste("P values: trt=",p.trt,"\nyr=",p.yr,"; int=",p.int), font.main=1, adj=0, cex=0.9, line=0.5)
+  
+}
+
+plot(1:10, 1:10, type="n", bty="o", xaxt="n", yaxt="n", xlab="", ylab="")
+legend(1,9,legend=c("Control","Spot spray","Boom spray"), col=c("black","red","blue"), pch=15, bty="n", pt.cex = 3)
+
+
+
+
 # close analysis ----
+
+
+

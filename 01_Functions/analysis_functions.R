@@ -162,6 +162,85 @@ res.list[[m]]<-res.r2
 return(data.frame(do.call(rbind,res.list)))
 } # close multicollinearity function
 
+# PREDICT function
+# extends predictSE to calculate CIs and dataframe-ise predictions with 'new data'
+pred<-function(model,new.data,se.fit=T,type="response"){
+  
+  if(class(model)!="glmmadmb"){
+    pr1<-predictSE(model,new.data,se.fit=se.fit, type=type)
+    df1<-data.frame(new.data,fit=pr1$fit,se=pr1$se.fit, lci=pr1$fit-(1.96*pr1$se.fit), uci=pr1$fit+(1.96*pr1$se.fit))
+  } # close lme4 models
+  
+  # defined for logit models only
+  if(class(model)=="glmmadmb"){
+    pr1<-predict(model,new.data,se.fit=se.fit, type="link")
+    df1<-data.frame(new.data,fit.link=pr1$fit,se.link=pr1$se.fit, lci.link=pr1$fit-(1.96*pr1$se.fit), uci.link=pr1$fit+(1.96*pr1$se.fit))	
+    df1$fit.resp<-round(invlogit(df1$fit.link),4)
+    df1$lci.resp<-round(invlogit(df1$lci.link),4)
+    df1$uci.resp<-round(invlogit(df1$uci.link),4)
+  } # close admb models
+  
+  return(df1)
+  
+} # close predict function
+
+# Extract coefficient table from model summary
+coef.ext<-function(model) {
+  
+  if(class(model)[1]=="lmerModLmerTest"){
+    mod.store<-data.frame(term=dimnames(summary(model)$coefficients[,c(1,2,5)])[[1]],round(summary(model)$coefficients[,c(1,2,5)],4))
+    mod.store<-tidy.df(mod.store)
+    colnames(mod.store)<-c("term","est","se","P")
+    return(mod.store)
+  } # close lmerTest
+  
+  if(class(model)[1]=="lmerMod"){
+    mod.store<-data.frame(term=dimnames(summary(model)$coefficients[,c(1,2,3)])[[1]],round(summary(model)$coefficients[,c(1,2,3)],4))
+    mod.store<-tidy.df(mod.store)
+    mod.store$P<-lmer.pval(mod.store[,4])
+    mod.store<-mod.store[,c(1,2,3,5)]
+    colnames(mod.store)<-c("term","est","se","P")
+    return(mod.store)
+  } # close lmer
+  
+  if(class(model)[1]=="glmmadmb"){
+    mod.store<-data.frame(term=dimnames(summary(model)$coefficients[,c(1,2,4)])[[1]],round(summary(model)$coefficients[,c(1,2,4)],4))
+    mod.store<-tidy.df(mod.store)
+    colnames(mod.store)<-c("term","est","se","P")
+    return(mod.store)
+  } # close glmmadmb
+  
+  if(class(model)[1]=="glmerMod"){
+    mod.store<-data.frame(term=dimnames(summary(model)$coefficients[,c(1,2,4)])[[1]],round(summary(model)$coefficients[,c(1,2,4)],4))
+    mod.store<-tidy.df(mod.store)
+    colnames(mod.store)<-c("term","est","se","P")
+    return(mod.store)
+  } # close glmerMod
+  
+} # close coef.ext
+
+# Extract anova table from model summary
+anova.ext<-function(model) {
+  
+  if(class(model)[1]=="lmerModLmerTest"){
+    mod.store<-data.frame(term=rownames(data.frame(anova(m1))),round(data.frame(anova(m1)),4))
+    mod.store<-tidy.df(mod.store)
+    colnames(mod.store)<-c("term","sum.sq","mean.sq","NumDF","DenDF","F.value","p")
+    return(mod.store)
+  } # close lmerTest
+
+} # close anova extract
+
+# Effect size plots from coef table:
+efs.plot<-function(coef.table,heading){
+  # coef.table is the output from coef.sum
+  # heading must be in quotes
+  par(mar=c(4,8,2,1), mgp=c(2.6,1,0))
+  plot(rev(coef.table$est),1:length(coef.table[,1]), pch=20, xlim=c(min(coef.table$lci.link),max(coef.table$uci.link)), xlab="Effect size", ylab="", yaxt="n", bty="l", main=heading, cex.main=1, font.main=1)
+  arrows(rev(coef.table$lci.link),1:length(coef.table[,1]),rev(coef.table$uci.link),1:length(coef.table[,1]),code=0)
+  arrows(0,0,0,50,code=0)
+  axis(side=2, at=1:1:length(coef.table[,1]), labels=rev(as.character(coef.table$term)),las=1, cex.axis=0.8)
+}
 
 
 
