@@ -513,6 +513,7 @@ for(i in 1:nrow(gdf)){
 plot(1:10, 1:10, type="n", bty="o", xaxt="n", yaxt="n", xlab="", ylab="")
 legend(1,9,legend=c("Control","Spot spray","Boom spray"), col=c("black","red","blue"), pch=15, bty="n", pt.cex = 3)
 
+save.image("03_Workspaces/STJW_analysis.RData")
 
 
 # close analysis ----
