@@ -13,7 +13,7 @@ invisible(lapply(paste("01_Functions/",dir("01_Functions"),sep=""),function(x) s
 library(lme4); library(vegan); library(AICcmodavg); library(lmerTest)
 
 # Load workspace
-load("03_workspaces/xx.RData")
+load("03_Workspaces/STJW_analysis.RData")
 
 #  IMPORT & check data:    	# ----
 
@@ -389,6 +389,10 @@ rich_sc<-rich
 rich_sc$DATE<-rich_sc$DATE-2017
 rahead(rich_sc,4,7); dim(rich_sc)
 
+shan_sc<-shan
+shan_sc$DATE<-shan_sc$DATE-2017
+rahead(shan_sc,4,7); dim(shan_sc)
+
 # new data for model estimates:
 nd1<-data.frame(DATE=rep(c(0,1,2),rep(3,3)),Treatment=as.factor(c("C","A","B")))
 
@@ -398,13 +402,24 @@ anova.out<-list()
 preds.out<-list()
 
 # run models and generate model estimates:
+# update the data set (rich_sc or shan_sc) and re-run for each
+
+data.set<-shan_sc
 
 for (i in 1:nrow(gdf)){
   
   resp.thisrun<-gdf$group[i]
+  data.thisrun<-data.set[,resp.thisrun]
   form.thisrun<-paste(resp.thisrun,"~Treatment*DATE+(1|reserve/PLOT_ID)", sep="")
   
-  m1<-lmer(formula = form.thisrun, data=rich_sc)
+  if(sum(data.thisrun,na.rm=T)==0){
+  coef.out[[i]]<-NULL
+  anova.out[[i]]<-NULL
+  preds.out[[i]]<-NULL
+  next
+  }
+  
+  m1<-lmer(formula = form.thisrun, data=data.set)
   summary(m1)
 
   m1_coef<-coef.ext(m1)
@@ -417,8 +432,9 @@ for (i in 1:nrow(gdf)){
 
 } # close models
 
-
 ## PLOT:
+
+# Species Richness:
 
 dev.new(width=11.69,height=8.27,noRStudioGD = T,dpi=80, pointsize=12)
 par(mfrow=c(5,6), mar=c(2,4,4,1), mgp=c(2.5,1,0))
@@ -455,6 +471,47 @@ for(i in 1:nrow(gdf)){
 plot(1:10, 1:10, type="n", bty="o", xaxt="n", yaxt="n", xlab="", ylab="")
 legend(1,9,legend=c("Control","Spot spray","Boom spray"), col=c("black","red","blue"), pch=15, bty="n", pt.cex = 3)
 
+# Shannon's Diversity:
+
+dev.new(width=11.69,height=8.27,noRStudioGD = T,dpi=80, pointsize=12)
+par(mfrow=c(5,6), mar=c(2,4,4,1), mgp=c(2.5,1,0))
+
+for(i in 1:nrow(gdf)){
+  
+  resp.thisrun<-gdf$group[i]
+  pred.thisrun<-preds.out[[i]]
+  anova.thisrun<-anova.out[[i]]
+  ylab.thisrun<-gdf$ylab[i]
+  xofs<-0.2
+  arrowlgth<-0.02
+  
+  if (is.null(pred.thisrun)){
+    plot(1:10, 1:10, type="n", bty="o", xaxt="n", yaxt="n", xlab="", ylab="")
+    next
+  }
+  
+  plot(pred.thisrun$DATE[pred.thisrun$Treatment=="C"]-xofs,pred.thisrun$fit[pred.thisrun$Treatment=="C"], pch=15, ylim=c(min(pred.thisrun$lci), max(pred.thisrun$uci)), xlim=c(-0.3,2.3), xaxt="n", xlab="", ylab=ylab.thisrun, las=1)
+  axis(side = 1, at=c(0,1,2), labels=c(2017,2018,2019))
+  arrows(pred.thisrun$DATE[pred.thisrun$Treatment=="C"]-xofs,pred.thisrun$lci[pred.thisrun$Treatment=="C"],pred.thisrun$DATE[pred.thisrun$Treatment=="C"]-xofs,pred.thisrun$uci[pred.thisrun$Treatment=="C"], code=3, angle=90, length=arrowlgth)
+  points(pred.thisrun$DATE[pred.thisrun$Treatment=="A"],pred.thisrun$fit[pred.thisrun$Treatment=="A"], pch=15, col="red")
+  arrows(pred.thisrun$DATE[pred.thisrun$Treatment=="A"],pred.thisrun$lci[pred.thisrun$Treatment=="A"],pred.thisrun$DATE[pred.thisrun$Treatment=="A"],pred.thisrun$uci[pred.thisrun$Treatment=="A"], code=3, angle=90, length=arrowlgth, col="red")
+  points(pred.thisrun$DATE[pred.thisrun$Treatment=="B"]+xofs,pred.thisrun$fit[pred.thisrun$Treatment=="B"], pch=15, col="blue")
+  arrows(pred.thisrun$DATE[pred.thisrun$Treatment=="B"]+xofs,pred.thisrun$lci[pred.thisrun$Treatment=="B"],pred.thisrun$DATE[pred.thisrun$Treatment=="B"]+xofs,pred.thisrun$uci[pred.thisrun$Treatment=="B"], code=3, angle=90, length=arrowlgth, col="blue")
+  
+  p.trt<-round(anova.thisrun$p[1],4)
+  p.yr<-round(anova.thisrun$p[2],4)
+  p.int<-round(anova.thisrun$p[3],4)
+  
+  if(p.trt>0.01) p.trt<-round(p.trt,2) else p.trt<-"<0.01"
+  if(p.yr>0.01) p.yr<-round(p.yr,2) else p.yr<-"<0.01"
+  if(p.int>0.01) p.int<-round(p.int,2) else p.int<-"<0.01"
+  
+  title(main=paste("P values: trt=",p.trt,"\nyr=",p.yr,"; int=",p.int), font.main=1, adj=0, cex=0.9, line=0.5)
+  
+}
+
+plot(1:10, 1:10, type="n", bty="o", xaxt="n", yaxt="n", xlab="", ylab="")
+legend(1,9,legend=c("Control","Spot spray","Boom spray"), col=c("black","red","blue"), pch=15, bty="n", pt.cex = 3)
 
 
 
