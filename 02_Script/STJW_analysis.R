@@ -404,6 +404,7 @@ preds.out<-list()
 # run models and generate model estimates:
 # update the data set (rich_sc or shan_sc) and re-run for each
 
+data.set<-rich_sc
 data.set<-shan_sc
 
 for (i in 1:nrow(gdf)){
@@ -515,8 +516,100 @@ legend(1,9,legend=c("Control","Spot spray","Boom spray"), col=c("black","red","b
 
 save.image("03_Workspaces/STJW_analysis.RData")
 
-
 # close analysis ----
+
+#  COMPONENT 4 seed viability:    	# ----
+
+sv<-read.table("00_Data/Formatted_data/seed_viability.txt", header=T)
+
+rahead(rich,4,7); dim(rich)
+
+# extract site data from richness data set
+sdat<-rich[,2:4]
+sdat$plot<-paste(sdat$PLOT_ID, sdat$Treatment, sep="")
+sdat<-sdat[-which(duplicated(sdat$plot)),]
+head(sdat); dim(sdat)
+
+# combine with seed viability data:
+sv$plot %in% sdat$plot
+sv_site<-sdat[-which(!sdat$plot %in% sv$plot),]
+sv_site$plot
+head(sv_site)
+head(sv); dim(sv)
+
+sv<-merge(sv, sv_site, by="plot", all.x=T, all.y=F)
+head(sv,3)
+
+# fit models:
+sv_mod1<-lmer(weight~Treatment+(1|reserve/PLOT_ID), data=sv)
+summary(sv_mod1)
+anova(sv_mod1)
+
+sv_mod2<-lmer(germ7~Treatment+(1|reserve/PLOT_ID), data=sv)
+summary(sv_mod2)
+anova(sv_mod2)
+
+sv_mod3<-lmer(germ21~Treatment+(1|reserve/PLOT_ID), data=sv)
+summary(sv_mod3)
+anova(sv_mod3)
+
+sv_nd<-data.frame(Treatment=factor(levels(sv$Treatment),levels=c("C","A","B")))
+sv_nd
+
+# model estimates:
+sv_pr1<-predictSE(sv_mod1, newdata = sv_nd, se.fit = T)
+sv_pr1<-data.frame(sv_nd,fit=sv_pr1$fit,se=sv_pr1$se.fit)
+sv_pr1$lci<-sv_pr1$fit-(sv_pr1$se*1.96)
+sv_pr1$uci<-sv_pr1$fit+(sv_pr1$se*1.96)
+
+sv_pr2<-predictSE(sv_mod2, newdata = sv_nd, se.fit = T)
+sv_pr2<-data.frame(sv_nd,fit=sv_pr2$fit,se=sv_pr2$se.fit)
+sv_pr2$lci<-sv_pr2$fit-(sv_pr2$se*1.96)
+sv_pr2$uci<-sv_pr2$fit+(sv_pr2$se*1.96)
+
+sv_pr3<-predictSE(sv_mod3, newdata = sv_nd, se.fit = T)
+sv_pr3<-data.frame(sv_nd,fit=sv_pr3$fit,se=sv_pr3$se.fit)
+sv_pr3$lci<-sv_pr3$fit-(sv_pr3$se*1.96)
+sv_pr3$uci<-sv_pr3$fit+(sv_pr3$se*1.96)
+
+# PLOT estimates:
+
+dev.new(width=8,height=8,noRStudioGD = T,dpi=80, pointsize=16)
+par(mfrow=c(2,2), mar=c(3,5,2,1), mgp=c(3.2,1,0))
+
+plot(1:3, sv_pr1$fit, ylim=c(min(sv_pr1$lci),max(sv_pr1$uci)), las=1, type="p", xlim=c(0.75, 3.25), pch=20, xlab="", xaxt="n", ylab="Sample weight (g)")
+arrows(1:3, sv_pr1$lci, 1:3, sv_pr1$uci, code=3, length=0.05, angle=90)
+axis(side=1, at=1:3, labels=levels(sv_pr1$Treatment), xlab="")
+title(xlab="Treatment", mgp=c(2,1,0))
+text(0.75, max(sv_pr1$uci),paste("P = ",round(anova(sv_mod1)$"Pr(>F)",3),sep=""), adj=0)
+mtext("A", side=3, line=0.5, cex=1, adj=0)
+
+plot(1:3, sv_pr2$fit, ylim=c(min(sv_pr2$lci),max(sv_pr2$uci)), las=1, type="p", xlim=c(0.75, 3.25), pch=20, xlab="", xaxt="n", ylab="Germination at 7d / g")
+arrows(1:3, sv_pr2$lci, 1:3, sv_pr2$uci, code=3, length=0.05, angle=90)
+axis(side=1, at=1:3, labels=levels(sv_pr2$Treatment), xlab="")
+title(xlab="Treatment", mgp=c(2,1,0))
+text(0.75, max(sv_pr2$uci),paste("P = ",round(anova(sv_mod2)$"Pr(>F)",3),sep=""), adj=0)
+mtext("B", side=3, line=0.5, cex=1, adj=0)
+
+plot(1:3, sv_pr3$fit, ylim=c(min(sv_pr3$lci),max(sv_pr3$uci)), las=1, type="p", xlim=c(0.75, 3.25), pch=20, xlab="", xaxt="n", ylab="Germination at 21d / g")
+arrows(1:3, sv_pr3$lci, 1:3, sv_pr3$uci, code=3, length=0.05, angle=90)
+axis(side=1, at=1:3, labels=levels(sv_pr3$Treatment), xlab="")
+title(xlab="Treatment", mgp=c(2,1,0))
+text(0.75, max(sv_pr3$uci),paste("P = ",round(anova(sv_mod3)$"Pr(>F)",3),sep=""), adj=0)
+mtext("C", side=3, line=0.5, cex=1, adj=0)
+
+# PLOT raw data:
+
+dev.new(width=8,height=8,noRStudioGD = T,dpi=80, pointsize=12)
+par(mfrow=c(2,2), mar=c(2,4,4,1), mgp=c(2.5,1,0))
+plot(sv$Treatment, sv$weight, ylab="Weight")
+plot(sv$Treatment, sv$germ7, ylab="Germ. 7")
+plot(sv$Treatment, sv$germ21, ylab="Germ. 21")
+
+# close component 4 ----
+
+
+
 
 
 
