@@ -1,31 +1,31 @@
-location	trt_orig	rep	treatment	all	yellow	percent_sprayed
-topleft	FineBoom5A	5	A	325268	273327	0.159686781
-topleft	FineBoom4A	4	A	302032	254311	0.157999815
-topleft	FineBoom3A	3	A	348692	278840	0.200325789
-topleft	FineBoom2A	2	A	324470	282636	0.128930255
-topleft	FineBoom1A	1	A	318986	241534	0.242806894
-bottomleft	Spot5A	5	A	NA	NA	NA
-bottomleft	Spot4A	4	A	392946	8643	0.978004611
-bottomleft	Spot3A	3	A	398426	2679	0.993276041
-bottomleft	Spot2A	2	A	396621	6068	0.98470076
-bottomleft	Spot1A	1	A	402866	70534	0.824919452
-bottomright	coarseboom5A	5	A	415928	333691	0.197719317
-bottomright	coarseboom4A	4	A	416675	341194	0.181150777
-bottomright	coarseboom3A	3	A	413141	338875	0.179759453
-bottomright	coarseboom2A	2	A	419993	324679	0.226941878
-bottomright	coarseboom1A	1	A	423744	321349	0.241643539
-topleft	FineBoom5B	5	B	341181	326707	0.04242323
-topleft	FineBoom4B	4	B	368330	289185	0.214875248
-topleft	FineBoom3B	3	B	365756	294199	0.195641357
-topleft	FineBoom2B	2	B	362542	325409	0.102423995
-topleft	FineBoom2B	2	B	375173	361397	0.03671906
-bottomleft	Spot5B	5	B	363740	107343	0.704890856
-bottomleft	Spot4B	4	B	374680	16301	0.956493541
-bottomleft	Spot3B	3	B	405444	1069	0.997363384
-bottomleft	Spot2B	2	B	448208	81354	0.818490522
-bottomleft	Spot1B	1	B	402396	382	0.999050686
-bottomright	coarseboom5B	5	B	439616	369644	0.159166181
-bottomright	coarseboom4B	4	B	458072	427963	0.065729842
-bottomright	coarseboom3B	3	B	470438	402797	0.143783028
-bottomright	coarseboom2B	2	B	484027	436267	0.098672182
-bottomright	coarseboom1B	1	B	485797	408312	0.159500779
+location	trt_orig	method	rep	treatment	all	yellow	percent_sprayed
+topleft	FineBoom5A	Fine	5	A	325268	273327	0.159686781
+topleft	FineBoom4A	Fine	4	A	302032	254311	0.157999815
+topleft	FineBoom3A	Fine	3	A	348692	278840	0.200325789
+topleft	FineBoom2A	Fine	2	A	324470	282636	0.128930255
+topleft	FineBoom1A	Fine	1	A	318986	241534	0.242806894
+bottomleft	Spot5A	Spot	5	A	NA	NA	NA
+bottomleft	Spot4A	Spot	4	A	392946	8643	0.978004611
+bottomleft	Spot3A	Spot	3	A	398426	2679	0.993276041
+bottomleft	Spot2A	Spot	2	A	396621	6068	0.98470076
+bottomleft	Spot1A	Spot	1	A	402866	70534	0.824919452
+bottomright	coarseboom5A	Coarse	5	A	415928	333691	0.197719317
+bottomright	coarseboom4A	Coarse	4	A	416675	341194	0.181150777
+bottomright	coarseboom3A	Coarse	3	A	413141	338875	0.179759453
+bottomright	coarseboom2A	Coarse	2	A	419993	324679	0.226941878
+bottomright	coarseboom1A	Coarse	1	A	423744	321349	0.241643539
+topleft	FineBoom5B	Fine	5	B	341181	326707	0.04242323
+topleft	FineBoom4B	Fine	4	B	368330	289185	0.214875248
+topleft	FineBoom3B	Fine	3	B	365756	294199	0.195641357
+topleft	FineBoom2B	Fine	2	B	362542	325409	0.102423995
+topleft	FineBoom2B	Fine	2	B	375173	361397	0.03671906
+bottomleft	Spot5B	Spot	5	B	363740	107343	0.704890856
+bottomleft	Spot4B	Spot	4	B	374680	16301	0.956493541
+bottomleft	Spot3B	Spot	3	B	405444	1069	0.997363384
+bottomleft	Spot2B	Spot	2	B	448208	81354	0.818490522
+bottomleft	Spot1B	Spot	1	B	402396	382	0.999050686
+bottomright	coarseboom5B	Coarse	5	B	439616	369644	0.159166181
+bottomright	coarseboom4B	Coarse	4	B	458072	427963	0.065729842
+bottomright	coarseboom3B	Coarse	3	B	470438	402797	0.143783028
+bottomright	coarseboom2B	Coarse	2	B	484027	436267	0.098672182
+bottomright	coarseboom1B	Coarse	1	B	485797	408312	0.159500779
