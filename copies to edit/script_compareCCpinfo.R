@@ -1,6 +1,12 @@
 
+
+
+# load functions:
+invisible(lapply(paste("01_Functions/",dir("01_Functions"),sep=""),function(x) source(x)))
+
 #Nov 14th - updated count and cover sheets
 Data_dir<-"Data/Final_datasets/copies to edit"
+Data_dir<-"copies to edit/count_data"
 Data_dir
 dir(Data_dir)
 
@@ -55,7 +61,7 @@ which(duplicated(colnames(ct18)))
 nchar(colnames(ct18))
 
 #compare pinfo with count & cover sheets - 2018 count
-pinfo<-read.table(paste(Data_dir,"plant_info.txt",sep="/"),header=T)
+pinfo<-read.table(paste("copies to edit","plant_info","plant_info.txt",sep="/"),header=T)
 head(pinfo,5)
 which(duplicated(pinfo$Sp))
 str(pinfo)
@@ -247,4 +253,47 @@ replace(ct17d$Air_sp.,list = c("W","X","Y"),values=c(35, 75, 100))
 replace(ct17d$Air_sp., lapply())
 repdf<-data.frame(oldval=c("W","X","Y"), newval=c(35, 75, 100))
 repdf        
-replace(ct17d$Air_sp., which(repdf$oldval==
+replace(ct17d$Air_sp., which(repdf$oldval==))
+
+
+rahead(ct18,3,15)
+ct18d<-as.matrix(ct18[,5:ncol(ct18)])
+ct18d[which(ct18d=="W")]<-35
+ct18d[which(ct18d=="X")]<-75
+ct18d[which(ct18d=="Z")]<-100
+ct18d<-data.frame(ct18d)
+rahead(ct18d,3,15)
+ct18d$Air_sp.
+
+
+apply(ct18d,2,function(x)length(which(x%in%LETTERS [23:25]))) #which sp. has letters like W and need to be replaced
+
+repdf<-data.frame(oldval=c("W","X","Y"), newval=c(35, 75, 100))
+repdf
+
+ct18d$Air_sp.
+
+replace(x=ct18d$Air_sp. , list=ct18d$Air_sp. %in% repdf$oldval[1], values = repdf$newval[1])
+
+lapply # 
+
+
+# ignore:
+tapply(ct18d$Air_sp.,repdf$oldval, repdf$newval) # lead astray
+ifelse()
+
+apply(x= repdf,1, function(pp) replace(x=ct18d$Air_sp. , list=ct18d$Air_sp. %in% pp[,1], values = pp[,2]))
+
+
+
+
+lapply(ct18d$Air_sp., function (dt) replace(x=ct18d$Air_sp. , list=ct18d$Air_sp. %in% repdf$oldval[dt], values = repdf$newval[dt]))
+
+                               
+                               
+          
+                               
+                               
+                               
+                                                    
+                               
