@@ -1,0 +1,216 @@
+"In original count and cover, but not in plant_info"		
+Unidentified exotic sp.		deleted because they are blank 
+Unidentified grass sp.		deleted because they are blank 
+Unidentified grass sp. 2		deleted because they are blank 
+Unidentified sp. 		"deleted because they are blank, 2018 had only 1 count"
+Unidentified sp. 2		deleted because they are blank 
+Velleia paradoxa		deleted because they are blank 
+		
+	"Epilobium sp. 2 in C/Csheet, but Epilobium spE and spN in plant info - which to use "	
+	"Epi_spe - in plant info but not in count sheet, so in plant info, I've combined the two and just called it Epi_sp2"	
+	Epi_spn	
+		
+		
+		
+		
+		
+		
+2017 -213 sp have no counts (195sp have no counts across all years so deleted. 313-194=118 left)		
+2018 - 231 sp have no count (195sp have no counts across all years so deleted. 313-194=118 left)		
+"2019 - 241 sp have no count (193sp have no counts across all years so deleted. 313-193=120 left,Ryt_ALL is extra)"		
+		
+"194 (+6 highlighted above in blue) Species absent in count 2017,18,19"		
+Acacia dealbata		
+Acaena novae-zelandiae		
+Acetosella vulgaris 		
+Ajuga australis		
+Alternanthera denticulata		
+Alternanthera nana		
+Alternanthera spp		
+Amphibromus nervosus		
+Anagallis arvensis		
+Aphanes arvensis		
+Aphanes sp		
+Arctotheca calendula		
+Arthropodium milleflorum		
+Arthropodium minus		
+Astroloma humifusum 		
+Austrostipa spp		
+Bacopa sp.		
+Bartsia latifolia		
+Bossiaea buxifolia		
+Bossiaea foliosa		
+Bossiaea prostrata		
+Briza maxima 		
+Bromus carthaticus		
+Bromus sp. 		
+Bulbine bulbosa 		
+Calandrinia calyptrata		
+Calocephalus citreus		
+Calotis lappulacea 		
+Capsella bursa-pastoris		
+Carex appressa  		
+Centaurium sp.		
+Cerastium glomeratum		
+Cerastium sp.		
+Cheilanthes austrotenuifolia		
+Cheilanthes distans		
+Chenopodium sp		
+Chrysocephalum semipapposum		
+Cicendia quadrangularis		
+Conyza sp.		
+Cotula australis		
+Craspedia variabilis 		
+Cryptandra amara		
+Cryptandra speciosa		
+Cymbopogon refractus		
+Cynodon dactylon 		
+Cynosurus echinatus		
+Cyperus eragrostis		
+Cyperus spp		
+Dactylis glomerata 		
+Daucus glochidiatus		
+Dianella longifolia		
+Dianella revoluta 		
+Dichelachne micrantha		
+Dichondra repens 		
+Dillwynia sericea		
+Dodonaea viscosa		
+Drosera auriculata		
+Drosera peltata		
+Dysphania pumilio		
+Echinopogon caespitosum		
+Echium plantagineum 		
+Echium vulgare		
+Einadia nutans		
+Eleocharis acuta		
+Eleocharis sp.		
+Eleusine tristachya		
+Epilobium billardiereanum		
+Epilobium sp. 2		
+Epilobium spp		
+Eragrostis curvula		
+Eragrostis sp (Tall ALG)		
+Erodium brachycarpum		
+Erodium cicutarium		
+Erodium crinitum 		
+Erodium sp.		
+Euchiton involucratus		
+Euchiton sp. (native)		
+Festuca arundinacea		
+Festuca sp.		
+Galium gaudichaudii 		
+Gamochaeta americana		
+Geranium retrorsum		
+Geranium solanderi 		
+Gonocarpus tetragynus 		
+Goodenia hederacea 		
+Hardenbergia violacea		
+Helichrysum luteoalbum		
+Hibbertia obtusifolia 		
+Hibbertia riparia 		
+Hirschfeldia incana		
+Holcus lanatus 		
+Hovea heterophylla		
+Hydrocotyle laxiflora 		
+Hypoxis hygrometrica		
+Isoetopsis graminifolia		
+Isolepis gaudichaudiana		
+Isotoma fluviatilis 		
+Juncus australis		
+Juncus bufonius		
+Juncus capitatus 		
+Juncus filicaulis		
+Juncus fockei		
+Juncus usitatus		
+Lachnagrostis filiformis		
+Lactuca saligna		
+Lactuca serriola		
+Lactuca serriola		
+Lepidium africanum		
+Leptospermum sp.		
+Ligustrum sp.		
+Linaria sp.		
+Linum marginale		
+Lissanthe strigosa		
+Lolium perenne  		
+Lolium rigidum 		
+Lomandra filiformis coriacea		
+Lomandra longifolia		
+Luzula densiflora 		
+Lycium ferocissimum		
+Malva sp. 		
+Medicago sp.		
+Melichrus urceolatus 		
+Mentha diemenica		
+Microseris lanceolata		
+Microtis unifolia 		
+Modiola caroliniana		
+Moenchia erecta		
+Montia fontana		
+Nassella neesiana		
+Oenothera mollissima		
+Oenothera stricta		
+Onopordum acanthium 		
+Opercularia hispida		
+Ophioglossum lusitanicum		
+Orobanche minor		
+Parentucellia latifolia		
+Paronychia brasiliana		
+Paspalum dilatatum		
+Pentapogon sp.		
+Persicaria  prostrata		
+Persicaria sp.		
+Phalaris aquatica 		
+Plantago gaudichaudii		
+Poa (exotic)		
+Poa labillardieri		
+Poa pratensis		
+Polygonum aviculare		
+Poranthera microphylla		
+Prunus sp.		
+Pterostylis sp.		
+Pyracantha sp.		
+Ranunculus pumilio		
+Ranunculus trilobus		
+Romulea sp.		
+Rosa rubiginosa		
+Rubus fruticosus		
+Rubus parvifolius		
+Rumex crispus		
+Rumex dumosus		
+Rumex sp.		
+Rytidosperma pallidum		
+Rytidosperma pilosa		
+Rytidosperma sp 		
+Salvia verbenaca 		
+Scleranthus biflorus 		
+Sebaea ovata		
+Senecio quadridentatus		
+Setaria parviflora		
+Sherardia arvensis		
+Silene gallica		
+Solanum chenopodioides		
+Solanum cinereum		
+Solanum nigrum		
+Sonchus asper		
+Sorghum leiocladum		
+Stackhousia monogyna		
+Stellaria pungens		
+Stuartina hamata		
+Swainsona sericea		
+Taraxacum sect. ruderallia		
+Taraxacum spp		
+Trifolium angustifolium		
+Trifolium stellata		
+Urtica incisa		
+Verbascum thapsus 		
+Verbascum virgatum 		
+Verbena bonariensis		
+Vulpia bromoides		
+Vulpia muralis		
+Wahlenbergia gracilenta		
+Wahlenbergia gracilis		
+Wahlenbergia multicaulis		
+Xanthium spinosum		
+Xerochrysum viscosum 		
