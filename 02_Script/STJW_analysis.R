@@ -379,6 +379,14 @@ legend(1,9,legend=c("Jerrabomberra","Mulangari"), col=c("darkturquoise","darkoli
 
 #  ANALYSIS:    	# ----
 
+# Notes on model selection to include in paper:
+
+# We fit an interaction between treatment and date in all models to describe the before-after, control-impact nature of our design. 
+
+# Our full model also included interactions between treatment and reserve and year and reserve, but we removed these if they were not significant, keeping only the treatment x date interaction and all main effects. 
+
+# Preliminary analysis showed no evidence of significant three way interactions between treatment, reserve and year. Thus, to avoid overly complex models we only fit first order interacions.
+
 head(gdf); dim(gdf)
 
 rahead(rich,4,7); dim(rich)
@@ -432,6 +440,25 @@ for (i in 1:nrow(gdf)){
   preds.out[[i]]<-p1
 
 } # close models
+
+## THREE WAY INTERACTION:
+head(gdf); dim(gdf)
+rahead(rich_sc,4,7); dim(rich_sc)
+rahead(shan_sc,4,7); dim(shan_sc)
+
+# Native leg. forb, exotic leg forb
+
+resp.thisrun<-gdf$group[26]
+form.threeway<-paste(resp.thisrun,"~Treatment+DATE+reserve+Treatment:DATE+Treatment:reserve+reserve:DATE+(1|PLOT_ID)", sep="")
+
+nfmod2<-lmer(form.threeway,data=rich_sc)
+summary(nfmod2)
+anova(nfmod2)
+
+form.simple<-paste(resp.thisrun,"~Treatment*DATE+reserve+(1|PLOT_ID)", sep="")
+mod.simp<-lmer(form.simple,data=rich_sc)
+summary(mod.simp)
+anova(mod.simp); AIC(mod.simp)
 
 ## PLOT:
 
