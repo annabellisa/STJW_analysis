@@ -266,7 +266,7 @@ calc.div<-function(species.data, site,data) {
   shan.data<-list()
   
   
-
+  
 
 
 
