@@ -547,6 +547,14 @@ legend(1,9,legend=c("Jerrabomberra","Mulangari"), col=c("darkturquoise","darkoli
 
 #  ANALYSIS:    	# ----
 
+# Notes on model selection to include in paper:
+
+# We fit an interaction between treatment and date in all models to describe the before-after, control-impact nature of our design. 
+
+# Our full model also included interactions between treatment and reserve and year and reserve, but we removed these if they were not significant, keeping only the treatment x date interaction and all main effects. 
+
+# Preliminary analysis showed no evidence of significant three way interactions between treatment, reserve and year. Thus, to avoid overly complex models we only fit first order interacions.
+
 head(gdf); dim(gdf)
 
 rahead(rich,4,7); dim(rich)
@@ -601,6 +609,25 @@ for (i in 1:nrow(gdf)){
   preds.out[[i]]<-p1
 
 } # close models
+
+## THREE WAY INTERACTION:
+head(gdf); dim(gdf)
+rahead(rich_sc,4,7); dim(rich_sc)
+rahead(shan_sc,4,7); dim(shan_sc)
+
+# Native leg. forb, exotic leg forb
+
+resp.thisrun<-gdf$group[26]
+form.threeway<-paste(resp.thisrun,"~Treatment+DATE+reserve+Treatment:DATE+Treatment:reserve+reserve:DATE+(1|PLOT_ID)", sep="")
+
+nfmod2<-lmer(form.threeway,data=rich_sc)
+summary(nfmod2)
+anova(nfmod2)
+
+form.simple<-paste(resp.thisrun,"~Treatment*DATE+reserve+(1|PLOT_ID)", sep="")
+mod.simp<-lmer(form.simple,data=rich_sc)
+summary(mod.simp)
+anova(mod.simp); AIC(mod.simp)
 
 ## PLOT:
 
@@ -779,6 +806,62 @@ plot(sv$Treatment, sv$germ21, ylab="Germ. 21")
 
 # close component 4 ----
 
+#  COMPONENT 2 spray drift:    	# ----
+
+sdrift<-read.table("00_Data/Formatted_data/spray_drift.txt", header=T)
+head(sdrift)
+
+# fit model:
+sd_mod1<-lm(percent_sprayed~treatment*method, data=sdrift)
+summary(sd_mod1)
+anova(sd_mod1)
+
+# model estimates:
+
+sd_nd<-data.frame(treatment=rep(unique(sdrift$treatment),rep(3,2)),method=unique(sdrift$method)[order(unique(sdrift$method))])
+
+sd_pr<-predict(sd_mod1, newdata = sd_nd, se.fit = T)
+sd_nd<-data.frame(sd_nd, fit=sd_pr$fit, se=sd_pr$se.fit)
+sd_nd$lci<-sd_nd$fit-(sd_nd$se*1.96)
+sd_nd$uci<-sd_nd$fit+(sd_nd$se*1.96)
+
+# PLOT estimates:
+
+dev.new(width=5,height=4,noRStudioGD = T,dpi=80, pointsize=14)
+par(mfrow=c(1,1), mar=c(3.5,4,2.5,4.5), mgp=c(2.8,1,0))
+
+plot(1:6, sd_nd$fit, ylim=c(min(sd_nd$lci),max(sd_nd$uci)), las=1, type="p", xlim=c(0.75, 6.25), pch=20, xlab="", xaxt="n", ylab="Percent sprayed",col=c("darkorange","darkturquoise","darkolivegreen2"))
+
+arrows(1:6, sd_nd$lci, 1:6, sd_nd$uci, code=3, length=0.05, angle=90)
+points(1:6, sd_nd$fit, pch=20, cex=2, col=c("darkorange","darkturquoise","darkolivegreen2"))
+axis(side=1, at=c(2, 5), labels=c("A","B"))
+title(xlab="Treatment", mgp=c(2.3,1,0))
+arrows(c(3.5),0,c(3.5),1.5, length=0, col="grey70")
+
+p.trt<-round(anova(sd_mod1)[1,5],3)
+p.mth<-round(anova(sd_mod1)[2,5],3)
+p.int<-round(anova(sd_mod1)[3,5],3)
+p.mth<-"< 0.001"
+
+title(main=paste("P values: Treatment =",p.trt,"\nMethod =",p.mth,"; Int. =",p.int), font.main=1, adj=0, cex.main=1, line=0.5)
+
+par(xpd=NA)
+legend(6.5,1,legend=c("Coarse","Fine","Spot"), col=c("darkorange","darkturquoise","darkolivegreen2"), pch=20, bty="n", pt.cex = 2)
+par(xpd=T)
+
+# PLOT raw data:
+
+dev.new(width=5,height=4,noRStudioGD = T,dpi=80, pointsize=14)
+par(mfrow=c(1,1), mar=c(4,4,1,6), mgp=c(2.8,1,0))
+boxplot(sdrift$percent_sprayed~sdrift$method*as.factor(sdrift$treatment), col=c("darkorange","darkturquoise","darkolivegreen2"), ,las=2, xlab="", xaxt="n", ylab="Percent sprayed",at=c(0.7,1.7,2.7,4.3,5.3,6.3))
+axis(side=1, at=c(2, 5), labels=c("A","B"))
+title(xlab="Treatment", mgp=c(2.5,1,0))
+arrows(c(3.5),0,c(3.5),1.5, length=0, col="grey70")
+par(xpd=NA)
+legend(7.5,1,legend=c("Coarse","Fine","Spot"), col=c("darkorange","darkturquoise","darkolivegreen2"), pch=15, bty="n", pt.cex = 3)
+par(xpd=T)
+
+# close component 2 ----
 
 
 
