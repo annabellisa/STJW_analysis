@@ -29,7 +29,17 @@ rahead(ct17,3,7)
 rahead(ct18,3,7)
 rahead(ct19,3,7)
 
+#COVER DATA:
+cv17<-read.table(paste(data_dir,"cover_2017.txt",sep=""),header=T)
+cv18<-read.table(paste(data_dir,"cover_2018.txt",sep=""),header=T)
+cv19<-read.table(paste(data_dir,"cover_2019.txt",sep=""),header=T)
+rahead(cv17,3,7)
+rahead(cv18,3,7)
+rahead(cv19,3,7)
+
+
 # PLANT INFO:
+
 pinfo<-read.table(paste(data_dir,"plant_info.txt",sep="/"),header=T)
 pinfo$Duration<-as.factor(pinfo$Duration)
 pinfo$func_grp<-as.factor(pinfo$func_grp)
@@ -38,15 +48,22 @@ pinfo$Status<-as.factor(pinfo$Status)
 head(pinfo,3); dim(pinfo)
 length(which(duplicated(pinfo$Sp))) # should be zero
 
-# CHECK:
+# CHECK COUNT:
 
 cnames17<-colnames(ct17)[which(colnames(ct17)=="Aca_ovi"):ncol(ct17)]
 cnames18<-colnames(ct18)[which(colnames(ct18)=="Aca_ovi"):ncol(ct18)]
 cnames19<-colnames(ct19)[which(colnames(ct19)=="Aca_ovi"):ncol(ct19)]
 
+#CHECK COVER:
+
+cvnames17<-colnames(cv17)[which(colnames(cv17)=="Aca_ovi"):ncol(cv17)]
+cvnames18<-colnames(cv18)[which(colnames(cv17)=="Aca_ovi"):ncol(cv18)]
+cvnames19<-colnames(cv19)[which(colnames(cv19)=="Aca_ovi"):ncol(cv19)]
+
 # these should all be TRUE:
 
-# Are all names matching across years?
+# Are all names matching across yearS? 
+#COUNT:
 length(cnames17)==length(cnames18)
 length(cnames17)==length(cnames19)
 length(cnames18)==length(cnames19)
@@ -55,26 +72,58 @@ table(cnames17 %in% cnames18)
 table(cnames17 %in% cnames19)
 table(cnames18 %in% cnames19)
 
-# Are all names in the data present in plant_info?
+#COVER:
+length(cvnames17)==length(cvnames18)
+length(cvnames17)==length(cvnames19)
+length(cvnames18)==length(cvnames19)
+
+
+table(cvnames17 %in% cvnames18)
+table(cvnames17 %in% cvnames19)
+table(cvnames18 %in% cvnames19)
+
+#Are all names in the data present in plant_info?
+#COUNT:
 table(cnames17 %in% pinfo$Sp)
 table(cnames18 %in% pinfo$Sp)
 table(cnames19 %in% pinfo$Sp)
+
+
+#COVER:
+table(cvnames17 %in% pinfo$Sp)
+table(cvnames18 %in% pinfo$Sp)
+table(cvnames19 %in% pinfo$Sp)
+
 
 # close import data ----
 
 #  FORMAT data:    	# ----
 
-# replace date with year:
+#replace date with year:
+#COUNT:
 ct17$DATE<-2017
 ct18$DATE<-2018
 ct19$DATE<-2019
 
+#COVER:
+cv17$DATE<-2017
+cv18$DATE<-2018
+cv19$DATE<-2019
+
 # QUADRAT_Direction is the treatment (A, B and C):
+#COUNT:
 colnames(ct17)[which(colnames(ct17)=="QUADRAT_Direction")]<-"Treatment"
 colnames(ct18)[which(colnames(ct18)=="QUADRAT_Direction")]<-"Treatment"
 colnames(ct19)[which(colnames(ct19)=="QUADRAT_Direction")]<-"Treatment"
 
+#COVER:
+colnames(cv17)[which(colnames(cv17)=="QUADRAT_Direction")]<-"Treatment"
+colnames(cv18)[which(colnames(cv18)=="QUADRAT_Direction")]<-"Treatment"
+colnames(cv19)[which(colnames(cv19)=="QUADRAT_Direction")]<-"Treatment"
+
+
 # create reserve variable from PLOT_ID:
+#COUNT:
 ct17$reserve<-ct17$PLOT_ID
 ct17$reserve[grep("J", ct17$reserve)]<-"J"
 ct17$reserve[grep("M", ct17$reserve)]<-"M"
@@ -87,17 +136,44 @@ ct19$reserve<-ct19$PLOT_ID
 ct19$reserve[grep("J", ct19$reserve)]<-"J"
 ct19$reserve[grep("M", ct19$reserve)]<-"M"
 
+#COVER:
+cv17$reserve<-cv17$PLOT_ID
+cv17$reserve[grep("J", cv17$reserve)]<-"J"
+cv17$reserve[grep("M", cv17$reserve)]<-"M"
+
+cv18$reserve<-cv18$PLOT_ID
+cv18$reserve[grep("J", cv18$reserve)]<-"J"
+cv18$reserve[grep("M", cv18$reserve)]<-"M"
+
+cv19$reserve<-cv19$PLOT_ID
+cv19$reserve[grep("J", cv19$reserve)]<-"J"
+cv19$reserve[grep("M", cv19$reserve)]<-"M"
+
 # re-arrange columns:
+#COUNT:
 ct17<-ct17[,c(which(colnames(ct17) %in% c("DATE", "reserve")),which(!colnames(ct17) %in% c("DATE", "reserve")))]
 ct18<-ct18[,c(which(colnames(ct18) %in% c("DATE", "reserve")),which(!colnames(ct18) %in% c("DATE", "reserve")))]
 ct19<-ct19[,c(which(colnames(ct19) %in% c("DATE", "reserve")),which(!colnames(ct19) %in% c("DATE", "reserve")))]
 
+#COVER:
+cv17<-cv17[,c(which(colnames(cv17) %in% c("DATE", "reserve")),which(!colnames(cv17) %in% c("DATE", "reserve")))]
+cv18<-cv18[,c(which(colnames(cv18) %in% c("DATE", "reserve")),which(!colnames(cv18) %in% c("DATE", "reserve")))]
+cv19<-cv19[,c(which(colnames(cv19) %in% c("DATE", "reserve")),which(!colnames(cv19) %in% c("DATE", "reserve")))]
+
+
 # remove unwanted columns:
+#COUNT:
 ct17$QUAD_ID<-NULL
 ct18$QUAD_ID<-NULL
 ct19$QUAD_ID<-NULL
 
+#COVER:
+cv17$QUAD_ID<-NULL
+cv18$QUAD_ID<-NULL
+cv19$QUAD_ID<-NULL
+
 # factorise variables which should be factors and make control the baseline level:
+#COUNT:
 ct17$reserve<-as.factor(ct17$reserve)
 ct17$PLOT_ID<-as.factor(ct17$PLOT_ID)
 ct17$Treatment<-factor(ct17$Treatment,levels=c("C","A","B"))
@@ -110,19 +186,35 @@ ct19$reserve<-as.factor(ct19$reserve)
 ct19$PLOT_ID<-as.factor(ct19$PLOT_ID)
 ct19$Treatment<-factor(ct19$Treatment,levels=c("C","A","B"))
 
-# replace count categories with numbers:
+#COVER:
+cv17$reserve<-as.factor(cv17$reserve)
+cv17$PLOT_ID<-as.factor(cv17$PLOT_ID)
+cv17$Treatment<-factor(cv17$Treatment,levels=c("C","A","B"))
+
+
+cv18$reserve<-as.factor(cv18$reserve)
+cv18$PLOT_ID<-as.factor(cv18$PLOT_ID)
+cv18$Treatment<-factor(cv18$Treatment,levels=c("C","A","B"))
+
+cv19$reserve<-as.factor(cv19$reserve)
+cv19$PLOT_ID<-as.factor(cv19$PLOT_ID)
+cv19$Treatment<-factor(cv19$Treatment,levels=c("C","A","B"))
+
+
+
+# replace COUNT categories with numbers:
 
 # 16-50 	W	35
 # 51-100	X	75
 # >100	  Y	100
 
-# Don't worry about NAs introduced by coercion, this'll be fixed when we sort out the NAs for Tri_ela and Ant_sca
 
 ct17d<-as.matrix(ct17[,which(colnames(ct17)=="Aca_ovi"):ncol(ct17)])
 ct17d[which(ct17d=="W")]<-35
 ct17d[which(ct17d=="X")]<-75
 ct17d[which(ct17d=="Y")]<-100
-ct17d<-data.frame(apply(ct17d,2,as.numeric))
+ct17d<-data.frame(apply(ct17d,2,as.numeric)) #Warning messages: 1: In apply(ct17d, 2, as.numeric) : NAs introduced by coercion; 2: In apply(ct17d, 2, as.numeric) : NAs introduced by coercion
+
 ct17<-data.frame(cbind(ct17[,1:which(colnames(ct17)=="Treatment")],ct17d))
 
 ct18d<-as.matrix(ct18[,which(colnames(ct18)=="Aca_ovi"):ncol(ct18)])
@@ -139,7 +231,67 @@ ct19d[which(ct19d=="Y")]<-100
 ct19d<-data.frame(apply(ct19d,2,as.numeric))
 ct19<-data.frame(cbind(ct19[,1:which(colnames(ct19)=="Treatment")],ct19d))
 
+#replace COVER ategories with numbers:
+
+# >5%	A	5
+# 5-10%	B	10
+# 11-20%	C 	20
+# 21-30%	D	30
+# 31-40%	E	40
+# 41-50%	F	50
+# 51-60%	G	60
+# 61-70%	H	70
+# 71-80%	I	80
+# 81-90%	J	90
+# 91-100%	K	100
+
+cv17d<-as.matrix(cv17[,which(colnames(cv17)=="Aca_ovi"):ncol(cv17)])
+cv17d[which(cv17d=="A")]<-5
+cv17d[which(cv17d=="B")]<-10
+cv17d[which(cv17d=="C")]<-20
+cv17d[which(cv17d=="D")]<-30
+cv17d[which(cv17d=="E")]<-40
+cv17d[which(cv17d=="F")]<-50
+cv17d[which(cv17d=="G")]<-60
+cv17d[which(cv17d=="H")]<-70
+cv17d[which(cv17d=="I")]<-80
+cv17d[which(cv17d=="J")]<-90
+cv17d[which(cv17d=="K")]<-100
+cv17d<-data.frame(apply(cv17d,2,as.numeric))
+cv17d<-data.frame(cbind(cv17[,1:which(colnames(cv17)=="Treatment")],cv17d))
+
+cv18d<-as.matrix(cv18[,which(colnames(cv18)=="Aca_ovi"):ncol(cv18)])
+cv18d[which(cv18d=="A")]<-5
+cv18d[which(cv18d=="B")]<-10
+cv18d[which(cv18d=="C")]<-20
+cv18d[which(cv18d=="D")]<-30
+cv18d[which(cv18d=="E")]<-40
+cv18d[which(cv18d=="F")]<-50
+cv18d[which(cv18d=="G")]<-60
+cv18d[which(cv18d=="H")]<-70
+cv18d[which(cv18d=="I")]<-80
+cv18d[which(cv18d=="J")]<-90
+cv18d[which(cv18d=="K")]<-100
+cv18d<-data.frame(apply(cv18d,2,as.numeric))
+cv18d<-data.frame(cbind(cv18[,1:which(colnames(cv18)=="Treatment")],cv18d))
+
+cv19d<-as.matrix(cv19[,which(colnames(cv19)=="Aca_ovi"):ncol(cv19)])
+cv19d[which(cv19d=="A")]<-5
+cv19d[which(cv19d=="B")]<-10
+cv19d[which(cv19d=="C")]<-20
+cv19d[which(cv19d=="D")]<-30
+cv19d[which(cv19d=="E")]<-40
+cv19d[which(cv19d=="F")]<-50
+cv19d[which(cv19d=="G")]<-60
+cv19d[which(cv19d=="H")]<-70
+cv19d[which(cv19d=="I")]<-80
+cv19d[which(cv19d=="J")]<-90
+cv19d[which(cv19d=="K")]<-100
+cv19d<-data.frame(apply(cv19d,2,as.numeric))
+cv19d<-data.frame(cbind(cv19[,1:which(colnames(cv19)=="Treatment")],cv19d))
+
 # remove unidentified species (for now... but we need to discuss whether these should be included in any analyses):
+#COUNT:
 unid<-pinfo$Sp[grep("Uni_", pinfo$Sp)]
 pinfo<-pinfo[-which(pinfo$Sp %in% unid),]
 pinfo<-tidy.df(pinfo)
@@ -153,11 +305,27 @@ rahead(ct17,3,7); dim(ct17)
 rahead(ct18,3,7); dim(ct18)
 rahead(ct19,3,7); dim(ct19)
 
+#COVER:
+nid<-pinfo$Sp[grep("Uni_", pinfo$Sp)]
+pinfo<-pinfo[-which(pinfo$Sp %in% unid),]
+pinfo<-tidy.df(pinfo)
+head(pinfo, 3); dim(pinfo)
+
+cv17<-cv17[,-which(colnames(cv17) %in% unid)]
+cv18<-cv18[,-which(colnames(cv18) %in% unid)]
+cv19<-cv19[,-which(colnames(cv19) %in% unid)]
+
+rahead(ct17,3,7); dim(ct17)
+rahead(ct18,3,7); dim(ct18)
+rahead(ct19,3,7); dim(ct19)
+
+
 # close format data ----
 
 #  species DIVERSITY GROUPS:    	# ----
 
 head(pinfo,3); dim(pinfo)
+
 str(pinfo)
 
 # Set-up vectors for grouping:
@@ -324,7 +492,7 @@ gdf<-group_df
 gdf<-tidy.df(gdf)
 gdf
 
-gdf$ylab<-c("All","Native","Exotic","Indicator","Significance A","Significance B","Common/Increaser","Significance X/Y","Significance Z","Native forb", "Exotic forb","Exotic annual forb","Exotic perennial forb","Native annual forb","Native perennial forb","Native non-leg. forb","Exotic non-leg. forb","Native leg. forb","Exotic leg. forb","Native grass","Exotic grass","Exotic annual grass","Exotic perennial grass","C3 grass","Native C3 grass","Native C4 grass","Exotic C3 grass","Sedge/Rush")
+gdf$ylab<-c("All","Native","Exotic","Indicator","Significance A","Significance B","Common/Increaser","Significance X/Y","Significance Z","Native forb", "Exotic forb","Exotic annual forb","Exotic perennial forb","Native annual forb","Native perennial forb","Native non-leg. forb","Exotic non-leg. forb","Native leg. forb","Exotic leg. forb","Native grass","Exotic grass","Exotic annual grass","Exotic perennial grass","C3 grass","Native C3 grass","Native C4 grass","Exotic C3 grass","Sedge     /Rush")
 
 save.image("03_Workspaces/stjw_analysis.RData")
 
@@ -413,6 +581,7 @@ for (i in 1:nrow(gdf)){
   data.thisrun<-data.set[,resp.thisrun]
   form.thisrun<-paste(resp.thisrun,"~Treatment*DATE+(1|reserve/PLOT_ID)", sep="")
   
+  #some functional groups have 0, its not going to run those functional groups here on
   if(sum(data.thisrun,na.rm=T)==0){
   coef.out[[i]]<-NULL
   anova.out[[i]]<-NULL
@@ -448,6 +617,8 @@ for(i in 1:nrow(gdf)){
   ylab.thisrun<-gdf$ylab[i]
   xofs<-0.2
   arrowlgth<-0.02
+  
+  if (is.null(pred.thisrun)) next
   
   plot(pred.thisrun$DATE[pred.thisrun$Treatment=="C"]-xofs,pred.thisrun$fit[pred.thisrun$Treatment=="C"], pch=15, ylim=c(min(pred.thisrun$lci), max(pred.thisrun$uci)), xlim=c(-0.3,2.3), xaxt="n", xlab="", ylab=ylab.thisrun, las=1)
   axis(side = 1, at=c(0,1,2), labels=c(2017,2018,2019))
