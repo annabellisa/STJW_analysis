@@ -231,7 +231,7 @@ ct19d[which(ct19d=="Y")]<-100
 ct19d<-data.frame(apply(ct19d,2,as.numeric))
 ct19<-data.frame(cbind(ct19[,1:which(colnames(ct19)=="Treatment")],ct19d))
 
-#replace COVER ategories with numbers:
+#replace COVER categories with numbers:
 
 # >5%	A	5
 # 5-10%	B	10
