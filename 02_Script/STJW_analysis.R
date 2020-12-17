@@ -569,7 +569,7 @@ shan_sc$DATE<-shan_sc$DATE-2017
 rahead(shan_sc,4,7); dim(shan_sc)
 
 # new data for model estimates:
-nd1<-data.frame(DATE=rep(c(0,1,2),rep(3,3)),Treatment=as.factor(c("C","A","B")))
+nd1<-data.frame(DATE=rep(c(0,1,2),rep(3,3)),Treatment=as.factor(c("C","A","B")),reserve=c(rep("J",9),rep("M",9)))
 
 # lists for storing coefficients, anova tables and model estimates:
 coef.out<-list()
@@ -587,9 +587,9 @@ for (i in 1:nrow(gdf)){
   
   resp.thisrun<-gdf$group[i]
   data.thisrun<-data.set[,resp.thisrun]
-  form.thisrun<-paste(resp.thisrun,"~Treatment*DATE+(1|reserve/PLOT_ID)", sep="")
+  form.thisrun<-paste(resp.thisrun,"~Treatment+DATE+reserve+Treatment:DATE+Treatment:reserve+(1|PLOT_ID)", sep="")
   
-  #some functional groups have 0, its not going to run those functional groups here on
+  # some functional groups have 0, its not going to run those functional groups here on
   if(sum(data.thisrun,na.rm=T)==0){
   coef.out[[i]]<-NULL
   anova.out[[i]]<-NULL
@@ -599,6 +599,16 @@ for (i in 1:nrow(gdf)){
   
   m1<-lmer(formula = form.thisrun, data=data.set)
   summary(m1)
+  anova(m1)
+  
+  # SIMPLIFY MODEL: if the interaction between treatment and reserve is not significant, remove:
+  
+  if(which(rownames(anova(m1))=="Treatment:reserve")>0.05){
+    form.thisrun<-paste(resp.thisrun,"~Treatment+DATE+reserve+Treatment:DATE+(1|PLOT_ID)", sep="")
+    m1<-lmer(formula = form.thisrun, data=data.set)
+    summary(m1)
+    anova(m1)
+  }
   
   m1_coef<-coef.ext(m1)
   m1_anova<-anova.ext(m1)
