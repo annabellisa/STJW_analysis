@@ -88,7 +88,6 @@ table(cnames17 %in% pinfo$Sp)
 table(cnames18 %in% pinfo$Sp)
 table(cnames19 %in% pinfo$Sp)
 
-
 #COVER:
 table(cvnames17 %in% pinfo$Sp)
 table(cvnames18 %in% pinfo$Sp)
@@ -580,6 +579,7 @@ preds.out<-list()
 # run models and generate model estimates:
 # update the data set (rich_sc or shan_sc) and re-run for each
 
+i=1
 data.set<-rich_sc
 data.set<-shan_sc
 
@@ -599,7 +599,7 @@ for (i in 1:nrow(gdf)){
   
   m1<-lmer(formula = form.thisrun, data=data.set)
   summary(m1)
-
+  
   m1_coef<-coef.ext(m1)
   m1_anova<-anova.ext(m1)
   coef.out[[i]]<-m1_coef
@@ -607,8 +607,10 @@ for (i in 1:nrow(gdf)){
   
   p1<-pred(model=m1, new.data = nd1,se.fit = T, type = "response")
   preds.out[[i]]<-p1
-
+  
 } # close models
+
+
 
 ## THREE WAY INTERACTION:
 head(gdf); dim(gdf)
