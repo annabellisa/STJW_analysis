@@ -204,7 +204,7 @@ cv19$Treatment<-factor(cv19$Treatment,levels=c("C","A","B"))
 head(ct17)
 rahead(ct17,3,7)
 ct17$Tri_ela
-Tri_eladat<-read.table(paste(data_dir,"count_tri_ela.txt",sep=""),header=T)
+Tri_eladat<-read.table(paste(data_dir,"tri_ela_2017.txt",sep=""),header=T)
 head(Tri_eladat)
 Tri_eladat$clump
 Tri_eladat$reserve<-Tri_eladat$PLOT_ID #take the first character of PLOT_ID eg, just J and M
@@ -237,6 +237,35 @@ te.pr
 Tri_eladat
 which(is.na(Tri_eladat$clump))
 Tri_eladat$clump[which(is.na(Tri_eladat$clump))]<-
+
+
+
+
+#update blanks in tri_ela 2018 count:
+  
+  data_dir<-"00_Data/Formatted_data/"
+dir(data_dir)
+head(ct18)
+rahead(ct18,3,7)
+ct18$Tri_ela
+Tri_eladat18<-read.table(paste(data_dir,"tri_ela_2018.txt",sep=""),header=T)
+head(Tri_eladat18)
+Tri_eladat18$clump
+Tri_eladat18$reserve<-Tri_eladat18$PLOT_ID #take the first character of PLOT_ID eg, just J and M
+Tri_eladat18$reserve<-substr(Tri_eladat18$reserve,1,1)
+Tri_eladat18$reserve<-as.factor(Tri_eladat18$reserve)
+plot(Tri_eladat18$clump,Tri_eladat18$tuft)
+cor.test(Tri_eladat18$clump[Tri_eladat18$clump<20],Tri_eladat18$tuft[Tri_eladat18$clump<20])
+
+
+
+
+
+
+
+
+
+
 
 
 
