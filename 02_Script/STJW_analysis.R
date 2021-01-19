@@ -200,50 +200,6 @@ cv19$PLOT_ID<-as.factor(cv19$PLOT_ID)
 cv19$Treatment<-factor(cv19$Treatment,levels=c("C","A","B"))
 
 
-#update blanks in tri_ela 2017 count:
-head(ct17)
-rahead(ct17,3,7)
-ct17$Tri_ela
-Tri_eladat<-read.table(paste(data_dir,"tri_ela_2017.txt",sep=""),header=T)
-head(Tri_eladat)
-Tri_eladat$clump
-Tri_eladat$reserve<-Tri_eladat$PLOT_ID #take the first character of PLOT_ID eg, just J and M
-Tri_eladat$reserve<- substr(Tri_eladat$reserve,1,1)
-Tri_eladat$reserve<-as.factor(Tri_eladat$reserve)
-plot(Tri_eladat$clump,Tri_eladat$tuft)
-cor.test(Tri_eladat$clump[Tri_eladat$clump<20],Tri_eladat$tuft[Tri_eladat$clump<20])
-temod1<-lm(clump~tuft+reserve,data=Tri_eladat[Tri_eladat$clump<20,]) 
-summary(temod1) #reserve not significant
-temod2<-lm(clump~tuft,data=Tri_eladat[Tri_eladat$clump<20,])#remove reserve
-summary(temod2)
-head(Tri_eladat)
-range(Tri_eladat$clump, na.rm = T)
-range(Tri_eladat$tuft, na.rm = T)
-te.nd<-data.frame(tuft=seq(min(Tri_eladat$tuft, na.rm = T),max(Tri_eladat$tuft, na.rm = T)))
-
-te.pr<-data.frame(te.nd,clump=round(predict(temod2,newdata = te.nd),0))
-Tri_eladat$clump
-head(te.pr)
-
-rahead(ct17,3,6)
-ct17$Tri_ela
-head(Tri_eladat)
-tuft.topredict<-Tri_eladat$tuft[which(is.na(Tri_eladat$clump))]
-head(te.pr)
-which(te.pr$tuft %in% tuft.topredict)
-relevanttufts<-te.pr[which(te.pr$tuft %in% tuft.topredict),]
-relevanttufts$tuft[order(tuft.topredict)]
-te.pr
-Tri_eladat
-which(is.na(Tri_eladat$clump))
-
- #overwrite with new values
-Tri_eladat$clump[which(is.na(Tri_eladat$clump))]
-
-
-
-
-
 # replace COUNT categories with numbers:
 
 # 16-50 	W	35
@@ -348,10 +304,6 @@ rahead(ct18,3,7); dim(ct18)
 rahead(ct19,3,7); dim(ct19)
 
 #COVER:
-nid<-pinfo$Sp[grep("Uni_", pinfo$Sp)]
-pinfo<-pinfo[-which(pinfo$Sp %in% unid),]
-pinfo<-tidy.df(pinfo)
-head(pinfo, 3); dim(pinfo)
 
 cv17<-cv17[,-which(colnames(cv17) %in% unid)]
 cv18<-cv18[,-which(colnames(cv18) %in% unid)]
@@ -475,7 +427,7 @@ calc.div<-function(species.data, site.data){
     if(length(vec.thisrun)==1){
       data.thisrun<-data.frame(data.thisrun)
       colnames(data.thisrun)<-vec.thisrun
-    } 
+    } # close if
     
     rich.data[[i]]<-apply(data.thisrun,1,function(x)length(which(x>0)))
     
@@ -593,7 +545,9 @@ legend(1,9,legend=c("Jerrabomberra","Mulangari"), col=c("darkturquoise","darkoli
 
 # We fit an interaction between treatment and date in all models to describe the before-after, control-impact nature of our design. 
 
-# Our full model also included interactions between treatment and reserve and year and reserve, but we removed these if they were not significant, keeping only the treatment x date interaction and all main effects. 
+# Our full model also included interactions between treatment and reserve , but we removed these if they were not significant, keeping only the treatment x date interaction and all main effects. 
+
+# we did not expect the diversity differences to change over time, so we did not fit a year and reserve interaction
 
 # Preliminary analysis showed no evidence of significant three way interactions between treatment, reserve and year. Thus, to avoid overly complex models we only fit first order interacions.
 
