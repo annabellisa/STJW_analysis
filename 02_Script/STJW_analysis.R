@@ -552,18 +552,81 @@ legend(1,9,legend=c("Jerrabomberra","Mulangari"), col=c("darkturquoise","darkoli
 # Preliminary analysis showed no evidence of significant three way interactions between treatment, reserve and year. Thus, to avoid overly complex models we only fit first order interacions.
 
 head(gdf); dim(gdf)
-
 rahead(rich,4,7); dim(rich)
 rahead(shan,4,7); dim(shan)
+
+# three way interaction for RICHNESS:
+data.set<-rich_sc
 
 # scale date only:
 rich_sc<-rich
 rich_sc$DATE<-rich_sc$DATE-2017
 rahead(rich_sc,4,7); dim(rich_sc)
 
+for (i in 1:nrow(gdf)){
+  
+  resp.thisrun<-gdf$group[i]
+  data.thisrun<-rich_sc[,resp.thisrun]
+  form.thisrun<-paste(resp.thisrun,"~Treatment+DATE+reserve+Treatment:DATE+Treatment:DATE:reserve+(1|PLOT_ID)", sep="")
+  
+  # some functional groups have 0, its not going to run those functional groups here on
+  if(sum(data.thisrun,na.rm=T)==0){
+    coef.out[[i]]<-NULL
+    anova.out[[i]]<-NULL
+    preds.out[[i]]<-NULL
+    next
+  }
+  
+  m1<-lmer(formula = form.thisrun, data=data.set)
+  summary(m1)
+  anova(m1)
+  
+  m1_coef<-coef.ext(m1)
+  m1_anova<-anova.ext(m1)
+  coef.out[[i]]<-m1_coef
+  anova.out[[i]]<-m1_anova
+  
+} # close model
+three.way.anovas.rich<-anova.out #no significant three way interactions for richness except [19], [26] and [5]
+  
+
+
+# Three way interaction for DIVERSITY:
+data.set<-shan_sc
+
+#scale date only
 shan_sc<-shan
 shan_sc$DATE<-shan_sc$DATE-2017
 rahead(shan_sc,4,7); dim(shan_sc)
+
+for (i in 1:nrow(gdf)){
+  
+  resp.thisrun<-gdf$group[i]
+  data.thisrun<-shan_sc[,resp.thisrun]
+  form.thisrun<-paste(resp.thisrun,"~Treatment+DATE+reserve+Treatment:DATE+Treatment:DATE:reserve+(1|PLOT_ID)", sep="")
+  
+  # some functional groups have 0, its not going to run those functional groups here on
+  if(sum(data.thisrun,na.rm=T)==0){
+    coef.out[[i]]<-NULL
+    anova.out[[i]]<-NULL
+    preds.out[[i]]<-NULL
+    next
+  }
+  
+  m1<-lmer(formula = form.thisrun, data=data.set)
+  summary(m1)
+  anova(m1)
+  
+  m1_coef<-coef.ext(m1)
+  m1_anova<-anova.ext(m1)
+  coef.out[[i]]<-m1_coef
+  anova.out[[i]]<-m1_anova
+  
+} # close model
+
+three.way.anovas.div<-anova.out #no significant three way interaction for diversity except 19
+
+
 
 # new data for model estimates:
 nd1<-data.frame(DATE=rep(c(0,1,2),rep(3,3)),Treatment=as.factor(c("C","A","B")),reserve=c(rep("J",9),rep("M",9)))
@@ -573,50 +636,28 @@ coef.out<-list()
 anova.out<-list()
 preds.out<-list()
 
-# run models and generate model estimates:
-# update the data set (rich_sc or shan_sc) and re-run for each
 
-i=1
-data.set<-rich_sc
-data.set<-shan_sc
-
-for (i in 1:nrow(gdf)){
+  # SIMPLIFY MODEL: the interaction between treatment, date and reserve is not significant, remove:
   
-  resp.thisrun<-gdf$group[i]
-  data.thisrun<-data.set[,resp.thisrun]
-  form.thisrun<-paste(resp.thisrun,"~Treatment+DATE+reserve+Treatment:DATE+Treatment:reserve+(1|PLOT_ID)", sep="")
-  
-  # some functional groups have 0, its not going to run those functional groups here on
-  if(sum(data.thisrun,na.rm=T)==0){
-  coef.out[[i]]<-NULL
-  anova.out[[i]]<-NULL
-  preds.out[[i]]<-NULL
-  next
-  }
-  
+if(which(rownames(anova(m1))=="Treatment:DATE:reserve")>0.05){
+  form.thisrun<-paste(resp.thisrun,"~Treatment+DATE+reserve+Treatment:DATE+Treatment:DATE:reserve+(1|PLOT_ID)", sep="")
   m1<-lmer(formula = form.thisrun, data=data.set)
   summary(m1)
   anova(m1)
-  
-  # SIMPLIFY MODEL: if the interaction between treatment and reserve is not significant, remove:
-  
-if(which(rownames(anova(m1))=="Treatment:reserve")>0.05){
-    form.thisrun<-paste(resp.thisrun,"~Treatment+DATE+reserve+Treatment:DATE+(1|PLOT_ID)", sep="")
-    m1<-lmer(formula = form.thisrun, data=data.set)
-    summary(m1)
-    anova(m1)
-  }
-  
-  m1_coef<-coef.ext(m1)
-  m1_anova<-anova.ext(m1)
-  coef.out[[i]]<-m1_coef
-  anova.out[[i]]<-m1_anova
-  
-  p1<-pred(model=m1, new.data = nd1,se.fit = T, type = "response")
-  preds.out[[i]]<-p1
-  
-} # close models
+}
 
+m1_coef<-coef.ext(m1)
+m1_anova<-anova.ext(m1)
+coef.out[[i]]<-m1_coef
+anova.out[[i]]<-m1_anova
+
+p1<-pred(model=m1, new.data = nd1,se.fit = T, type = "response")
+preds.out[[i]]<-p1
+
+
+   # close models
+
+anova.out
 
 
 ## THREE WAY INTERACTION:
