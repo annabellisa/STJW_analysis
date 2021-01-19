@@ -208,13 +208,13 @@ Tri_eladat<-read.table(paste(data_dir,"tri_ela_2017.txt",sep=""),header=T)
 head(Tri_eladat)
 Tri_eladat$clump
 Tri_eladat$reserve<-Tri_eladat$PLOT_ID #take the first character of PLOT_ID eg, just J and M
-Tri_eladat$reserve<-substr(Tri_eladat$reserve,1,1)
+Tri_eladat$reserve<- substr(Tri_eladat$reserve,1,1)
 Tri_eladat$reserve<-as.factor(Tri_eladat$reserve)
 plot(Tri_eladat$clump,Tri_eladat$tuft)
 cor.test(Tri_eladat$clump[Tri_eladat$clump<20],Tri_eladat$tuft[Tri_eladat$clump<20])
-temod1<-lm(clump~tuft+reserve,data=Tri_eladat[Tri_eladat$clump<20,])
-summary(temod1)
-temod2<-lm(clump~tuft,data=Tri_eladat[Tri_eladat$clump<20,])
+temod1<-lm(clump~tuft+reserve,data=Tri_eladat[Tri_eladat$clump<20,]) 
+summary(temod1) #reserve not significant
+temod2<-lm(clump~tuft,data=Tri_eladat[Tri_eladat$clump<20,])#remove reserve
 summary(temod2)
 head(Tri_eladat)
 range(Tri_eladat$clump, na.rm = T)
@@ -236,37 +236,9 @@ relevanttufts$tuft[order(tuft.topredict)]
 te.pr
 Tri_eladat
 which(is.na(Tri_eladat$clump))
-Tri_eladat$clump[which(is.na(Tri_eladat$clump))]<-
 
-
-
-
-#update blanks in tri_ela 2018 count:
-  
-  data_dir<-"00_Data/Formatted_data/"
-dir(data_dir)
-head(ct18)
-rahead(ct18,3,7)
-ct18$Tri_ela
-Tri_eladat18<-read.table(paste(data_dir,"tri_ela_2018.txt",sep=""),header=T)
-head(Tri_eladat18)
-Tri_eladat18$clump
-Tri_eladat18$reserve<-Tri_eladat18$PLOT_ID #take the first character of PLOT_ID eg, just J and M
-Tri_eladat18$reserve<-substr(Tri_eladat18$reserve,1,1)
-Tri_eladat18$reserve<-as.factor(Tri_eladat18$reserve)
-plot(Tri_eladat18$clump,Tri_eladat18$tuft)
-cor.test(Tri_eladat18$clump[Tri_eladat18$clump<20],Tri_eladat18$tuft[Tri_eladat18$clump<20])
-
-
-
-
-
-
-
-
-
-
-
+ #overwrite with new values
+Tri_eladat$clump[which(is.na(Tri_eladat$clump))]
 
 
 
@@ -558,7 +530,7 @@ rahead(shan,4,7); dim(shan)
 
 # We need to decide the cut-off for analysis. We could say there must be more records (i.e. number of species recorded) than the number of quadrats (48)? Or the number of observations (within years?). Number of quadrats would cut out two responses (exotic_perengrass and sed_rus)
 group_df$rich_records<-colSums(rich[,5:length(rich)])
-gdf<-group_df
+gdf<-group_df 
 gdf<-tidy.df(gdf)
 gdf
 
@@ -674,7 +646,7 @@ for (i in 1:nrow(gdf)){
   
   # SIMPLIFY MODEL: if the interaction between treatment and reserve is not significant, remove:
   
-  if(which(rownames(anova(m1))=="Treatment:reserve")>0.05){
+if(which(rownames(anova(m1))=="Treatment:reserve")>0.05){
     form.thisrun<-paste(resp.thisrun,"~Treatment+DATE+reserve+Treatment:DATE+(1|PLOT_ID)", sep="")
     m1<-lmer(formula = form.thisrun, data=data.set)
     summary(m1)
