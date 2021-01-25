@@ -551,6 +551,10 @@ legend(1,9,legend=c("Jerrabomberra","Mulangari"), col=c("darkturquoise","darkoli
 
 # Preliminary analysis showed no evidence of significant three way interactions between treatment, reserve and year. Thus, to avoid overly complex models we only fit first order interacions.
 
+# Dcide the cut-off for analysis. There must be more records (i.e. number of species recorded) than the number of quadrats (48)? I.e. exclude two responses (exotic_perengrass and sed_rus):
+
+gdf<-gdf[-which(gdf$rich_records<48),]
+gdf<-tidy.df(gdf)
 head(gdf); dim(gdf)
 rahead(rich,4,7); dim(rich)
 rahead(shan,4,7); dim(shan)
@@ -563,6 +567,16 @@ rich_sc<-rich
 rich_sc$DATE<-rich_sc$DATE-2017
 rahead(rich_sc,4,7); dim(rich_sc)
 
+# lists for storing model fits, coefficients, anova tables and model estimates:
+fits.rich<-list()
+coef.rich<-list()
+anova.rich<-list()
+preds.rich<-list()
+
+# new data for model estimates (same for models with a date:treatment interaction only and models with a three way interaction; you can also use the same newdata frame for richness and shannon's):
+nd1<-data.frame(DATE=rep(c(0,1,2),rep(3,3)),Treatment=as.factor(c("C","A","B")),reserve=c(rep("J",9),rep("M",9)))
+
+
 for (i in 1:nrow(gdf)){
   
   resp.thisrun<-gdf$group[i]
@@ -571,9 +585,10 @@ for (i in 1:nrow(gdf)){
   
   # some functional groups have 0, its not going to run those functional groups here on
   if(sum(data.thisrun,na.rm=T)==0){
-    coef.out[[i]]<-NULL
-    anova.out[[i]]<-NULL
-    preds.out[[i]]<-NULL
+    fits.rich[[i]]<-NULL
+    coef.rich[[i]]<-NULL
+    anova.rich[[i]]<-NULL
+    preds.rich[[i]]<-NULL
     next
   }
   
@@ -583,13 +598,43 @@ for (i in 1:nrow(gdf)){
   
   m1_coef<-coef.ext(m1)
   m1_anova<-anova.ext(m1)
-  coef.out[[i]]<-m1_coef
-  anova.out[[i]]<-m1_anova
+  
+  # simplify model if the three way is not significant:
+  if(m1_anova[which(m1_anova$term=="Treatment:DATE:reserve"),"p"]>0.05){
+    
+    # remove three way term from formula:
+    form.thisrun<-paste(resp.thisrun,"~Treatment+DATE+reserve+Treatment:DATE+(1|PLOT_ID)", sep="")
+    
+    # re-run model without three way:
+    m1<-lmer(formula = form.thisrun, data=data.set)
+    summary(m1)
+    anova(m1)
+    
+    m1_coef<-coef.ext(m1)
+    m1_anova<-anova.ext(m1)
+    
+  } # close if three way not signif
+  
+  fits.rich[[i]]<-m1
+  coef.rich[[i]]<-m1_coef
+  anova.rich[[i]]<-m1_anova
+  
+  # generate model predictions:
+  
+  m1_pr<-predictSE(mod=m1, newdata=nd1, se.fit = T)
+  m1_pr<-data.frame(nd1,fit=m1_pr$fit,se=m1_pr$se.fit)
+  m1_pr$lci<-m1_pr$fit-(m1_pr$se*1.96)
+  m1_pr$uci<-m1_pr$fit+(m1_pr$se*1.96)
+  head(m1_pr)
+  
+  preds.rich[[i]]<-m1_anova
   
 } # close model
-three.way.anovas.rich<-anova.out #no significant three way interactions for richness except [19], [26] and [5]
-  
 
+three.way.anovas.rich<-anova.rich #no significant three way interactions for richness except [19] (exotic_legherb), [26] (native_c4) and [5] (sigA)
+  
+# extract an individual model
+summary(fits.rich[[24]])
 
 # Three way interaction for DIVERSITY:
 data.set<-shan_sc
@@ -624,7 +669,49 @@ for (i in 1:nrow(gdf)){
   
 } # close model
 
-three.way.anovas.div<-anova.out #no significant three way interaction for diversity except 19
+three.way.anovas.div<-anova.out #no significant three way interaction for diversity except 19  (exotic_legherb)
+
+# exotic leg herbs: (repeat for exotic_legherb diver, and for richness c4 and sigA)
+# change data set and the response variable:
+elh_mod<-lmer(exotic_legherb~Treatment+DATE+reserve+Treatment:DATE+Treatment:DATE:reserve+(1|PLOT_ID), data=rich_sc)
+summary(elh_mod)
+elh_pr<-predictSE(elh_mod, nd1, se.fit = T)
+elh_pr
+elh_pr<-data.frame(nd1,fit=elh_pr$fit,se=elh_pr$se.fit)
+elh_pr$lci<-elh_pr$fit-(elh_pr$se*1.96)
+elh_pr$uci<-elh_pr$fit+(elh_pr$se*1.96)
+head(elh_pr)
+
+xofs<-0.2
+arrowlgth<-0.02
+
+dev.new(width=10,height=5,noRStudioGD = T,dpi=80, pointsize=12)
+par(mfrow=c(1,2), mar=c(2,4,4,1), mgp=c(2.5,1,0))
+
+plot(elh_pr$DATE[elh_pr$reserve=="J" & elh_pr$Treatment=="C"]-xofs,elh_pr$fit[elh_pr$reserve=="J" & elh_pr$Treatment=="C"], pch=15, ylim=c(min(elh_pr$lci), max(elh_pr$uci)), xlim=c(-0.3,2.3), xaxt="n", xlab="", ylab=ylab.thisrun, las=1)
+axis(side = 1, at=c(0,1,2), labels=c(2017,2018,2019))
+arrows(elh_pr$DATE[elh_pr$reserve=="J" & elh_pr$Treatment=="C"]-xofs,elh_pr$lci[elh_pr$reserve=="J" & elh_pr$Treatment=="C"],elh_pr$DATE[elh_pr$reserve=="J" & elh_pr$Treatment=="C"]-xofs,elh_pr$uci[elh_pr$reserve=="J" & elh_pr$Treatment=="C"], code=3, angle=90, length=arrowlgth)
+
+points(elh_pr$DATE[elh_pr$reserve=="J" & elh_pr$Treatment=="A"],elh_pr$fit[elh_pr$reserve=="J" & elh_pr$Treatment=="A"], pch=15, col="red")
+arrows(elh_pr$DATE[elh_pr$reserve=="J" & elh_pr$Treatment=="A"],elh_pr$lci[elh_pr$reserve=="J" & elh_pr$Treatment=="A"],elh_pr$DATE[elh_pr$reserve=="J" & elh_pr$Treatment=="A"],elh_pr$uci[elh_pr$reserve=="J" & elh_pr$Treatment=="A"], code=3, angle=90, length=arrowlgth, col="red")
+
+points(elh_pr$DATE[elh_pr$reserve=="J" & elh_pr$Treatment=="B"]+xofs,elh_pr$fit[elh_pr$reserve=="J" & elh_pr$Treatment=="B"], pch=15, col="blue")
+arrows(elh_pr$DATE[elh_pr$reserve=="J" & elh_pr$Treatment=="B"]+xofs,elh_pr$lci[elh_pr$reserve=="J" & elh_pr$Treatment=="B"],elh_pr$DATE[elh_pr$reserve=="J" & elh_pr$Treatment=="B"]+xofs,elh_pr$uci[elh_pr$reserve=="J" & elh_pr$Treatment=="B"], code=3, angle=90, length=arrowlgth)
+
+legend(1.5,4,legend=c("Control","Spot spray","Boom spray"), col=c("black","red","blue"), pch=15, bty="n", pt.cex = 3)
+mtext("Jerra",side=3, line=1)
+
+# mulungarri:
+plot(elh_pr$DATE[elh_pr$reserve=="M" & elh_pr$Treatment=="C"]-xofs,elh_pr$fit[elh_pr$reserve=="M" & elh_pr$Treatment=="C"], pch=15, ylim=c(min(elh_pr$lci), max(elh_pr$uci)), xlim=c(-0.3,2.3), xaxt="n", xlab="", ylab=ylab.thisrun, las=1)
+axis(side = 1, at=c(0,1,2), labels=c(2017,2018,2019))
+arrows(elh_pr$DATE[elh_pr$reserve=="M" & elh_pr$Treatment=="C"]-xofs,elh_pr$lci[elh_pr$reserve=="M" & elh_pr$Treatment=="C"],elh_pr$DATE[elh_pr$reserve=="M" & elh_pr$Treatment=="C"]-xofs,elh_pr$uci[elh_pr$reserve=="M" & elh_pr$Treatment=="C"], code=3, angle=90, length=arrowlgth)
+
+points(elh_pr$DATE[elh_pr$reserve=="M" & elh_pr$Treatment=="A"],elh_pr$fit[elh_pr$reserve=="M" & elh_pr$Treatment=="A"], pch=15, col="red")
+arrows(elh_pr$DATE[elh_pr$reserve=="M" & elh_pr$Treatment=="A"],elh_pr$lci[elh_pr$reserve=="M" & elh_pr$Treatment=="A"],elh_pr$DATE[elh_pr$reserve=="M" & elh_pr$Treatment=="A"],elh_pr$uci[elh_pr$reserve=="M" & elh_pr$Treatment=="A"], code=3, angle=90, length=arrowlgth, col="red")
+
+points(elh_pr$DATE[elh_pr$reserve=="M" & elh_pr$Treatment=="B"]+xofs,elh_pr$fit[elh_pr$reserve=="M" & elh_pr$Treatment=="B"], pch=15, col="blue")
+arrows(elh_pr$DATE[elh_pr$reserve=="M" & elh_pr$Treatment=="B"]+xofs,elh_pr$lci[elh_pr$reserve=="M" & elh_pr$Treatment=="B"],elh_pr$DATE[elh_pr$reserve=="M" & elh_pr$Treatment=="B"]+xofs,elh_pr$uci[elh_pr$reserve=="M" & elh_pr$Treatment=="B"], code=3, angle=90, length=arrowlgth)
+mtext("Mulangarri",side=3, line=1)
 
 
 
