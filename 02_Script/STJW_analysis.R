@@ -13,7 +13,7 @@ invisible(lapply(paste("01_Functions/",dir("01_Functions"),sep=""),function(x) s
 library(lme4); library(vegan); library(AICcmodavg); library(lmerTest)
 
 # Load workspace
-load("03_Workspaces/STJW_analysis.RData")
+load("03_Workspaces/stjw_analysis.RData")
 
 #  IMPORT & check data:    	# ----
 
@@ -559,8 +559,12 @@ head(gdf); dim(gdf)
 rahead(rich,4,7); dim(rich)
 rahead(shan,4,7); dim(shan)
 
-# three way interaction for RICHNESS:
-data.set<-rich_sc
+# save workspace:
+# save.image("03_Workspaces/stjw_analysis.RData")
+
+
+
+# **** RICHNESS:
 
 # scale date only:
 rich_sc<-rich
@@ -570,16 +574,27 @@ rahead(rich_sc,4,7); dim(rich_sc)
 # lists for storing model fits, coefficients, anova tables and model estimates:
 fits.rich<-list()
 coef.rich<-list()
-anova.rich<-list()
 preds.rich<-list()
+
+# This is a different kind of anova table than for diversity because we are just using it to test the significance of the two-way date:treatment interaction in the final models. We can get the other p values from the coefficient table:
+anova.rich<-list()
 
 # new data for model estimates (same for models with a date:treatment interaction only and models with a three way interaction; you can also use the same newdata frame for richness and shannon's):
 nd1<-data.frame(DATE=rep(c(0,1,2),rep(3,3)),Treatment=as.factor(c("C","A","B")),reserve=c(rep("J",9),rep("M",9)))
 
+# THE ACTUAL ANALYSIS CODE:
+# RUN MODELLING LOOP:
+
+# **** RICHNESS:
+
+# follow 'best bet' instructions for installation:
+# https://glmmadmb.r-forge.r-project.org/
+library("glmmADMB")
 
 for (i in 1:nrow(gdf)){
   
   resp.thisrun<-gdf$group[i]
+  data.set<-rich_sc
   data.thisrun<-rich_sc[,resp.thisrun]
   form.thisrun<-paste(resp.thisrun,"~Treatment+DATE+reserve+Treatment:DATE+Treatment:DATE:reserve+(1|PLOT_ID)", sep="")
   
@@ -587,8 +602,107 @@ for (i in 1:nrow(gdf)){
   if(sum(data.thisrun,na.rm=T)==0){
     fits.rich[[i]]<-NULL
     coef.rich[[i]]<-NULL
-    anova.rich[[i]]<-NULL
     preds.rich[[i]]<-NULL
+    anova.rich[[i]]<-NULL
+    next
+  }
+  
+  m1<-glmmadmb(as.formula(form.thisrun), family="poisson", data=data.set)
+  
+  # run model without three-way:
+  form.twoway<-paste(resp.thisrun,"~Treatment+DATE+reserve+Treatment:DATE+(1|PLOT_ID)", sep="")
+  mod_twoway<-glmmadmb(as.formula(form.twoway), family="poisson", data=data.set)
+  
+  summary(m1)
+  
+  m1_coef<-coef.ext(m1)
+  m1_anova<-anova(mod_twoway, m1)
+  
+  p_anova<-m1_anova[2,5]
+  anova.rich[[i]]<-m1_anova
+  
+  # simplify model if the three way is not significant:
+  if(p_anova>0.05){
+    
+    # remove three way term from formula:
+    form.thisrun<-paste(resp.thisrun,"~Treatment+DATE+reserve+Treatment:DATE+(1|PLOT_ID)", sep="")
+    
+    # re-run model without three way:
+    m1<-glmmadmb(as.formula(form.thisrun), family="poisson", data=data.set)
+    summary(m1)
+    
+    m1_coef<-coef.ext(m1)
+    
+    # run model without any interaction (to figure out if the two way interaction is significant):
+    form.noint<-paste(resp.thisrun,"~Treatment+DATE+reserve+(1|PLOT_ID)", sep="")
+    mod_noint<-glmmadmb(as.formula(form.noint), family="poisson", data=data.set)
+    
+    int_term_anova<-anova(mod_noint, m1)
+    anova.rich[[i]]<-int_term_anova
+    
+  } # close if three way not signif
+  
+  fits.rich[[i]]<-m1
+  coef.rich[[i]]<-m1_coef
+  
+  # generate model predictions:
+  
+  m1_pr<-predict(object=m1,type="link",newdata=nd1, se.fit = T)
+  m1_pr<-data.frame(nd1,fit=m1_pr$fit,se=m1_pr$se.fit)
+  m1_pr$lci<-m1_pr$fit-(m1_pr$se*1.96)
+  m1_pr$uci<-m1_pr$fit+(m1_pr$se*1.96)
+  m1_pr$fit.resp<-round(exp(m1_pr$fit),4)
+  m1_pr$lci.resp<-round(exp(m1_pr$lci),4)
+  m1_pr$uci.resp<-round(exp(m1_pr$uci),4)
+  
+  head(m1_pr)
+  
+  preds.rich[[i]]<-m1_pr
+  
+} # close model
+
+# Only one three-way significant for richness (12, exotic annual forb):
+
+summary(fits.rich[[1]])
+coef.rich
+anova.rich[[12]]
+preds.rich
+
+# save.image("03_Workspaces/stjw_analysis.RData")
+
+
+# **** DIVERSITY:
+
+#scale date only
+shan_sc<-shan
+shan_sc$DATE<-shan_sc$DATE-2017
+rahead(shan_sc,4,7); dim(shan_sc)
+
+# lists for storing model fits, coefficients, anova tables and model estimates:
+fits.shan<-list()
+coef.shan<-list()
+anova.shan<-list()
+preds.shan<-list()
+
+# new data for model estimates (same for models with a date:treatment interaction only and models with a three way interaction; you can also use the same newdata frame for richness and shannon's):
+nd1<-data.frame(DATE=rep(c(0,1,2),rep(3,3)),Treatment=as.factor(c("C","A","B")),reserve=c(rep("J",9),rep("M",9)))
+
+# RUN MODELLING LOOP:
+# **** DIVERSITY:
+
+for (i in 1:nrow(gdf)){
+  
+  resp.thisrun<-gdf$group[i]
+  data.set<-shan_sc
+  data.thisrun<-shan_sc[,resp.thisrun]
+  form.thisrun<-paste(resp.thisrun,"~Treatment+DATE+reserve+Treatment:DATE+Treatment:DATE:reserve+(1|PLOT_ID)", sep="")
+  
+  # some functional groups have 0, its not going to run those functional groups here on
+  if(sum(data.thisrun,na.rm=T)==0){
+    fits.shan[[i]]<-NULL
+    coef.shan[[i]]<-NULL
+    anova.shan[[i]]<-NULL
+    preds.shan[[i]]<-NULL
     next
   }
   
@@ -615,286 +729,29 @@ for (i in 1:nrow(gdf)){
     
   } # close if three way not signif
   
-  fits.rich[[i]]<-m1
-  coef.rich[[i]]<-m1_coef
-  anova.rich[[i]]<-m1_anova
+  fits.shan[[i]]<-m1
+  coef.shan[[i]]<-m1_coef
+  anova.shan[[i]]<-m1_anova
   
   # generate model predictions:
   
-  m1_pr<-predictSE(mod=m1, newdata=nd1, se.fit = T)
+  m1_pr<-predictSE(mod=m1,newdata=nd1, se.fit = T)
   m1_pr<-data.frame(nd1,fit=m1_pr$fit,se=m1_pr$se.fit)
   m1_pr$lci<-m1_pr$fit-(m1_pr$se*1.96)
   m1_pr$uci<-m1_pr$fit+(m1_pr$se*1.96)
   head(m1_pr)
   
-  preds.rich[[i]]<-m1_anova
+  preds.shan[[i]]<-m1_pr
   
 } # close model
 
-three.way.anovas.rich<-anova.rich #no significant three way interactions for richness except 5 (sigA), 19 (exotic_legherb) and 25 (native c4 grass)
+summary(fits.shan[[1]])
+coef.shan
+anova.shan[[19]] # only 19 significant three-way
+preds.shan
 
-# extract an individual model
-summary(fits.rich[[24]])
 
-# Three way interaction for DIVERSITY:
-data.set<-shan_sc
 
-#scale date only
-shan_sc<-shan
-shan_sc$DATE<-shan_sc$DATE-2017
-rahead(shan_sc,4,7); dim(shan_sc)
-
-for (i in 1:nrow(gdf)){
-  
-  resp.thisrun<-gdf$group[i]
-  data.thisrun<-shan_sc[,resp.thisrun]
-  form.thisrun<-paste(resp.thisrun,"~Treatment+DATE+reserve+Treatment:DATE+Treatment:DATE:reserve+(1|PLOT_ID)", sep="")
-  
-  # some functional groups have 0, its not going to run those functional groups here on
-  if(sum(data.thisrun,na.rm=T)==0){
-    coef.out[[i]]<-NULL
-    anova.out[[i]]<-NULL
-    preds.out[[i]]<-NULL
-    next
-  }
-  
-  m1<-lmer(formula = form.thisrun, data=data.set)
-  summary(m1)
-  anova(m1)
-  
-  m1_coef<-coef.ext(m1)
-  m1_anova<-anova.ext(m1)
-  coef.out[[i]]<-m1_coef
-  anova.out[[i]]<-m1_anova
-  
-} # close model
-
-three.way.anovas.div<-anova.out #no significant three way interaction for diversity except 19  (exotic_legherb)
-
-# exotic leg herbs richness: (repeat for exotic_legherb diversity, and for richness c4 and sigA)
-# change data set and the response variable:
-elh_mod<-lmer(exotic_legherb~Treatment+DATE+reserve+Treatment:DATE+Treatment:DATE:reserve+(1|PLOT_ID), data=rich_sc)
-summary(elh_mod)
-elh_pr<-predictSE(elh_mod, nd1, se.fit = T)
-elh_pr
-elh_pr<-data.frame(nd1,fit=elh_pr$fit,se=elh_pr$se.fit)
-elh_pr$lci<-elh_pr$fit-(elh_pr$se*1.96)
-elh_pr$uci<-elh_pr$fit+(elh_pr$se*1.96)
-head(elh_pr)
-
-xofs<-0.2
-arrowlgth<-0.02
-
-dev.new(width=10,height=5,noRStudioGD = T,dpi=80, pointsize=12)
-par(mfrow=c(1,2), mar=c(2,4,4,1), mgp=c(2.5,1,0))
-
-plot(elh_pr$DATE[elh_pr$reserve=="J" & elh_pr$Treatment=="C"]-xofs,elh_pr$fit[elh_pr$reserve=="J" & elh_pr$Treatment=="C"], pch=15, ylim=c(min(elh_pr$lci), max(elh_pr$uci)), xlim=c(-0.3,2.3), xaxt="n", xlab="", ylab=ylab.thisrun, las=1)
-axis(side = 1, at=c(0,1,2), labels=c(2017,2018,2019))
-arrows(elh_pr$DATE[elh_pr$reserve=="J" & elh_pr$Treatment=="C"]-xofs,elh_pr$lci[elh_pr$reserve=="J" & elh_pr$Treatment=="C"],elh_pr$DATE[elh_pr$reserve=="J" & elh_pr$Treatment=="C"]-xofs,elh_pr$uci[elh_pr$reserve=="J" & elh_pr$Treatment=="C"], code=3, angle=90, length=arrowlgth)
-
-points(elh_pr$DATE[elh_pr$reserve=="J" & elh_pr$Treatment=="A"],elh_pr$fit[elh_pr$reserve=="J" & elh_pr$Treatment=="A"], pch=15, col="red")
-arrows(elh_pr$DATE[elh_pr$reserve=="J" & elh_pr$Treatment=="A"],elh_pr$lci[elh_pr$reserve=="J" & elh_pr$Treatment=="A"],elh_pr$DATE[elh_pr$reserve=="J" & elh_pr$Treatment=="A"],elh_pr$uci[elh_pr$reserve=="J" & elh_pr$Treatment=="A"], code=3, angle=90, length=arrowlgth, col="red")
-
-points(elh_pr$DATE[elh_pr$reserve=="J" & elh_pr$Treatment=="B"]+xofs,elh_pr$fit[elh_pr$reserve=="J" & elh_pr$Treatment=="B"], pch=15, col="blue")
-arrows(elh_pr$DATE[elh_pr$reserve=="J" & elh_pr$Treatment=="B"]+xofs,elh_pr$lci[elh_pr$reserve=="J" & elh_pr$Treatment=="B"],elh_pr$DATE[elh_pr$reserve=="J" & elh_pr$Treatment=="B"]+xofs,elh_pr$uci[elh_pr$reserve=="J" & elh_pr$Treatment=="B"], code=3, angle=90, length=arrowlgth)
-
-legend(1.5,4,legend=c("Control","Spot spray","Boom spray"), col=c("black","red","blue"), pch=15, bty="n", pt.cex = 3)
-mtext("Jerra",side=3, line=1)
-
-# mulungarri:
-plot(elh_pr$DATE[elh_pr$reserve=="M" & elh_pr$Treatment=="C"]-xofs,elh_pr$fit[elh_pr$reserve=="M" & elh_pr$Treatment=="C"], pch=15, ylim=c(min(elh_pr$lci), max(elh_pr$uci)), xlim=c(-0.3,2.3), xaxt="n", xlab="", ylab=ylab.thisrun, las=1)
-axis(side = 1, at=c(0,1,2), labels=c(2017,2018,2019))
-arrows(elh_pr$DATE[elh_pr$reserve=="M" & elh_pr$Treatment=="C"]-xofs,elh_pr$lci[elh_pr$reserve=="M" & elh_pr$Treatment=="C"],elh_pr$DATE[elh_pr$reserve=="M" & elh_pr$Treatment=="C"]-xofs,elh_pr$uci[elh_pr$reserve=="M" & elh_pr$Treatment=="C"], code=3, angle=90, length=arrowlgth)
-
-points(elh_pr$DATE[elh_pr$reserve=="M" & elh_pr$Treatment=="A"],elh_pr$fit[elh_pr$reserve=="M" & elh_pr$Treatment=="A"], pch=15, col="red")
-arrows(elh_pr$DATE[elh_pr$reserve=="M" & elh_pr$Treatment=="A"],elh_pr$lci[elh_pr$reserve=="M" & elh_pr$Treatment=="A"],elh_pr$DATE[elh_pr$reserve=="M" & elh_pr$Treatment=="A"],elh_pr$uci[elh_pr$reserve=="M" & elh_pr$Treatment=="A"], code=3, angle=90, length=arrowlgth, col="red")
-
-points(elh_pr$DATE[elh_pr$reserve=="M" & elh_pr$Treatment=="B"]+xofs,elh_pr$fit[elh_pr$reserve=="M" & elh_pr$Treatment=="B"], pch=15, col="blue")
-arrows(elh_pr$DATE[elh_pr$reserve=="M" & elh_pr$Treatment=="B"]+xofs,elh_pr$lci[elh_pr$reserve=="M" & elh_pr$Treatment=="B"],elh_pr$DATE[elh_pr$reserve=="M" & elh_pr$Treatment=="B"]+xofs,elh_pr$uci[elh_pr$reserve=="M" & elh_pr$Treatment=="B"], code=3, angle=90, length=arrowlgth)
-mtext("Mulangarri",side=3, line=1)
-mtext("exotic_leg_forb richness", side=3, line=3)
-
-#exotic leg_herb diversity:
-# change data set and the response variable:
-elhd_mod<-lmer(exotic_legherb~Treatment+DATE+reserve+Treatment:DATE+Treatment:DATE:reserve+(1|PLOT_ID), data=shan_sc)
-summary(elhd_mod)
-elhd_pr<-predictSE(elhd_mod, nd1, se.fit = T)
-elhd_pr
-elhd_pr<-data.frame(nd1,fit=elhd_pr$fit,se=elhd_pr$se.fit)
-elhd_pr$lci<-elhd_pr$fit-(elhd_pr$se*1.96)
-elhd_pr$uci<-elhd_pr$fit+(elhd_pr$se*1.96)
-head(elhd_pr)
-
-xofs<-0.2
-arrowlgth<-0.02
-
-dev.new(width=10,height=5,noRStudioGD = T,dpi=80, pointsize=12)
-par(mfrow=c(1,2), mar=c(2,4,4,1), mgp=c(2.5,1,0))
-
-plot(elhd_pr$DATE[elhd_pr$reserve=="J" & elhd_pr$Treatment=="C"]-xofs,elhd_pr$fit[elhd_pr$reserve=="J" & elhd_pr$Treatment=="C"], pch=15, ylim=c(min(elhd_pr$lci), max(elhd_pr$uci)), xlim=c(-0.3,2.3), xaxt="n", xlab="", ylab=ylab.thisrun, las=1)
-axis(side = 1, at=c(0,1,2), labels=c(2017,2018,2019))
-arrows(elhd_pr$DATE[elhd_pr$reserve=="J" & elhd_pr$Treatment=="C"]-xofs,elhd_pr$lci[elhd_pr$reserve=="J" & elhd_pr$Treatment=="C"],elhd_pr$DATE[elhd_pr$reserve=="J" & elhd_pr$Treatment=="C"]-xofs,elhd_pr$uci[elhd_pr$reserve=="J" & elh_pr$Treatment=="C"], code=3, angle=90, length=arrowlgth)
-points(elhd_pr$DATE[elhd_pr$reserve=="J" & elhd_pr$Treatment=="A"],elhd_pr$fit[elhd_pr$reserve=="J" & elhd_pr$Treatment=="A"], pch=15, col="red")
-arrows(elhd_pr$DATE[elhd_pr$reserve=="J" & elhd_pr$Treatment=="A"],elhd_pr$lci[elhd_pr$reserve=="J" & elhd_pr$Treatment=="A"],elhd_pr$DATE[elhd_pr$reserve=="J" & elhd_pr$Treatment=="A"],elhd_pr$uci[elhd_pr$reserve=="J" & elhd_pr$Treatment=="A"], code=3, angle=90, length=arrowlgth, col="red")
-
-points(elhd_pr$DATE[elhd_pr$reserve=="J" & elhd_pr$Treatment=="B"]+xofs,elhd_pr$fit[elhd_pr$reserve=="J" & elhd_pr$Treatment=="B"], pch=15, col="blue")
-arrows(elhd_pr$DATE[elhd_pr$reserve=="J" & elhd_pr$Treatment=="B"]+xofs,elhd_pr$lci[elhd_pr$reserve=="J" & elhd_pr$Treatment=="B"],elhd_pr$DATE[elhd_pr$reserve=="J" & elhd_pr$Treatment=="B"]+xofs,elhd_pr$uci[elhd_pr$reserve=="J" & elhd_pr$Treatment=="B"], code=3, angle=90, length=arrowlgth)
-
-legend(1.5,4,legend=c("Control","Spot spray","Boom spray"), col=c("black","red","blue"), pch=15, bty="n", pt.cex = 3)
-mtext("Jerra",side=3, line=1)
-
-# mulungarri:
-plot(elhd_pr$DATE[elhd_pr$reserve=="M" & elhd_pr$Treatment=="C"]-xofs,elhd_pr$fit[elhd_pr$reserve=="M" & elhd_pr$Treatment=="C"], pch=15, ylim=c(min(elhd_pr$lci), max(elhd_pr$uci)), xlim=c(-0.3,2.3), xaxt="n", xlab="", ylab=ylab.thisrun, las=1)
-axis(side = 1, at=c(0,1,2), labels=c(2017,2018,2019))
-arrows(elhd_pr$DATE[elhd_pr$reserve=="M" & elhd_pr$Treatment=="C"]-xofs,elhd_pr$lci[elhd_pr$reserve=="M" & elhd_pr$Treatment=="C"],elhd_pr$DATE[elhd_pr$reserve=="M" & elhd_pr$Treatment=="C"]-xofs,elhd_pr$uci[elhd_pr$reserve=="M" & elhd_pr$Treatment=="C"], code=3, angle=90, length=arrowlgth)
-
-points(elhd_pr$DATE[elhd_pr$reserve=="M" & elhd_pr$Treatment=="A"],elhd_pr$fit[elhd_pr$reserve=="M" & elhd_pr$Treatment=="A"], pch=15, col="red")
-arrows(elhd_pr$DATE[elhd_pr$reserve=="M" & elhd_pr$Treatment=="A"],elhd_pr$lci[elhd_pr$reserve=="M" & elhd_pr$Treatment=="A"],elhd_pr$DATE[elhd_pr$reserve=="M" & elhd_pr$Treatment=="A"],elhd_pr$uci[elhd_pr$reserve=="M" & elhd_pr$Treatment=="A"], code=3, angle=90, length=arrowlgth, col="red")
-
-points(elhd_pr$DATE[elhd_pr$reserve=="M" & elhd_pr$Treatment=="B"]+xofs,elhd_pr$fit[elhd_pr$reserve=="M" & elhd_pr$Treatment=="B"], pch=15, col="blue")
-arrows(elhd_pr$DATE[elhd_pr$reserve=="M" & elhd_pr$Treatment=="B"]+xofs,elhd_pr$lci[elhd_pr$reserve=="M" & elhd_pr$Treatment=="B"],elhd_pr$DATE[elhd_pr$reserve=="M" & elhd_pr$Treatment=="B"]+xofs,elhd_pr$uci[elhd_pr$reserve=="M" & elhd_pr$Treatment=="B"], code=3, angle=90, length=arrowlgth)
-mtext("Mulangarri",side=3, line=1)
-mtext("exotic_leg_forb diversity", side=3, line=3)
-
-
-#native c4 grass richness:
-nc4_mod<-lmer(native_c4~Treatment+DATE+reserve+Treatment:DATE+Treatment:DATE:reserve+(1|PLOT_ID), data=rich_sc)
-summary(nc4_mod)
-nc4_pr<-predictSE(nc4_mod, nd1, se.fit = T)
-nc4_pr
-nc4_pr<-data.frame(nd1,fit=nc4_pr$fit,se=nc4_pr$se.fit)
-nc4_pr$lci<-nc4_pr$fit-(nc4_pr$se*1.96)
-nc4_pr$uci<-nc4_pr$fit+(nc4_pr$se*1.96)
-head(nc4_pr)
-
-xofs<-0.2
-arrowlgth<-0.02
-
-dev.new(width=10,height=5,noRStudioGD = T,dpi=80, pointsize=12)
-par(mfrow=c(1,2), mar=c(2,4,4,1), mgp=c(2.5,1,0))
-
-plot(nc4_pr$DATE[nc4_pr$reserve=="J" & nc4_pr$Treatment=="C"]-xofs,nc4_pr$fit[nc4_pr$reserve=="J" & nc4_pr$Treatment=="C"], pch=15, ylim=c(min(nc4_pr$lci), max(nc4_pr$uci)), xlim=c(-0.3,2.3), xaxt="n", xlab="", ylab=ylab.thisrun, las=1)
-axis(side = 1, at=c(0,1,2), labels=c(2017,2018,2019))
-arrows(nc4_pr$DATE[nc4_pr$reserve=="J" & nc4_pr$Treatment=="C"]-xofs,nc4_pr$lci[nc4_pr$reserve=="J" & nc4_pr$Treatment=="C"],nc4_pr$DATE[nc4_pr$reserve=="J" & nc4_pr$Treatment=="C"]-xofs,nc4_pr$uci[nc4_pr$reserve=="J" & nc4_pr$Treatment=="C"], code=3, angle=90, length=arrowlgth)
-
-points(nc4_pr$DATE[nc4_pr$reserve=="J" & nc4_pr$Treatment=="A"],nc4_pr$fit[nc4_pr$reserve=="J" & nc4_pr$Treatment=="A"], pch=15, col="red")
-arrows(nc4_pr$DATE[nc4_pr$reserve=="J" & nc4_pr$Treatment=="A"],nc4_pr$lci[nc4_pr$reserve=="J" & nc4_pr$Treatment=="A"],nc4_pr$DATE[nc4_pr$reserve=="J" & nc4_pr$Treatment=="A"],nc4_pr$uci[nc4_pr$reserve=="J" & nc4_pr$Treatment=="A"], code=3, angle=90, length=arrowlgth, col="red")
-
-points(nc4_pr$DATE[nc4_pr$reserve=="J" & nc4_pr$Treatment=="B"]+xofs,nc4_pr$fit[nc4_pr$reserve=="J" & nc4_pr$Treatment=="B"], pch=15, col="blue")
-arrows(nc4_pr$DATE[nc4_pr$reserve=="J" & nc4_pr$Treatment=="B"]+xofs,nc4_pr$lci[nc4_pr$reserve=="J" & nc4_pr$Treatment=="B"],nc4_pr$DATE[nc4_pr$reserve=="J" & nc4_pr$Treatment=="B"]+xofs,nc4_pr$uci[nc4_pr$reserve=="J" & nc4_pr$Treatment=="B"], code=3, angle=90, length=arrowlgth)
-
-legend(1.5,4,legend=c("Control","Spot spray","Boom spray"), col=c("black","red","blue"), pch=15, bty="n", pt.cex = 3)
-mtext("Jerra",side=3, line=1)
-
-# mulungarri:
-plot(nc4_pr$DATE[nc4_pr$reserve=="M" & nc4_pr$Treatment=="C"]-xofs,nc4_pr$fit[nc4_pr$reserve=="M" & nc4_pr$Treatment=="C"], pch=15, ylim=c(min(nc4_pr$lci), max(nc4_pr$uci)), xlim=c(-0.3,2.3), xaxt="n", xlab="", ylab=ylab.thisrun, las=1)
-axis(side = 1, at=c(0,1,2), labels=c(2017,2018,2019))
-arrows(nc4_pr$DATE[nc4_pr$reserve=="M" & nc4_pr$Treatment=="C"]-xofs,nc4_pr$lci[nc4_pr$reserve=="M" & nc4_pr$Treatment=="C"],nc4_pr$DATE[nc4_pr$reserve=="M" & nc4_pr$Treatment=="C"]-xofs,nc4_pr$uci[nc4_pr$reserve=="M" & nc4_pr$Treatment=="C"], code=3, angle=90, length=arrowlgth)
-
-points(nc4_pr$DATE[nc4_pr$reserve=="M" & nc4_pr$Treatment=="A"],nc4_pr$fit[nc4_pr$reserve=="M" & nc4_pr$Treatment=="A"], pch=15, col="red")
-arrows(nc4_pr$DATE[nc4_pr$reserve=="M" & nc4_pr$Treatment=="A"],nc4_pr$lci[nc4_pr$reserve=="M" & nc4_pr$Treatment=="A"],nc4_pr$DATE[nc4_pr$reserve=="M" & nc4_pr$Treatment=="A"],nc4_pr$uci[nc4_pr$reserve=="M" & nc4_pr$Treatment=="A"], code=3, angle=90, length=arrowlgth, col="red")
-
-points(nc4_pr$DATE[nc4_pr$reserve=="M" & nc4_pr$Treatment=="B"]+xofs,nc4_pr$fit[nc4_pr$reserve=="M" & nc4_pr$Treatment=="B"], pch=15, col="blue")
-arrows(nc4_pr$DATE[nc4_pr$reserve=="M" & nc4_pr$Treatment=="B"]+xofs,nc4_pr$lci[nc4_pr$reserve=="M" & nc4_pr$Treatment=="B"],nc4_pr$DATE[nc4_pr$reserve=="M" & nc4_pr$Treatment=="B"]+xofs,nc4_pr$uci[nc4_pr$reserve=="M" & nc4_pr$Treatment=="B"], code=3, angle=90, length=arrowlgth)
-mtext("Mulangarri",side=3, line=1)
-mtext("native_c4 richness", side=3, line=3)
-
-
-#significance A richness
-siga_mod<-lmer(exotic_legherb~Treatment+DATE+reserve+Treatment:DATE+Treatment:DATE:reserve+(1|PLOT_ID), data=rich_sc)
-summary(siga_mod)
-siga_pr<-predictSE(siga_mod, nd1, se.fit = T)
-siga_pr
-siga_pr<-data.frame(nd1,fit=siga_pr$fit,se=siga_pr$se.fit)
-siga_pr$lci<-siga_pr$fit-(siga_pr$se*1.96)
-siga_pr$uci<-siga_pr$fit+(siga_pr$se*1.96)
-head(siga_pr)
-
-xofs<-0.2
-arrowlgth<-0.02
-
-dev.new(width=10,height=5,noRStudioGD = T,dpi=80, pointsize=12)
-par(mfrow=c(1,2), mar=c(2,4,4,1), mgp=c(2.5,1,0))
-
-plot(siga_pr$DATE[siga_pr$reserve=="J" & siga_pr$Treatment=="C"]-xofs,siga_pr$fit[siga_pr$reserve=="J" & siga_pr$Treatment=="C"], pch=15, ylim=c(min(siga_pr$lci), max(siga_pr$uci)), xlim=c(-0.3,2.3), xaxt="n", xlab="", ylab=ylab.thisrun, las=1)
-axis(side = 1, at=c(0,1,2), labels=c(2017,2018,2019))
-arrows(siga_pr$DATE[siga_pr$reserve=="J" & siga_pr$Treatment=="C"]-xofs,siga_pr$lci[siga_pr$reserve=="J" & siga_pr$Treatment=="C"],siga_pr$DATE[siga_pr$reserve=="J" & siga_pr$Treatment=="C"]-xofs,siga_pr$uci[siga_pr$reserve=="J" & siga_pr$Treatment=="C"], code=3, angle=90, length=arrowlgth)
-
-points(siga_pr$DATE[siga_pr$reserve=="J" & siga_pr$Treatment=="A"],siga_pr$fit[siga_pr$reserve=="J" & siga_pr$Treatment=="A"], pch=15, col="red")
-arrows(siga_pr$DATE[siga_pr$reserve=="J" & siga_pr$Treatment=="A"],siga_pr$lci[siga_pr$reserve=="J" & siga_pr$Treatment=="A"],siga_pr$DATE[siga_pr$reserve=="J" & siga_pr$Treatment=="A"],siga_pr$uci[siga_pr$reserve=="J" & siga_pr$Treatment=="A"], code=3, angle=90, length=arrowlgth, col="red")
-
-points(siga_pr$DATE[siga_pr$reserve=="J" & siga_pr$Treatment=="B"]+xofs,siga_pr$fit[siga_pr$reserve=="J" & siga_pr$Treatment=="B"], pch=15, col="blue")
-arrows(siga_pr$DATE[siga_pr$reserve=="J" & siga_pr$Treatment=="B"]+xofs,siga_pr$lci[siga_pr$reserve=="J" & siga_pr$Treatment=="B"],siga_pr$DATE[siga_pr$reserve=="J" & siga_pr$Treatment=="B"]+xofs,siga_pr$uci[siga_pr$reserve=="J" & siga_pr$Treatment=="B"], code=3, angle=90, length=arrowlgth)
-
-legend(1.5,4,legend=c("Control","Spot spray","Boom spray"), col=c("black","red","blue"), pch=15, bty="n", pt.cex = 3)
-mtext("Jerra",side=3, line=1)
-
-# mulungarri:
-plot(siga_pr$DATE[siga_pr$reserve=="M" & siga_pr$Treatment=="C"]-xofs,siga_pr$fit[siga_pr$reserve=="M" & siga_pr$Treatment=="C"], pch=15, ylim=c(min(siga_pr$lci), max(siga_pr$uci)), xlim=c(-0.3,2.3), xaxt="n", xlab="", ylab=ylab.thisrun, las=1)
-axis(side = 1, at=c(0,1,2), labels=c(2017,2018,2019))
-arrows(siga_pr$DATE[siga_pr$reserve=="M" & siga_pr$Treatment=="C"]-xofs,siga_pr$lci[siga_pr$reserve=="M" & siga_pr$Treatment=="C"],siga_pr$DATE[siga_pr$reserve=="M" & siga_pr$Treatment=="C"]-xofs,siga_pr$uci[siga_pr$reserve=="M" & siga_pr$Treatment=="C"], code=3, angle=90, length=arrowlgth)
-
-points(siga_pr$DATE[siga_pr$reserve=="M" & siga_pr$Treatment=="A"],siga_pr$fit[siga_pr$reserve=="M" & siga_pr$Treatment=="A"], pch=15, col="red")
-arrows(siga_pr$DATE[siga_pr$reserve=="M" & siga_pr$Treatment=="A"],siga_pr$lci[siga_pr$reserve=="M" & siga_pr$Treatment=="A"],siga_pr$DATE[siga_pr$reserve=="M" & siga_pr$Treatment=="A"],siga_pr$uci[siga_pr$reserve=="M" & siga_pr$Treatment=="A"], code=3, angle=90, length=arrowlgth, col="red")
-
-points(siga_pr$DATE[siga_pr$reserve=="M" & siga_pr$Treatment=="B"]+xofs,siga_pr$fit[siga_pr$reserve=="M" & siga_pr$Treatment=="B"], pch=15, col="blue")
-arrows(siga_pr$DATE[siga_pr$reserve=="M" & siga_pr$Treatment=="B"]+xofs,siga_pr$lci[siga_pr$reserve=="M" & siga_pr$Treatment=="B"],siga_pr$DATE[siga_pr$reserve=="M" & siga_pr$Treatment=="B"]+xofs,siga_pr$uci[siga_pr$reserve=="M" & siga_pr$Treatment=="B"], code=3, angle=90, length=arrowlgth)
-mtext("Mulangarri",side=3, line=1)
-mtext("significance A_ richness", side=3, line=3)
-
-
-
-
-# new data for model estimates:
-nd1<-data.frame(DATE=rep(c(0,1,2),rep(3,3)),Treatment=as.factor(c("C","A","B")),reserve=c(rep("J",9),rep("M",9)))
-
-# lists for storing coefficients, anova tables and model estimates:
-coef.out<-list()
-anova.out<-list()
-preds.out<-list()
-
-
-  # SIMPLIFY MODEL: the interaction between treatment, date and reserve is not significant, remove:
-  
-if(which(rownames(anova(m1))=="Treatment:DATE:reserve")>0.05){
-  form.thisrun<-paste(resp.thisrun,"~Treatment+DATE+reserve+Treatment:DATE+Treatment:DATE:reserve+(1|PLOT_ID)", sep="")
-  m1<-lmer(formula = form.thisrun, data=data.set)
-  summary(m1)
-  anova(m1)
-}
-
-m1_coef<-coef.ext(m1)
-m1_anova<-anova.ext(m1)
-coef.out[[i]]<-m1_coef
-anova.out[[i]]<-m1_anova
-
-p1<-pred(model=m1, new.data = nd1,se.fit = T, type = "response")
-preds.out[[i]]<-p1
-
-
-   # close models
-
-anova.out
-
-
-## THREE WAY INTERACTION:
-head(gdf); dim(gdf)
-rahead(rich_sc,4,7); dim(rich_sc)
-rahead(shan_sc,4,7); dim(shan_sc)
-
-# Native leg. forb, exotic leg forb
-
-resp.thisrun<-gdf$group[26]
-form.threeway<-paste(resp.thisrun,"~Treatment+DATE+reserve+Treatment:DATE+Treatment:reserve+reserve:DATE+(1|PLOT_ID)", sep="")
-
-nfmod2<-lmer(form.threeway,data=rich_sc)
-summary(nfmod2)
-anova(nfmod2)
-
-form.simple<-paste(resp.thisrun,"~Treatment*DATE+reserve+(1|PLOT_ID)", sep="")
-mod.simp<-lmer(form.simple,data=rich_sc)
-summary(mod.simp)
-anova(mod.simp); AIC(mod.simp)
 
 ## PLOT:
 

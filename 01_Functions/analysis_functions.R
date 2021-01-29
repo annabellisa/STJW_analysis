@@ -242,6 +242,21 @@ efs.plot<-function(coef.table,heading){
   axis(side=2, at=1:1:length(coef.table[,1]), labels=rev(as.character(coef.table$term)),las=1, cex.axis=0.8)
 }
 
+# From: http://glmm.wikidot.com/faq
+overdisp_fun <- function(model) {
+  ## number of variance parameters in 
+  ##   an n-by-n variance-covariance matrix
+  vpars <- function(m) {
+    nrow(m)*(nrow(m)+1)/2
+  }
+  model.df <- sum(sapply(VarCorr(model),vpars))+length(fixef(model))
+  rdf <- nrow(model.frame(model))-model.df
+  if(model$family=="truncpoiss") rp <- summary(model)$residuals else rp <- residuals(model,type="pearson")
+  Pearson.chisq <- sum(rp^2)
+  prat <- Pearson.chisq/rdf
+  pval <- pchisq(Pearson.chisq, df=rdf, lower.tail=FALSE)
+  c(chisq=Pearson.chisq,ratio=prat,rdf=rdf,p=pval)
+}
 
 
 
