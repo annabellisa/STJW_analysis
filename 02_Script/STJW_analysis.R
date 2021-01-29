@@ -545,11 +545,10 @@ legend(1,9,legend=c("Jerrabomberra","Mulangari"), col=c("darkturquoise","darkoli
 
 # We fit an interaction between treatment and date in all models to describe the before-after, control-impact nature of our design. 
 
-# Our full model also included interactions between treatment and reserve , but we removed these if they were not significant, keeping only the treatment x date interaction and all main effects. 
+# Our full model included an interaction between date, treatment and reserve, but we removed this term if it was not significant (< 0.05)
 
 # we did not expect the diversity differences to change over time, so we did not fit a year and reserve interaction
 
-# Preliminary analysis showed no evidence of significant three way interactions between treatment, reserve and year. Thus, to avoid overly complex models we only fit first order interacions.
 
 # Dcide the cut-off for analysis. There must be more records (i.e. number of species recorded) than the number of quadrats (48)? I.e. exclude two responses (exotic_perengrass and sed_rus):
 
@@ -561,8 +560,6 @@ rahead(shan,4,7); dim(shan)
 
 # save workspace:
 # save.image("03_Workspaces/stjw_analysis.RData")
-
-
 
 # **** RICHNESS:
 
@@ -667,6 +664,13 @@ summary(fits.rich[[1]])
 coef.rich
 anova.rich[[12]]
 preds.rich
+
+head(gdf); dim(gdf)
+
+# Three-way interactions have a coefficient table with 10 rows, while those without have only seven rows. Thus we can use the length of the coef table to designate whether the three way was significant:
+
+gdf$sig.3way_rich<-ifelse(unlist(lapply(coef.rich,nrow))==10,"yes","no")
+
 
 # save.image("03_Workspaces/stjw_analysis.RData")
 
