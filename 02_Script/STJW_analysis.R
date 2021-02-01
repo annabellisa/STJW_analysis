@@ -549,7 +549,6 @@ legend(1,9,legend=c("Jerrabomberra","Mulangari"), col=c("darkturquoise","darkoli
 
 # we did not expect the diversity differences to change over time, so we did not fit a year and reserve interaction
 
-
 # Dcide the cut-off for analysis. There must be more records (i.e. number of species recorded) than the number of quadrats (48)? I.e. exclude two responses (exotic_perengrass and sed_rus):
 
 gdf<-gdf[-which(gdf$rich_records<48),]
@@ -665,15 +664,39 @@ coef.rich
 anova.rich[[12]]
 preds.rich
 
-head(gdf); dim(gdf)
+# Summarise results (RICHNESS):
+
+gdf.rich<-gdf
+head(gdf.rich); dim(gdf.rich)
+
+# The anova table for richness (Poisson models) was a Likelihood Ratio Test comparing the full 3-way interacion model and the nested model without the 3-way. Where P was > 0.05 the 3-way was removed. When the 3-way was removed, we repeated the LRT test on the interaction model, compared with a nested model without any interactions. Thus, the anova table gives a P value for the 3 way interaction if it was kept, and a P value for the 2 way interaction for all other models:
+rich.anova.ps<-unlist(lapply(anova.rich,function(x)x[2,5]))
+
+# Was the three-way significant?
 
 # Three-way interactions have a coefficient table with 10 rows, while those without have only seven rows. Thus we can use the length of the coef table to designate whether the three way was significant:
 
-gdf$sig.3way_rich<-ifelse(unlist(lapply(coef.rich,nrow))==10,"yes","no")
+gdf.rich$sig.3way<-ifelse(unlist(lapply(coef.rich,nrow))==10,"yes","no")
+gdf.rich$P.3way<-NA
+gdf.rich$P.3way[which(gdf.rich$sig.3way=="yes")]<-rich.anova.ps[which(gdf.rich$sig.3way=="yes")]
 
+# For models without a three way, was the two-way significant?
+
+gdf.rich$P.2way<-rich.anova.ps
+gdf.rich$P.2way[which(gdf.rich$sig.3way=="yes")]<-NA
+gdf.rich$sig.2way<-ifelse(gdf.rich$P.2way<0.05,"yes","no")
+
+# For models without a three way, was the reserve main effect significant?
+
+# This can come directly from the coefficient table since there are only two levels in this factor:
+
+gdf.rich$P.res<-unlist(lapply(coef.rich,function(x)x[x$term=="reserveM",4]))
+gdf.rich$sig.res<-ifelse(gdf.rich$P.res<0.05,"yes","no")
+gdf.rich$P.res[which(gdf.rich$sig.3way=="yes")]<-NA
+gdf.rich$sig.res[which(gdf.rich$sig.3way=="yes")]<-NA
+head(gdf.rich); dim(gdf.rich)
 
 # save.image("03_Workspaces/stjw_analysis.RData")
-
 
 # **** DIVERSITY:
 
@@ -754,7 +777,41 @@ coef.shan
 anova.shan[[19]] # only 19 significant three-way
 preds.shan
 
+# save.image("03_Workspaces/stjw_analysis.RData")
 
+# Summarise results (DIVERISTY):
+
+gdf.shan<-gdf
+head(gdf.shan); dim(gdf.shan)
+
+# The anova table for diversity (normal models) gives P values for all terms directly, rather than the LRT format of the Poisson models. 
+
+# Was the three-way significant?
+
+# Three-way interactions have a anova table with five rows, while those without have only four rows. Use the length of the anova table to designate whether the three way was significant:
+
+gdf.shan$sig.3way<-ifelse(unlist(lapply(anova.shan,nrow))==5,"yes","no")
+gdf.shan$P.3way<-NA
+gdf.shan$P.3way[which(gdf.shan$sig.3way=="yes")]<-unlist(lapply(anova.shan,function(x) x[which(x$term=="Treatment:DATE:reserve"),"p"]))
+head(gdf.shan); dim(gdf.shan)
+
+# For models without a three way, was the two-way significant?
+
+gdf.shan$P.2way<-unlist(lapply(anova.shan,function(x) x[which(x$term=="Treatment:DATE"),"p"]))
+gdf.shan$P.2way[which(gdf.shan$sig.3way=="yes")]<-NA
+gdf.shan$sig.2way<-ifelse(gdf.shan$P.2way<0.05,"yes","no")
+
+# For models without a three way, was the reserve main effect significant?
+
+# This can come directly from the coefficient table since there are only two levels in this factor:
+
+gdf.shan$P.res<-unlist(lapply(coef.shan,function(x)x[x$term=="reserveM",4]))
+gdf.shan$sig.res<-ifelse(gdf.shan$P.res<0.05,"yes","no")
+gdf.shan$P.res[which(gdf.shan$sig.3way=="yes")]<-NA
+gdf.shan$sig.res[which(gdf.shan$sig.3way=="yes")]<-NA
+head(gdf.shan); dim(gdf.shan)
+
+# save.image("03_Workspaces/stjw_analysis.RData")
 
 
 ## PLOT:
