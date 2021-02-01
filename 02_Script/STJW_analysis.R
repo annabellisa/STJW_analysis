@@ -539,7 +539,7 @@ legend(1,9,legend=c("Jerrabomberra","Mulangari"), col=c("darkturquoise","darkoli
 
 # close visualise ----
 
-#  ANALYSIS:    	# ----
+#  ANALYSIS (COMPONENT 1):    	# ----
 
 # Notes on model selection to include in paper:
 
@@ -813,93 +813,273 @@ head(gdf.shan); dim(gdf.shan)
 
 # save.image("03_Workspaces/stjw_analysis.RData")
 
+save.image("03_Workspaces/STJW_analysis.RData")
 
-## PLOT:
+# close analysis ----
+
+#  PLOT (COMPONENT 1):    	# ----
 
 # Species Richness:
+
+# Twenty-six fitted models
+# One significant 3-way (Exotic annual forb) 
+# Eight significant 2-way
+# Seventeen significant reserve effects
+
+# For all models, plot the treatment by year effect, even if the two way wasn't significant. This is so we have an overall visual of the results. 
+# This will give 26 treatment:year plots + one 3-way = 27 panels
+# For all models without a three-way, plot MULANGARRI only. We will plot the reserve effects separately, on another panel. For the three way, plot both reserves
+
+head(gdf.rich); dim(gdf.rich)
+fits.rich
+coef.rich
+anova.rich
+preds.rich
 
 dev.new(width=11.69,height=8.27,noRStudioGD = T,dpi=80, pointsize=12)
 par(mfrow=c(5,6), mar=c(2,4,4,1), mgp=c(2.5,1,0))
 
-for(i in 1:nrow(gdf)){
+for(i in 1:nrow(gdf.rich)){
   
-  resp.thisrun<-gdf$group[i]
-  pred.thisrun<-preds.out[[i]]
-  anova.thisrun<-anova.out[[i]]
-  ylab.thisrun<-gdf$ylab[i]
+  resp.thisrun<-gdf.rich$group[i]
+  pred.thisrun<-preds.rich[[i]]
+  pred.thisrun<-pred.thisrun[which(pred.thisrun$reserve=="M"),]
+  anova.thisrun<-anova.rich[[i]]
+  coef.thisrun<-coef.rich[[i]]
+  ylab.thisrun<-gdf.rich$ylab[i]
+  meta.thisrun<-gdf.rich[i,]
+  xofs<-0.2
+  arrowlgth<-0.02
+  
+  head(pred.thisrun)
+  
+  if (is.null(pred.thisrun)) next
+  
+  if(meta.thisrun$sig.3way=="yes"){
+    
+    jerra.preds<-preds.rich[[i]]
+    jerra.preds<-jerra.preds[which(jerra.preds$reserve=="J"),]
+    
+    # MULANGARRI
+    
+    plot(pred.thisrun$DATE[pred.thisrun$Treatment=="C"]-xofs,pred.thisrun$fit.resp[pred.thisrun$Treatment=="C"], pch=15, ylim=c(min(pred.thisrun$lci.resp), max(pred.thisrun$uci.resp)), xlim=c(-0.3,2.3), xaxt="n", xlab="", ylab=ylab.thisrun, las=1)
+    axis(side = 1, at=c(0,1,2), labels=c(2017,2018,2019))
+    arrows(pred.thisrun$DATE[pred.thisrun$Treatment=="C"]-xofs,pred.thisrun$lci.resp[pred.thisrun$Treatment=="C"],pred.thisrun$DATE[pred.thisrun$Treatment=="C"]-xofs,pred.thisrun$uci.resp[pred.thisrun$Treatment=="C"], code=3, angle=90, length=arrowlgth)
+    points(pred.thisrun$DATE[pred.thisrun$Treatment=="A"],pred.thisrun$fit.resp[pred.thisrun$Treatment=="A"], pch=15, col="red")
+    arrows(pred.thisrun$DATE[pred.thisrun$Treatment=="A"],pred.thisrun$lci.resp[pred.thisrun$Treatment=="A"],pred.thisrun$DATE[pred.thisrun$Treatment=="A"],pred.thisrun$uci.resp[pred.thisrun$Treatment=="A"], code=3, angle=90, length=arrowlgth, col="red")
+    points(pred.thisrun$DATE[pred.thisrun$Treatment=="B"]+xofs,pred.thisrun$fit.resp[pred.thisrun$Treatment=="B"], pch=15, col="blue")
+    arrows(pred.thisrun$DATE[pred.thisrun$Treatment=="B"]+xofs,pred.thisrun$lci.resp[pred.thisrun$Treatment=="B"],pred.thisrun$DATE[pred.thisrun$Treatment=="B"]+xofs,pred.thisrun$uci.resp[pred.thisrun$Treatment=="B"], code=3, angle=90, length=arrowlgth, col="blue")
+    
+    p.trt_yr_int<-round(anova.thisrun$"Pr(>Chi)"[2],4)
+    title(main=paste("Three-way int, ","P=",p.trt_yr_int, sep=""), font.main=1, adj=0, cex=0.9, line=0.5)
+    
+    mtext("Mulangarri", side=3, line=1.5, adj=0)
+    
+    # JERRA
+    
+    plot(jerra.preds$DATE[jerra.preds$Treatment=="C"]-xofs,jerra.preds$fit.resp[jerra.preds$Treatment=="C"], pch=15, ylim=c(min(jerra.preds$lci.resp), max(jerra.preds$uci.resp)), xlim=c(-0.3,2.3), xaxt="n", xlab="", ylab=ylab.thisrun, las=1)
+    axis(side = 1, at=c(0,1,2), labels=c(2017,2018,2019))
+    arrows(jerra.preds$DATE[jerra.preds$Treatment=="C"]-xofs,jerra.preds$lci.resp[jerra.preds$Treatment=="C"],jerra.preds$DATE[jerra.preds$Treatment=="C"]-xofs,jerra.preds$uci.resp[jerra.preds$Treatment=="C"], code=3, angle=90, length=arrowlgth)
+    points(jerra.preds$DATE[jerra.preds$Treatment=="A"],jerra.preds$fit.resp[jerra.preds$Treatment=="A"], pch=15, col="red")
+    arrows(jerra.preds$DATE[jerra.preds$Treatment=="A"],jerra.preds$lci.resp[jerra.preds$Treatment=="A"],jerra.preds$DATE[jerra.preds$Treatment=="A"],jerra.preds$uci.resp[jerra.preds$Treatment=="A"], code=3, angle=90, length=arrowlgth, col="red")
+    points(jerra.preds$DATE[jerra.preds$Treatment=="B"]+xofs,jerra.preds$fit.resp[jerra.preds$Treatment=="B"], pch=15, col="blue")
+    arrows(jerra.preds$DATE[jerra.preds$Treatment=="B"]+xofs,jerra.preds$lci.resp[jerra.preds$Treatment=="B"],jerra.preds$DATE[jerra.preds$Treatment=="B"]+xofs,jerra.preds$uci.resp[jerra.preds$Treatment=="B"], code=3, angle=90, length=arrowlgth, col="blue")
+    
+    p.trt_yr_int<-round(anova.thisrun$"Pr(>Chi)"[2],4)
+    title(main=paste("Three-way int, ","P=",p.trt_yr_int, sep=""), font.main=1, adj=0, cex=0.9, line=0.5)
+    
+    mtext("Jerrabomberra", side=3, line=1.5, adj=0)
+    
+  } # close three way plot
+  
+  if(meta.thisrun$sig.3way=="no"){
+    
+  plot(pred.thisrun$DATE[pred.thisrun$Treatment=="C"]-xofs,pred.thisrun$fit.resp[pred.thisrun$Treatment=="C"], pch=15, ylim=c(min(pred.thisrun$lci.resp), max(pred.thisrun$uci.resp)), xlim=c(-0.3,2.3), xaxt="n", xlab="", ylab=ylab.thisrun, las=1)
+  axis(side = 1, at=c(0,1,2), labels=c(2017,2018,2019))
+  arrows(pred.thisrun$DATE[pred.thisrun$Treatment=="C"]-xofs,pred.thisrun$lci.resp[pred.thisrun$Treatment=="C"],pred.thisrun$DATE[pred.thisrun$Treatment=="C"]-xofs,pred.thisrun$uci.resp[pred.thisrun$Treatment=="C"], code=3, angle=90, length=arrowlgth)
+  points(pred.thisrun$DATE[pred.thisrun$Treatment=="A"],pred.thisrun$fit.resp[pred.thisrun$Treatment=="A"], pch=15, col="red")
+  arrows(pred.thisrun$DATE[pred.thisrun$Treatment=="A"],pred.thisrun$lci.resp[pred.thisrun$Treatment=="A"],pred.thisrun$DATE[pred.thisrun$Treatment=="A"],pred.thisrun$uci.resp[pred.thisrun$Treatment=="A"], code=3, angle=90, length=arrowlgth, col="red")
+  points(pred.thisrun$DATE[pred.thisrun$Treatment=="B"]+xofs,pred.thisrun$fit.resp[pred.thisrun$Treatment=="B"], pch=15, col="blue")
+  arrows(pred.thisrun$DATE[pred.thisrun$Treatment=="B"]+xofs,pred.thisrun$lci.resp[pred.thisrun$Treatment=="B"],pred.thisrun$DATE[pred.thisrun$Treatment=="B"]+xofs,pred.thisrun$uci.resp[pred.thisrun$Treatment=="B"], code=3, angle=90, length=arrowlgth, col="blue")
+  
+  p.res<-round(coef.thisrun$P[which(coef.thisrun$term=="reserveM")],4)
+  p.yr<-round(coef.thisrun$P[which(coef.thisrun$term=="DATE")],4)
+  p.trt_yr_int<-round(anova.thisrun$"Pr(>Chi)"[2],4)
+  
+  if(p.res>0.01) p.res<-round(p.res,2) else p.res<-"<0.01"
+  if(p.yr>0.01) p.yr<-round(p.yr,2) else p.yr<-"<0.01"
+  if(p.trt_yr_int>0.01) p.trt_yr_int<-round(p.trt_yr_int,2) else p.trt_yr_int<-"<0.01"
+  
+  title(main=paste("P values: res=",p.res,"\nyr=",p.yr,"; trt x yr=",p.trt_yr_int, sep=""), font.main=1, adj=0, cex=0.9, line=0.5)
+  
+  } # close plot 2-way
+  
+} # close richness plot
+
+plot(1:10, 1:10, type="n", bty="o", xaxt="n", yaxt="n", xlab="", ylab="")
+legend(1,9,legend=c("Control","Spot spray","Boom spray"), col=c("black","red","blue"), pch=15, bty="n", pt.cex = 3)
+
+## PLOT RESERVE EFFECTS (richness)
+
+res.rich<-gdf.rich[which(gdf.rich$sig.res=="yes"),]
+res.rich<-tidy.df(res.rich)
+head(res.rich); dim(res.rich)
+
+dev.new(width=11.69,height=(8.27/5)*3,noRStudioGD = T,dpi=80, pointsize=12)
+par(mfrow=c(3,6), mar=c(2,4,2,1), mgp=c(2.5,1,0))
+
+for (i in 1:nrow(res.rich)){
+  
+  resp.thisrun<-res.rich$group[i]
+  index.ingdf<-which(gdf.rich$group==resp.thisrun)
+  pred.thisrun<-preds.rich[[index.ingdf]]
+  pred.thisrun<-pred.thisrun[pred.thisrun$DATE==0 & pred.thisrun$Treatment=="C",]
+  coef.thisrun<-coef.rich[[index.ingdf]]
+  ylab.thisrun<-res.rich$ylab[i]
+
+  plot(1:2,pred.thisrun$fit.resp, xlim=c(0.5, 2.5), ylim=c(min(pred.thisrun$lci.resp), max(pred.thisrun$uci.resp)), pch=20, xaxt="n", ylab=ylab.thisrun, las=1)
+  arrows(1:2, pred.thisrun$lci.resp, 1:2, pred.thisrun$uci.resp, code=3, angle=90, length=0.02)
+  axis(side=1,at = 1:2,labels=c("Jerra","Mulangarri"))
+  p.res<-round(coef.thisrun$P[which(coef.thisrun$term=="reserveM")],4)
+  if(p.res>0.001) p.res<-round(p.res,3) else p.res<-"<0.001"
+  
+  title(main=paste("P value: res=",p.res,sep=""), font.main=1, adj=0, cex=0.9, line=0.5)
+  
+} # close plot reserve
+
+plot(1:10, 1:10, type="n", bty="o", xaxt="n", yaxt="n", xlab="", ylab="")
+text(1,8,labels="Estimates of reserve\neffects displayed for\ncontrol in 2017", adj=0)
+
+# Diversity:
+
+# Twenty-six fitted models
+# One significant 3-way (Exotic leg. forb) 
+# One significant 2-way (Exotic forb)
+# Fourteen significant reserve effects
+
+# For all models, plot the treatment by year effect, even if the two way wasn't significant. This is so we have an overall visual of the results. 
+# This will give 26 treatment:year plots + one 3-way = 27 panels
+# For all models without a three-way, plot MULANGARRI only. We will plot the reserve effects separately, on another panel. For the three way, plot both reserves
+
+head(gdf.shan); dim(gdf.shan)
+fits.shan
+coef.shan
+anova.shan
+preds.shan
+
+dev.new(width=11.69,height=8.27,noRStudioGD = T,dpi=80, pointsize=12)
+par(mfrow=c(5,6), mar=c(2,4,4,1), mgp=c(2.5,1,0))
+
+for(i in 1:nrow(gdf.shan)){
+  
+  resp.thisrun<-gdf.shan$group[i]
+  pred.thisrun<-preds.shan[[i]]
+  pred.thisrun<-pred.thisrun[which(pred.thisrun$reserve=="M"),]
+  anova.thisrun<-anova.shan[[i]]
+  coef.thisrun<-coef.shan[[i]]
+  ylab.thisrun<-gdf.shan$ylab[i]
+  meta.thisrun<-gdf.shan[i,]
   xofs<-0.2
   arrowlgth<-0.02
   
   if (is.null(pred.thisrun)) next
   
-  plot(pred.thisrun$DATE[pred.thisrun$Treatment=="C"]-xofs,pred.thisrun$fit[pred.thisrun$Treatment=="C"], pch=15, ylim=c(min(pred.thisrun$lci), max(pred.thisrun$uci)), xlim=c(-0.3,2.3), xaxt="n", xlab="", ylab=ylab.thisrun, las=1)
-  axis(side = 1, at=c(0,1,2), labels=c(2017,2018,2019))
-  arrows(pred.thisrun$DATE[pred.thisrun$Treatment=="C"]-xofs,pred.thisrun$lci[pred.thisrun$Treatment=="C"],pred.thisrun$DATE[pred.thisrun$Treatment=="C"]-xofs,pred.thisrun$uci[pred.thisrun$Treatment=="C"], code=3, angle=90, length=arrowlgth)
-  points(pred.thisrun$DATE[pred.thisrun$Treatment=="A"],pred.thisrun$fit[pred.thisrun$Treatment=="A"], pch=15, col="red")
-  arrows(pred.thisrun$DATE[pred.thisrun$Treatment=="A"],pred.thisrun$lci[pred.thisrun$Treatment=="A"],pred.thisrun$DATE[pred.thisrun$Treatment=="A"],pred.thisrun$uci[pred.thisrun$Treatment=="A"], code=3, angle=90, length=arrowlgth, col="red")
-  points(pred.thisrun$DATE[pred.thisrun$Treatment=="B"]+xofs,pred.thisrun$fit[pred.thisrun$Treatment=="B"], pch=15, col="blue")
-  arrows(pred.thisrun$DATE[pred.thisrun$Treatment=="B"]+xofs,pred.thisrun$lci[pred.thisrun$Treatment=="B"],pred.thisrun$DATE[pred.thisrun$Treatment=="B"]+xofs,pred.thisrun$uci[pred.thisrun$Treatment=="B"], code=3, angle=90, length=arrowlgth, col="blue")
+  if(meta.thisrun$sig.3way=="yes"){
+    
+    jerra.preds<-preds.shan[[i]]
+    jerra.preds<-jerra.preds[which(jerra.preds$reserve=="J"),]
+    
+    # MULANGARRI
+    
+    plot(pred.thisrun$DATE[pred.thisrun$Treatment=="C"]-xofs,pred.thisrun$fit[pred.thisrun$Treatment=="C"], pch=15, ylim=c(min(pred.thisrun$lci), max(pred.thisrun$uci)), xlim=c(-0.3,2.3), xaxt="n", xlab="", ylab=ylab.thisrun, las=1)
+    axis(side = 1, at=c(0,1,2), labels=c(2017,2018,2019))
+    arrows(pred.thisrun$DATE[pred.thisrun$Treatment=="C"]-xofs,pred.thisrun$lci[pred.thisrun$Treatment=="C"],pred.thisrun$DATE[pred.thisrun$Treatment=="C"]-xofs,pred.thisrun$uci[pred.thisrun$Treatment=="C"], code=3, angle=90, length=arrowlgth)
+    points(pred.thisrun$DATE[pred.thisrun$Treatment=="A"],pred.thisrun$fit[pred.thisrun$Treatment=="A"], pch=15, col="red")
+    arrows(pred.thisrun$DATE[pred.thisrun$Treatment=="A"],pred.thisrun$lci[pred.thisrun$Treatment=="A"],pred.thisrun$DATE[pred.thisrun$Treatment=="A"],pred.thisrun$uci[pred.thisrun$Treatment=="A"], code=3, angle=90, length=arrowlgth, col="red")
+    points(pred.thisrun$DATE[pred.thisrun$Treatment=="B"]+xofs,pred.thisrun$fit[pred.thisrun$Treatment=="B"], pch=15, col="blue")
+    arrows(pred.thisrun$DATE[pred.thisrun$Treatment=="B"]+xofs,pred.thisrun$lci[pred.thisrun$Treatment=="B"],pred.thisrun$DATE[pred.thisrun$Treatment=="B"]+xofs,pred.thisrun$uci[pred.thisrun$Treatment=="B"], code=3, angle=90, length=arrowlgth, col="blue")
+    
+    p.trt_yr_int<-round(anova.thisrun$p[which(anova.thisrun$term=="Treatment:DATE:reserve")],4)
+    title(main=paste("Three-way int, ","P=",p.trt_yr_int, sep=""), font.main=1, adj=0, cex=0.9, line=0.5)
+    
+    mtext("Mulangarri", side=3, line=1.5, adj=0)
+    
+    # JERRA
+    
+    plot(jerra.preds$DATE[jerra.preds$Treatment=="C"]-xofs,jerra.preds$fit[jerra.preds$Treatment=="C"], pch=15, ylim=c(min(jerra.preds$lci), max(jerra.preds$uci)), xlim=c(-0.3,2.3), xaxt="n", xlab="", ylab=ylab.thisrun, las=1)
+    axis(side = 1, at=c(0,1,2), labels=c(2017,2018,2019))
+    arrows(jerra.preds$DATE[jerra.preds$Treatment=="C"]-xofs,jerra.preds$lci[jerra.preds$Treatment=="C"],jerra.preds$DATE[jerra.preds$Treatment=="C"]-xofs,jerra.preds$uci[jerra.preds$Treatment=="C"], code=3, angle=90, length=arrowlgth)
+    points(jerra.preds$DATE[jerra.preds$Treatment=="A"],jerra.preds$fit[jerra.preds$Treatment=="A"], pch=15, col="red")
+    arrows(jerra.preds$DATE[jerra.preds$Treatment=="A"],jerra.preds$lci[jerra.preds$Treatment=="A"],jerra.preds$DATE[jerra.preds$Treatment=="A"],jerra.preds$uci[jerra.preds$Treatment=="A"], code=3, angle=90, length=arrowlgth, col="red")
+    points(jerra.preds$DATE[jerra.preds$Treatment=="B"]+xofs,jerra.preds$fit[jerra.preds$Treatment=="B"], pch=15, col="blue")
+    arrows(jerra.preds$DATE[jerra.preds$Treatment=="B"]+xofs,jerra.preds$lci[jerra.preds$Treatment=="B"],jerra.preds$DATE[jerra.preds$Treatment=="B"]+xofs,jerra.preds$uci[jerra.preds$Treatment=="B"], code=3, angle=90, length=arrowlgth, col="blue")
+    
+    p.trt_yr_int<-round(anova.thisrun$p[which(anova.thisrun$term=="Treatment:DATE:reserve")],4)
+    title(main=paste("Three-way int, ","P=",p.trt_yr_int, sep=""), font.main=1, adj=0, cex=0.9, line=0.5)
+    
+    mtext("Jerrabomberra", side=3, line=1.5, adj=0)
+    
+  } # close three way plot
   
-  p.trt<-round(anova.thisrun$p[1],4)
-  p.yr<-round(anova.thisrun$p[2],4)
-  p.int<-round(anova.thisrun$p[3],4)
+  if(meta.thisrun$sig.3way=="no"){
+    
+    plot(pred.thisrun$DATE[pred.thisrun$Treatment=="C"]-xofs,pred.thisrun$fit[pred.thisrun$Treatment=="C"], pch=15, ylim=c(min(pred.thisrun$lci), max(pred.thisrun$uci)), xlim=c(-0.3,2.3), xaxt="n", xlab="", ylab=ylab.thisrun, las=1)
+    axis(side = 1, at=c(0,1,2), labels=c(2017,2018,2019))
+    arrows(pred.thisrun$DATE[pred.thisrun$Treatment=="C"]-xofs,pred.thisrun$lci[pred.thisrun$Treatment=="C"],pred.thisrun$DATE[pred.thisrun$Treatment=="C"]-xofs,pred.thisrun$uci[pred.thisrun$Treatment=="C"], code=3, angle=90, length=arrowlgth)
+    points(pred.thisrun$DATE[pred.thisrun$Treatment=="A"],pred.thisrun$fit[pred.thisrun$Treatment=="A"], pch=15, col="red")
+    arrows(pred.thisrun$DATE[pred.thisrun$Treatment=="A"],pred.thisrun$lci[pred.thisrun$Treatment=="A"],pred.thisrun$DATE[pred.thisrun$Treatment=="A"],pred.thisrun$uci[pred.thisrun$Treatment=="A"], code=3, angle=90, length=arrowlgth, col="red")
+    points(pred.thisrun$DATE[pred.thisrun$Treatment=="B"]+xofs,pred.thisrun$fit[pred.thisrun$Treatment=="B"], pch=15, col="blue")
+    arrows(pred.thisrun$DATE[pred.thisrun$Treatment=="B"]+xofs,pred.thisrun$lci[pred.thisrun$Treatment=="B"],pred.thisrun$DATE[pred.thisrun$Treatment=="B"]+xofs,pred.thisrun$uci[pred.thisrun$Treatment=="B"], code=3, angle=90, length=arrowlgth, col="blue")
+    
+    p.res<-round(coef.thisrun$P[which(coef.thisrun$term=="reserveM")],4)
+    p.yr<-round(coef.thisrun$P[which(coef.thisrun$term=="DATE")],4)
+    p.trt_yr_int<-round(anova.thisrun$p[which(anova.thisrun$term=="Treatment:DATE")],4)
+    
+    if(p.res>0.01) p.res<-round(p.res,2) else p.res<-"<0.01"
+    if(p.yr>0.01) p.yr<-round(p.yr,2) else p.yr<-"<0.01"
+    if(p.trt_yr_int>0.001) p.trt_yr_int<-round(p.trt_yr_int,3) else p.trt_yr_int<-"<0.001"
+    
+    title(main=paste("P values: res=",p.res,"\nyr=",p.yr,"; trt x yr=",p.trt_yr_int, sep=""), font.main=1, adj=0, cex=0.9, line=0.5)
+    
+  } # close plot 2-way
   
-  if(p.trt>0.01) p.trt<-round(p.trt,2) else p.trt<-"<0.01"
-  if(p.yr>0.01) p.yr<-round(p.yr,2) else p.yr<-"<0.01"
-  if(p.int>0.01) p.int<-round(p.int,2) else p.int<-"<0.01"
-  
-  title(main=paste("P values: trt=",p.trt,"\nyr=",p.yr,"; int=",p.int), font.main=1, adj=0, cex=0.9, line=0.5)
-  
-}
+} # close diversity plot
 
 plot(1:10, 1:10, type="n", bty="o", xaxt="n", yaxt="n", xlab="", ylab="")
 legend(1,9,legend=c("Control","Spot spray","Boom spray"), col=c("black","red","blue"), pch=15, bty="n", pt.cex = 3)
 
-# Shannon's Diversity:
+## PLOT RESERVE EFFECTS (diversity)
 
-dev.new(width=11.69,height=8.27,noRStudioGD = T,dpi=80, pointsize=12)
-par(mfrow=c(5,6), mar=c(2,4,4,1), mgp=c(2.5,1,0))
+res.shan<-gdf.shan[which(gdf.shan$sig.res=="yes"),]
+res.shan<-tidy.df(res.shan)
+head(res.shan); dim(res.shan)
 
-for(i in 1:nrow(gdf)){
+dev.new(width=(11.69/6)*5,height=(8.27/5)*3,noRStudioGD = T,dpi=80, pointsize=12)
+par(mfrow=c(3,5), mar=c(2,4,2,1), mgp=c(2.5,1,0))
+
+for (i in 1:nrow(res.shan)){
   
-  resp.thisrun<-gdf$group[i]
-  pred.thisrun<-preds.out[[i]]
-  anova.thisrun<-anova.out[[i]]
-  ylab.thisrun<-gdf$ylab[i]
-  xofs<-0.2
-  arrowlgth<-0.02
+  resp.thisrun<-res.shan$group[i]
+  index.ingdf<-which(gdf.shan$group==resp.thisrun)
+  pred.thisrun<-preds.shan[[index.ingdf]]
+  pred.thisrun<-pred.thisrun[pred.thisrun$DATE==0 & pred.thisrun$Treatment=="C",]
+  coef.thisrun<-coef.shan[[index.ingdf]]
+  ylab.thisrun<-res.shan$ylab[i]
   
-  if (is.null(pred.thisrun)){
-    plot(1:10, 1:10, type="n", bty="o", xaxt="n", yaxt="n", xlab="", ylab="")
-    next
-  }
+  plot(1:2,pred.thisrun$fit, xlim=c(0.5, 2.5), ylim=c(min(pred.thisrun$lci), max(pred.thisrun$uci)), pch=20, xaxt="n", ylab=ylab.thisrun, las=1)
+  arrows(1:2, pred.thisrun$lci, 1:2, pred.thisrun$uci, code=3, angle=90, length=0.02)
+  axis(side=1,at = 1:2,labels=c("Jerra","Mulangarri"))
+  p.res<-round(coef.thisrun$P[which(coef.thisrun$term=="reserveM")],4)
+  if(p.res>0.001) p.res<-round(p.res,3) else p.res<-"<0.001"
   
-  plot(pred.thisrun$DATE[pred.thisrun$Treatment=="C"]-xofs,pred.thisrun$fit[pred.thisrun$Treatment=="C"], pch=15, ylim=c(min(pred.thisrun$lci), max(pred.thisrun$uci)), xlim=c(-0.3,2.3), xaxt="n", xlab="", ylab=ylab.thisrun, las=1)
-  axis(side = 1, at=c(0,1,2), labels=c(2017,2018,2019))
-  arrows(pred.thisrun$DATE[pred.thisrun$Treatment=="C"]-xofs,pred.thisrun$lci[pred.thisrun$Treatment=="C"],pred.thisrun$DATE[pred.thisrun$Treatment=="C"]-xofs,pred.thisrun$uci[pred.thisrun$Treatment=="C"], code=3, angle=90, length=arrowlgth)
-  points(pred.thisrun$DATE[pred.thisrun$Treatment=="A"],pred.thisrun$fit[pred.thisrun$Treatment=="A"], pch=15, col="red")
-  arrows(pred.thisrun$DATE[pred.thisrun$Treatment=="A"],pred.thisrun$lci[pred.thisrun$Treatment=="A"],pred.thisrun$DATE[pred.thisrun$Treatment=="A"],pred.thisrun$uci[pred.thisrun$Treatment=="A"], code=3, angle=90, length=arrowlgth, col="red")
-  points(pred.thisrun$DATE[pred.thisrun$Treatment=="B"]+xofs,pred.thisrun$fit[pred.thisrun$Treatment=="B"], pch=15, col="blue")
-  arrows(pred.thisrun$DATE[pred.thisrun$Treatment=="B"]+xofs,pred.thisrun$lci[pred.thisrun$Treatment=="B"],pred.thisrun$DATE[pred.thisrun$Treatment=="B"]+xofs,pred.thisrun$uci[pred.thisrun$Treatment=="B"], code=3, angle=90, length=arrowlgth, col="blue")
+  title(main=paste("P value: res=",p.res,sep=""), font.main=1, adj=0, cex=0.9, line=0.5)
   
-  p.trt<-round(anova.thisrun$p[1],4)
-  p.yr<-round(anova.thisrun$p[2],4)
-  p.int<-round(anova.thisrun$p[3],4)
-  
-  if(p.trt>0.01) p.trt<-round(p.trt,2) else p.trt<-"<0.01"
-  if(p.yr>0.01) p.yr<-round(p.yr,2) else p.yr<-"<0.01"
-  if(p.int>0.01) p.int<-round(p.int,2) else p.int<-"<0.01"
-  
-  title(main=paste("P values: trt=",p.trt,"\nyr=",p.yr,"; int=",p.int), font.main=1, adj=0, cex=0.9, line=0.5)
-  
-}
+} # close plot reserve
 
 plot(1:10, 1:10, type="n", bty="o", xaxt="n", yaxt="n", xlab="", ylab="")
-legend(1,9,legend=c("Control","Spot spray","Boom spray"), col=c("black","red","blue"), pch=15, bty="n", pt.cex = 3)
+text(1,8,labels="Estimates of reserve\neffects displayed for\ncontrol in 2017", adj=0)
 
-save.image("03_Workspaces/STJW_analysis.RData")
-
-# close analysis ----
+# close plot component 1 ----
 
 #  COMPONENT 4 seed viability:    	# ----
 
