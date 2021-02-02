@@ -37,7 +37,6 @@ rahead(cv17,3,7)
 rahead(cv18,3,7)
 rahead(cv19,3,7)
 
-
 # PLANT INFO:
 
 pinfo<-read.table(paste(data_dir,"plant_info.txt",sep="/"),header=T)
@@ -77,7 +76,6 @@ length(cvnames17)==length(cvnames18)
 length(cvnames17)==length(cvnames19)
 length(cvnames18)==length(cvnames19)
 
-
 table(cvnames17 %in% cvnames18)
 table(cvnames17 %in% cvnames19)
 table(cvnames18 %in% cvnames19)
@@ -92,7 +90,6 @@ table(cnames19 %in% pinfo$Sp)
 table(cvnames17 %in% pinfo$Sp)
 table(cvnames18 %in% pinfo$Sp)
 table(cvnames19 %in% pinfo$Sp)
-
 
 # close import data ----
 
@@ -119,7 +116,6 @@ colnames(ct19)[which(colnames(ct19)=="QUADRAT_Direction")]<-"Treatment"
 colnames(cv17)[which(colnames(cv17)=="QUADRAT_Direction")]<-"Treatment"
 colnames(cv18)[which(colnames(cv18)=="QUADRAT_Direction")]<-"Treatment"
 colnames(cv19)[which(colnames(cv19)=="QUADRAT_Direction")]<-"Treatment"
-
 
 # create reserve variable from PLOT_ID:
 #COUNT:
@@ -159,7 +155,6 @@ cv17<-cv17[,c(which(colnames(cv17) %in% c("DATE", "reserve")),which(!colnames(cv
 cv18<-cv18[,c(which(colnames(cv18) %in% c("DATE", "reserve")),which(!colnames(cv18) %in% c("DATE", "reserve")))]
 cv19<-cv19[,c(which(colnames(cv19) %in% c("DATE", "reserve")),which(!colnames(cv19) %in% c("DATE", "reserve")))]
 
-
 # remove unwanted columns:
 #COUNT:
 ct17$QUAD_ID<-NULL
@@ -190,7 +185,6 @@ cv17$reserve<-as.factor(cv17$reserve)
 cv17$PLOT_ID<-as.factor(cv17$PLOT_ID)
 cv17$Treatment<-factor(cv17$Treatment,levels=c("C","A","B"))
 
-
 cv18$reserve<-as.factor(cv18$reserve)
 cv18$PLOT_ID<-as.factor(cv18$PLOT_ID)
 cv18$Treatment<-factor(cv18$Treatment,levels=c("C","A","B"))
@@ -199,13 +193,11 @@ cv19$reserve<-as.factor(cv19$reserve)
 cv19$PLOT_ID<-as.factor(cv19$PLOT_ID)
 cv19$Treatment<-factor(cv19$Treatment,levels=c("C","A","B"))
 
-
 # replace COUNT categories with numbers:
 
 # 16-50 	W	35
 # 51-100	X	75
 # >100	  Y	100
-
 
 ct17d<-as.matrix(ct17[,which(colnames(ct17)=="Aca_ovi"):ncol(ct17)])
 ct17d[which(ct17d=="W")]<-35
@@ -313,6 +305,45 @@ rahead(ct17,3,7); dim(ct17)
 rahead(ct18,3,7); dim(ct18)
 rahead(ct19,3,7); dim(ct19)
 
+# Combine count and cover data:
+
+# COUNT:
+rahead(ct17,3,7); dim(ct17)
+rahead(ct18,3,7); dim(ct18)
+rahead(ct19,3,7); dim(ct19)
+
+# Aus_den and Aus_sca are switched in ct19
+# Flip them around:
+table(colnames(ct17)==colnames(ct18))
+table(colnames(ct17)==colnames(ct19))
+colnames(ct17)[which(!colnames(ct17)==colnames(ct19))]
+colnames(ct19)[which(!colnames(ct19)==colnames(ct17))]
+
+head(ct17[,1:15],3)
+head(ct18[,1:15],3)
+head(ct19[,1:15],3)
+
+# Warning: run this only once
+# Already saved in workspace
+# ct19<-ct19[,c(1:which(colnames(ct19)=="Aus_big"),which(colnames(ct19)=="Aus_den"),which(colnames(ct19)=="Aus_sca"),which(colnames(ct19)=="Ave_sp."):ncol(ct19))]
+
+ct_dat<-rbind(ct17, ct18, ct19)
+rahead(ct_dat,3,7); dim(ct_dat)
+
+# COVER
+rahead(cv17,3,7); dim(ct17)
+rahead(cv18,3,7); dim(ct18)
+rahead(cv19,3,7); dim(ct19)
+
+# For cover, they're in the correct order:
+table(colnames(cv17)==colnames(cv18))
+table(colnames(cv17)==colnames(cv19))
+table(colnames(cv18)==colnames(cv19))
+
+cv_dat<-rbind(cv17, cv18, cv19)
+rahead(cv_dat,3,7); dim(cv_dat)
+
+# save.image("03_Workspaces/stjw_analysis.RData")
 
 # close format data ----
 
@@ -1080,6 +1111,29 @@ plot(1:10, 1:10, type="n", bty="o", xaxt="n", yaxt="n", xlab="", ylab="")
 text(1,8,labels="Estimates of reserve\neffects displayed for\ncontrol in 2017", adj=0)
 
 # close plot component 1 ----
+
+#  INDIVIDUAL SPECIES:    	# ----
+
+# save.image("03_Workspaces/stjw_analysis.RData")
+
+rahead(ct_dat,3,7); dim(ct_dat)
+rahead(cv_dat,3,7); dim(cv_dat)
+head(pinfo,3); dim(pinfo)
+
+# Lomandra species:
+# "Lomandra coriacea filiformis"
+# "Lomandra bracteata"          
+# "Lomandra filiformis"         
+# "Lomandra multiflora"     
+
+# Glycine species:
+# "Glycine clandestina"         
+# "Glycine tabacina"  
+
+ind_sp<-c("Eryngium ovinum", "Chrysocephalum apiculatum", "Arthropodium fimbriatum", "Wurmbea dioica", "Desmodium varians", "Plantago varia", "Tricoryne elatior", "Triptilodiscus pygmaeus")
+
+
+# close indiv species ----
 
 #  COMPONENT 4 seed viability:    	# ----
 
