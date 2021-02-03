@@ -221,6 +221,11 @@ ct19d[which(ct19d=="Y")]<-100
 ct19d<-data.frame(apply(ct19d,2,as.numeric))
 ct19<-data.frame(cbind(ct19[,1:which(colnames(ct19)=="Treatment")],ct19d))
 
+# Make sure they're all numeric:
+table(apply(ct17[,5:ncol(ct17)],2,function(x)is.numeric(x)))
+table(apply(ct18[,5:ncol(ct18)],2,function(x)is.numeric(x)))
+table(apply(ct19[,5:ncol(ct19)],2,function(x)is.numeric(x)))
+
 #replace COVER categories with numbers:
 
 # >5%	A	5
@@ -248,7 +253,7 @@ cv17d[which(cv17d=="I")]<-80
 cv17d[which(cv17d=="J")]<-90
 cv17d[which(cv17d=="K")]<-100
 cv17d<-data.frame(apply(cv17d,2,as.numeric))
-cv17d<-data.frame(cbind(cv17[,1:which(colnames(cv17)=="Treatment")],cv17d))
+cv17<-data.frame(cbind(cv17[,1:which(colnames(cv17)=="Treatment")],cv17d))
 
 cv18d<-as.matrix(cv18[,which(colnames(cv18)=="Aca_ovi"):ncol(cv18)])
 cv18d[which(cv18d=="A")]<-5
@@ -263,7 +268,7 @@ cv18d[which(cv18d=="I")]<-80
 cv18d[which(cv18d=="J")]<-90
 cv18d[which(cv18d=="K")]<-100
 cv18d<-data.frame(apply(cv18d,2,as.numeric))
-cv18d<-data.frame(cbind(cv18[,1:which(colnames(cv18)=="Treatment")],cv18d))
+cv18<-data.frame(cbind(cv18[,1:which(colnames(cv18)=="Treatment")],cv18d))
 
 cv19d<-as.matrix(cv19[,which(colnames(cv19)=="Aca_ovi"):ncol(cv19)])
 cv19d[which(cv19d=="A")]<-5
@@ -278,7 +283,16 @@ cv19d[which(cv19d=="I")]<-80
 cv19d[which(cv19d=="J")]<-90
 cv19d[which(cv19d=="K")]<-100
 cv19d<-data.frame(apply(cv19d,2,as.numeric))
-cv19d<-data.frame(cbind(cv19[,1:which(colnames(cv19)=="Treatment")],cv19d))
+cv19<-data.frame(cbind(cv19[,1:which(colnames(cv19)=="Treatment")],cv19d))
+
+rahead(cv17,3,10)
+rahead(cv18,3,10)
+rahead(cv19,3,10)
+
+# Make sure they're all numeric:
+table(apply(cv17[,5:ncol(cv17)],2,function(x)is.numeric(x)))
+table(apply(cv18[,5:ncol(cv18)],2,function(x)is.numeric(x)))
+table(apply(cv19[,5:ncol(cv19)],2,function(x)is.numeric(x)))
 
 # remove unidentified species (for now... but we need to discuss whether these should be included in any analyses):
 #COUNT:
@@ -301,9 +315,18 @@ cv17<-cv17[,-which(colnames(cv17) %in% unid)]
 cv18<-cv18[,-which(colnames(cv18) %in% unid)]
 cv19<-cv19[,-which(colnames(cv19) %in% unid)]
 
-rahead(ct17,3,7); dim(ct17)
-rahead(ct18,3,7); dim(ct18)
-rahead(ct19,3,7); dim(ct19)
+rahead(cv17,3,7); dim(cv17)
+rahead(cv18,3,7); dim(cv18)
+rahead(cv19,3,7); dim(cv19)
+
+# Re-classify Desmodium varians as a native leg forb?
+# Need to double check this is OK with RM. 
+# PlantNet classifies it as a "Prostrate or climbing herb"
+# And it is the ONLY species in the Legume category
+table(pinfo$func_grp)
+pinfo[which(pinfo$Sp=="Des_var"),]$func_grp<-"Leguminous_herb"
+pinfo<-tidy.df(pinfo)
+head(pinfo,2)
 
 # Combine count and cover data:
 
@@ -438,50 +461,6 @@ rahead(ct19,3,7); dim(ct19)
 
 # Add species richness and Shannon's index to count data:
 
-# This function returns both richness and shannon's data frames in a list:
-
-calc.div<-function(species.data, site.data){
-  
-  all.output<-list()
-  
-  rich.data<-list()
-  shan.data<-list()
-  
-  for (i in 1:nrow(group_df)){
-    
-    name.thisrun<-as.character(group_df$group[i])
-    vec.thisrun<-get(name.thisrun)
-    
-    data.thisrun<-species.data[,colnames(species.data) %in% vec.thisrun]
-    head(data.thisrun,3); dim(data.thisrun)
-    
-    if(length(vec.thisrun)==1){
-      data.thisrun<-data.frame(data.thisrun)
-      colnames(data.thisrun)<-vec.thisrun
-    } # close if
-    
-    rich.data[[i]]<-apply(data.thisrun,1,function(x)length(which(x>0)))
-    
-    # if there is only one species in a community (quadrat), shannon's diversity == 0, regardless of how many species are in functional group i. Thus, for functional groups with only one species, the value zero for all quadrats should be zero:
-    if(length(vec.thisrun)==1) shan.data[[i]]<-rep(0, nrow(data.thisrun)) else shan.data[[i]]<-diversity(data.thisrun,index="shannon")
-    
-  } # close i for
-  
-  rich.res<-data.frame(do.call(cbind,rich.data))
-  colnames(rich.res)<-group_df$group
-  rich<-cbind(site.data,rich.res)
-  
-  shan.res<-data.frame(do.call(cbind,shan.data))
-  colnames(shan.res)<-group_df$group
-  shan<-cbind(site.data,shan.res)
-  
-  all.output$rich<-rich
-  all.output$shan<-shan
-  
-  return(all.output)
-  
-} # close function
-
 # CALCULATE diversity for each year separately:
 
 ct17_site.data<-ct17[,1:which(colnames(ct17)=="Treatment")]
@@ -517,58 +496,11 @@ gdf<-group_df
 gdf<-tidy.df(gdf)
 gdf
 
-gdf$ylab<-c("All","Native","Exotic","Indicator","Significance A","Significance B","Common/Increaser","Significance X/Y","Significance Z","Native forb", "Exotic forb","Exotic annual forb","Exotic perennial forb","Native annual forb","Native perennial forb","Native non-leg. forb","Exotic non-leg. forb","Native leg. forb","Exotic leg. forb","Native grass","Exotic grass","Exotic annual grass","Exotic perennial grass","C3 grass","Native C3 grass","Native C4 grass","Exotic C3 grass","Sedge     /Rush")
+gdf$ylab<-c("All","Native","Exotic","Indicator","Significance A","Significance B","Common/Increaser","Significance X/Y","Significance Z","Native forb", "Exotic forb","Exotic annual forb","Exotic perennial forb","Native annual forb","Native perennial forb","Native non-leg. forb","Exotic non-leg. forb","Native leg. forb","Exotic leg. forb","Native grass","Exotic grass","Exotic annual grass","Exotic perennial grass","C3 grass","Native C3 grass","Native C4 grass","Exotic C3 grass","Sedge/Rush")
 
 save.image("03_Workspaces/stjw_analysis.RData")
 
 # close diversity calculation ----
-
-#  VISUALISE raw data:    	# ----
-
-head(gdf); dim(gdf)
-
-rahead(rich,4,7); dim(rich)
-rahead(shan,4,7); dim(shan)
-
-# visualise raw data:
-
-# year effects on species richness:
-
-dev.new(width=11.69,height=8.27,noRStudioGD = T,dpi=80, pointsize=12)
-par(mfrow=c(5,6), mar=c(4,4,1,1), mgp=c(2.5,1,0))
-
-for(i in 1:nrow(gdf)){
-  
-  resp.thisrun<-gdf$group[i]
-  resp.dat<-rich[,which(colnames(rich)==resp.thisrun)]
-  ylab.thisrun<-gdf$ylab[i]
-  
-  boxplot(resp.dat~rich$reserve+as.factor(rich$DATE), cex.axis=1, col=c("darkturquoise","darkolivegreen2"), ylab=ylab.thisrun, xlab="", las=1, xaxt="n")
-  axis(side=1, at=c(1.5,3.5,5.5), labels=c(2017, 2018, 2019), cex.axis=0.8)
-  arrows(c(2.5,4.5),0,c(2.5,4.5),40, length=0, col="grey70")
-}
-plot(1:10, 1:10, type="n", bty="o", xaxt="n", yaxt="n", xlab="", ylab="")
-legend(1,9,legend=c("Jerrabomberra","Mulangari"), col=c("darkturquoise","darkolivegreen2"), pch=15, bty="n", pt.cex = 3)
-
-# treatement effects on species richness:
-
-dev.new(width=11.69,height=8.27,noRStudioGD = T,dpi=80, pointsize=12)
-par(mfrow=c(5,6), mar=c(4,4,1,1), mgp=c(2.5,1,0))
-
-for(i in 1:nrow(gdf)){
-  
-  resp.thisrun<-gdf$group[i]
-  resp.dat<-rich[,which(colnames(rich)==resp.thisrun)]
-  ylab.thisrun<-gdf$ylab[i]
-  
-  boxplot(resp.dat~rich$reserve+as.factor(rich$Treatment), cex.axis=1, col=c("darkturquoise","darkolivegreen2"), ylab=ylab.thisrun, xlab="", las=1, xaxt="n")
-  axis(side=1, at=c(1.5,3.5,5.5), labels=c("C", "A", "B"), cex.axis=0.8)
-  arrows(c(2.5,4.5),0,c(2.5,4.5),40, length=0, col="grey70")
-}
-plot(1:10, 1:10, type="n", bty="o", xaxt="n", yaxt="n", xlab="", ylab="")
-legend(1,9,legend=c("Jerrabomberra","Mulangari"), col=c("darkturquoise","darkolivegreen2"), pch=15, bty="n", pt.cex = 3)
-
-# close visualise ----
 
 #  ANALYSIS (COMPONENT 1):    	# ----
 
@@ -808,6 +740,14 @@ coef.shan
 anova.shan[[19]] # only 19 significant three-way
 preds.shan
 
+rahead(shan_sc,3,5)
+
+# what's going on with native_legherb?
+nlh<-lmer(native_legherb~Treatment+DATE+reserve+Treatment:DATE+(1|PLOT_ID), data=shan_sc)
+summary(nlh)
+# hist(shan_sc$native_legherb) # there's very little data in this group and there isvery high proportion of zeros
+gdf.shan
+
 # save.image("03_Workspaces/stjw_analysis.RData")
 
 # Summarise results (DIVERISTY):
@@ -844,11 +784,9 @@ head(gdf.shan); dim(gdf.shan)
 
 # save.image("03_Workspaces/stjw_analysis.RData")
 
-save.image("03_Workspaces/STJW_analysis.RData")
-
 # close analysis ----
 
-#  PLOT (COMPONENT 1):    	# ----
+#  PLOT ESTIMATES (COMPONENT 1):    	# ----
 
 # Species Richness:
 
@@ -1114,23 +1052,48 @@ text(1,8,labels="Estimates of reserve\neffects displayed for\ncontrol in 2017", 
 
 #  INDIVIDUAL SPECIES:    	# ----
 
+# Need to check with RM: why was Desmodium varians classified as a legume rather than a native leg forb?
+# Is it OK for us to classify it as native leg forb (I have done this above in the 'format data' section)?
+# PlantNet classifies it as a "Prostrate or climbing herb"
+# And it is the ONLY species in the Legume category
+table(pinfo$func_grp)
+
 # save.image("03_Workspaces/stjw_analysis.RData")
 
 rahead(ct_dat,3,7); dim(ct_dat)
 rahead(cv_dat,3,7); dim(cv_dat)
 head(pinfo,3); dim(pinfo)
 
-# Lomandra species:
-# "Lomandra coriacea filiformis"
-# "Lomandra bracteata"          
-# "Lomandra filiformis"         
-# "Lomandra multiflora"     
+ind.sp<-data.frame(ind_species=c("Eryngium ovinum", "Chrysocephalum apiculatum", "Arthropodium fimbriatum", "Wurmbea dioica", "Desmodium varians", "Plantago varia", "Tricoryne elatior", "Triptilodiscus pygmaeus","Lomandra coriacea filiformis", "Lomandra bracteata", "Lomandra filiformis","Lomandra multiflora","Glycine clandestina","Glycine tabacina"))
+ind.sp<-merge(ind.sp, pinfo, by.x="ind_species", by.y="Species")
+ind.sp
+indsp<-ind.sp$Sp
 
-# Glycine species:
-# "Glycine clandestina"         
-# "Glycine tabacina"  
+ct_ind<-ct_dat[,c(1:4, which(colnames(ct_dat) %in% indsp))]
+cv_ind<-cv_dat[,c(1:4, which(colnames(cv_dat) %in% indsp))]
 
-ind_sp<-c("Eryngium ovinum", "Chrysocephalum apiculatum", "Arthropodium fimbriatum", "Wurmbea dioica", "Desmodium varians", "Plantago varia", "Tricoryne elatior", "Triptilodiscus pygmaeus")
+
+# ORDER so the columns match:
+
+ct_ind<-ct_ind[order(ct_ind$DATE, ct_ind$reserve, ct_ind$PLOT_ID, ct_ind$Treatment),]
+ct_ind<-tidy.df(ct_ind)
+cv_ind<-cv_ind[order(cv_ind$DATE, cv_ind$reserve, cv_ind$PLOT_ID, cv_ind$Treatment),]
+cv_ind<-tidy.df(cv_ind)
+rahead(ct_ind,3,7); dim(ct_ind)
+rahead(cv_ind,3,7); dim(cv_ind)
+
+head(ind.sp); dim(ind.sp)
+# Lom_bra (7), Lom_cor (8), Lom_fil (9), Wur_dio (14) cover and count not lining up
+table((ct_ind[ind.sp$Sp[9]]>0)==(cv_ind[ind.sp$Sp[9]]>0))
+
+sum(ct_ind$Lom_bra)
+sum(cv_ind$Lom_bra)
+
+# Lom_bra
+# M2B 2018 should be count=2, cover=A (5)
+# Cover is zero for 2018
+cbind(ct_ind[,c(1:4,which(colnames(ct_ind)=="Lom_bra"))],cv_ind[,c(1:4,which(colnames(cv_ind)=="Lom_bra"))])
+
 
 
 # close indiv species ----
