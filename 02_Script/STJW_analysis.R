@@ -1060,8 +1060,78 @@ table(pinfo$func_grp)
 
 # save.image("03_Workspaces/stjw_analysis.RData")
 
+# ORDER data so the columns match:
+
+ct_dat<-ct_dat[order(ct_dat$DATE, ct_dat$reserve, ct_dat$PLOT_ID, ct_dat$Treatment),]
+ct_dat<-tidy.df(ct_dat)
+cv_dat<-cv_dat[order(cv_dat$DATE, cv_dat$reserve, cv_dat$PLOT_ID, cv_dat$Treatment),]
+cv_dat<-tidy.df(cv_dat)
+
+# Make sure all site-data columns match:
+
+table(ct_dat$DATE==cv_dat$DATE)
+table(ct_dat$reserve==cv_dat$reserve)
+table(ct_dat$PLOT_ID==cv_dat$PLOT_ID)
+table(ct_dat$Treatment==cv_dat$Treatment)
+table(paste(ct_dat$PLOT_ID,ct_dat$Treatment,sep="")==paste(cv_dat$PLOT_ID,cv_dat$Treatment,sep=""))
+
+# Make sure all species data columns match:
+
 rahead(ct_dat,3,7); dim(ct_dat)
 rahead(cv_dat,3,7); dim(cv_dat)
+
+# The species data columns in cover and count are not in the same order (but we can work around this):
+table(colnames(ct_dat)[5:ncol(ct_dat)]==colnames(cv_dat)[5:ncol(cv_dat)])
+
+# The same species are present in both data sets:
+table(colnames(ct_dat)[5:ncol(ct_dat)] %in% colnames(cv_dat)[5:ncol(cv_dat)])
+table(colnames(cv_dat)[5:ncol(cv_dat)] %in% colnames(ct_dat)[5:ncol(ct_dat)])
+
+# Make sure that the cover and count data have data in the same plots:
+
+sp.totest<-colnames(ct_dat)[5:ncol(ct_dat)]
+
+sp.testout<-data.frame(Sp=sp.totest, lineup=NA, mm17="-", mm18="-", mm19="-")
+
+for (i in 1:length(sp.totest)){
+  
+  sp.thisrun<-sp.totest[i]
+  ct.thisrun<-ct_dat[,sp.thisrun]
+  cv.thisrun<-cv_dat[,sp.thisrun]
+  
+  test.thisrun<-table((ct.thisrun>0)==(cv.thisrun>0))
+  res.thisrun<-unlist(attr(test.thisrun,"dimnames"))
+  
+  # If false is in the result, it means that some of them are lining up. So if this if statement is true, they are NOT lining up. If the if statement is false, they ARE lining up:
+  if("FALSE" %in% res.thisrun) sp.testout$lineup[i]<-"no" else sp.testout$lineup[i]<-"yes"
+  
+  if("FALSE" %in% res.thisrun){
+    
+    test.dat<-ct_dat[,c(1:4,which(colnames(ct_dat)==sp.thisrun))]
+    colnames(test.dat)[ncol(test.dat)]<-"count_data"
+    test.dat<-cbind(test.dat, cv_dat[,which(colnames(cv_dat)==sp.thisrun)])
+    colnames(test.dat)[ncol(test.dat)]<-"cover_data"
+    head(test.dat)
+    
+    test.dat<-test.dat[which(!(test.dat$count_data>0)==(test.dat$cover_data>0)),]
+    dates.thisrun<-unique(test.dat$DATE)
+    if("2017" %in% dates.thisrun) sp.testout$mm17[i]<-"yes"
+    if("2018" %in% dates.thisrun) sp.testout$mm18[i]<-"yes"
+    if("2019" %in% dates.thisrun) sp.testout$mm19[i]<-"yes"
+    
+  } # close if
+  
+} # close for
+
+# These are the species with problems:
+mismatch.sp<-sp.testout[sp.testout$lineup=="no",]
+
+sp.test<-"Gal_div"
+xdat<-ct_dat[,c(1:4,which(colnames(ct_dat)==sp.test))]
+xdat<-cbind(xdat,cv_dat[,which(colnames(cv_dat)==sp.test)])
+head(xdat)
+
+
 head(pinfo,3); dim(pinfo)
 
 ind.sp<-data.frame(ind_species=c("Eryngium ovinum", "Chrysocephalum apiculatum", "Arthropodium fimbriatum", "Wurmbea dioica", "Desmodium varians", "Plantago varia", "Tricoryne elatior", "Triptilodiscus pygmaeus","Lomandra coriacea filiformis", "Lomandra bracteata", "Lomandra filiformis","Lomandra multiflora","Glycine clandestina","Glycine tabacina"))
@@ -1094,7 +1164,8 @@ sum(cv_ind$Lom_bra)
 # Cover is zero for 2018
 cbind(ct_ind[,c(1:4,which(colnames(ct_ind)=="Lom_bra"))],cv_ind[,c(1:4,which(colnames(cv_ind)=="Lom_bra"))])
 
-
+rahead(cv18,3,5)
+cv18[,c(1:4,which(colnames(cv18)=="Lom_bra"))]
 
 # close indiv species ----
 
