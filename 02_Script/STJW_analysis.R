@@ -1128,9 +1128,39 @@ mismatch.sp<-sp.testout[sp.testout$lineup=="no",]
 
 sp.test<-"Gal_div"
 xdat<-ct_dat[,c(1:4,which(colnames(ct_dat)==sp.test))]
+colnames(xdat)[ncol(xdat)]<-"count_data"
 xdat<-cbind(xdat,cv_dat[,which(colnames(cv_dat)==sp.test)])
+colnames(xdat)[ncol(xdat)]<-"cover_data"
 head(xdat)
+xdat[which(!xdat$count_data==xdat$cover_data),]
 
+# Gal_div and Gal_sp. switched? No, it's not that simple...
+# Gal_div = 2017, J3, J4, M3, M4, M7
+# Gal_sp. = 2017, J3, J4, M3, M4, M7
+
+# For Gal_div in 2017, M7C should be A for count and W for cover, but in our data, there is only a value for count, not cover...
+
+
+# Lom_fil and Lom_cor switched?
+# What's happening with Lom_bra?
+# Lom_bra = 2018, M2, M6; 2019, M6
+# Lom_fil = almost everything mismatched
+# Lom_cor = almost everything mismatched
+
+# Ryt_sp2 and Ryt_sp4 switched?
+
+# Vit_gre and Vit_gra switched?
+# Vit_cun, 2017 and 2019, many rows
+# Vit_gre 2017 J2, 2018 M1, J6
+# Vit_gra 2017 J2, 2018 M1, J6
+
+# Wah_com 2017, 2018 many rows
+# Wah_lut, all years, many rows
+# Wah_sp., all years, many rows
+# Wah_sp2 2017 J5, J6, J7, J8
+
+# Wur_dio, 2017, 2018, 2019, Mulangarri many rows
+# Zor_dic 2017 J7, J8
 
 head(pinfo,3); dim(pinfo)
 
