@@ -20,6 +20,119 @@ load("03_Workspaces/stjw_analysis.RData")
 data_dir<-"00_Data/Formatted_data/"
 dir(data_dir)
 
+# PLANT INFO:
+pinfo<-read.table(paste(data_dir,"plant_info.txt",sep="/"),header=T)
+pinfo$Duration<-as.factor(pinfo$Duration)
+pinfo$func_grp<-as.factor(pinfo$func_grp)
+pinfo$Significance<-as.factor(pinfo$Significance)
+pinfo$Status<-as.factor(pinfo$Status)
+head(pinfo,3); dim(pinfo)
+length(which(duplicated(pinfo$Sp))) # should be zero
+
+# remove unidentified species:
+unid<-pinfo$Sp[grep("Uni_", pinfo$Sp)]
+pinfo<-pinfo[-which(pinfo$Sp %in% unid),]
+pinfo<-tidy.df(pinfo)
+head(pinfo, 3); dim(pinfo)
+
+# Re-classify Desmodium varians as a native leg forb
+# Need to double check this is OK with RM. 
+# PlantNet classifies it as a "Prostrate or climbing herb"
+# And it is the ONLY species in the Legume category
+table(pinfo$func_grp)
+pinfo[which(pinfo$Sp=="Des_var"),]$func_grp<-"Leguminous_herb"
+pinfo<-tidy.df(pinfo)
+table(pinfo$func_grp)
+head(pinfo,2); dim(pinfo)
+
+
+# ALL data:
+a17<-read.table(paste(data_dir,"all_2017.txt",sep="/"),header=F)
+a18<-read.table(paste(data_dir,"all_2018.txt",sep="/"),header=F)
+a19<-read.table(paste(data_dir,"all_2019.txt",sep="/"),header=F)
+
+# Data order for each quadrat:
+# 1 = cover
+# 2 = count (main, unshaded, clump)
+# 3 = count (second column, shaded for Tricoryne and Lomandra only, tuft)
+
+# For count we will use the main, unshaded clump count, so remove the third column from all data files:
+# Warning: run only once:
+
+# a17<-a17[,-seq(4,ncol(a17), by=3)]
+# a18<-a18[,-seq(4,ncol(a18), by=3)]
+# a19<-a19[,-seq(4,ncol(a19), by=3)]
+
+rahead(a17,6,6); dim(a17)
+rahead(a18,6,6); dim(a18)
+rahead(a19,6,6); dim(a19)
+
+# Separate count and cover:
+
+ct17<-a17[,c(1,seq(3,ncol(a17),by=2))]
+cv17<-a17[,c(1,seq(2,ncol(a17),by=2))]
+
+ct18<-a18[,c(1,seq(3,ncol(a18),by=2))]
+cv18<-a18[,c(1,seq(2,ncol(a18),by=2))]
+
+ct19<-a19[,c(1,seq(3,ncol(a19),by=2))]
+cv19<-a19[,c(1,seq(2,ncol(a19),by=2))]
+
+rahead(ct17,6,6); dim(ct17)
+rahead(ct18,6,6); dim(ct18)
+rahead(ct19,6,6); dim(ct19)
+
+rahead(cv17,6,6); dim(cv17)
+rahead(cv18,6,6); dim(cv18)
+rahead(cv19,6,6); dim(cv19)
+
+
+# replace COUNT categories with numbers:
+
+# 16-50 	W	35
+# 51-100	X	75
+# >100	  Y	100
+
+# ** WARNING: numeric subsets
+ct17d<-as.matrix(ct17[4:nrow(ct17),2:ncol(ct17)])
+ct17d[which(ct17d=="W")]<-35
+ct17d[which(ct17d=="X")]<-75
+ct17d[which(ct17d=="Y")]<-100
+ct17d<-data.frame(apply(ct17d,2,as.numeric)) # Warning NAs introduced by coercion
+rahead(ct17,6,6)
+ct17site<-ct17[1:3,]
+ct17site[,1:10]
+ct17<-data.frame(cbind(ct17[4:nrow(ct17),1]),ct17d)
+names(ct17)<-names(ct17site)
+ct17<-data.frame(rbind(ct17site, ct17))
+rahead(ct17, 6, 10)
+
+
+
+ct18d<-as.matrix(ct18[,which(colnames(ct18)=="Aca_ovi"):ncol(ct18)])
+ct18d[which(ct18d=="W")]<-35
+ct18d[which(ct18d=="X")]<-75
+ct18d[which(ct18d=="Y")]<-100
+ct18d<-data.frame(apply(ct18d,2,as.numeric))
+ct18<-data.frame(cbind(ct18[,1:which(colnames(ct18)=="Treatment")],ct18d))
+
+ct19d<-as.matrix(ct19[,which(colnames(ct19)=="Aca_ovi"):ncol(ct19)])
+ct19d[which(ct19d=="W")]<-35
+ct19d[which(ct19d=="X")]<-75
+ct19d[which(ct19d=="Y")]<-100
+ct19d<-data.frame(apply(ct19d,2,as.numeric))
+ct19<-data.frame(cbind(ct19[,1:which(colnames(ct19)=="Treatment")],ct19d))
+
+# Make sure they're all numeric:
+table(apply(ct17[,5:ncol(ct17)],2,function(x)is.numeric(x)))
+table(apply(ct18[,5:ncol(ct18)],2,function(x)is.numeric(x)))
+table(apply(ct19[,5:ncol(ct19)],2,function(x)is.numeric(x)))
+
+
+
+
+
+
 # COUNT DATA:
 
 ct17<-read.table(paste(data_dir,"count_2017.txt",sep=""),header=T)
@@ -37,15 +150,6 @@ rahead(cv17,3,7)
 rahead(cv18,3,7)
 rahead(cv19,3,7)
 
-# PLANT INFO:
-
-pinfo<-read.table(paste(data_dir,"plant_info.txt",sep="/"),header=T)
-pinfo$Duration<-as.factor(pinfo$Duration)
-pinfo$func_grp<-as.factor(pinfo$func_grp)
-pinfo$Significance<-as.factor(pinfo$Significance)
-pinfo$Status<-as.factor(pinfo$Status)
-head(pinfo,3); dim(pinfo)
-length(which(duplicated(pinfo$Sp))) # should be zero
 
 # CHECK COUNT:
 
@@ -294,12 +398,6 @@ table(apply(cv17[,5:ncol(cv17)],2,function(x)is.numeric(x)))
 table(apply(cv18[,5:ncol(cv18)],2,function(x)is.numeric(x)))
 table(apply(cv19[,5:ncol(cv19)],2,function(x)is.numeric(x)))
 
-# remove unidentified species (for now... but we need to discuss whether these should be included in any analyses):
-#COUNT:
-unid<-pinfo$Sp[grep("Uni_", pinfo$Sp)]
-pinfo<-pinfo[-which(pinfo$Sp %in% unid),]
-pinfo<-tidy.df(pinfo)
-head(pinfo, 3); dim(pinfo)
 
 ct17<-ct17[,-which(colnames(ct17) %in% unid)]
 ct18<-ct18[,-which(colnames(ct18) %in% unid)]
@@ -319,14 +417,6 @@ rahead(cv17,3,7); dim(cv17)
 rahead(cv18,3,7); dim(cv18)
 rahead(cv19,3,7); dim(cv19)
 
-# Re-classify Desmodium varians as a native leg forb?
-# Need to double check this is OK with RM. 
-# PlantNet classifies it as a "Prostrate or climbing herb"
-# And it is the ONLY species in the Legume category
-table(pinfo$func_grp)
-pinfo[which(pinfo$Sp=="Des_var"),]$func_grp<-"Leguminous_herb"
-pinfo<-tidy.df(pinfo)
-head(pinfo,2)
 
 # Combine count and cover data:
 
@@ -1126,20 +1216,51 @@ for (i in 1:length(sp.totest)){
 # These are the species with problems:
 mismatch.sp<-sp.testout[sp.testout$lineup=="no",]
 
-sp.test<-"Gal_div"
+chk17<-read.table("00_Data/check17.txt",header=F)
+chk18<-read.table("00_Data/check18.txt",header=F)
+chk19<-read.table("00_Data/check19.txt",header=F)
+
+# Update species code and check data for each:
+sp.test<-"Lom_bra"
+
+# Get count and cover data for mismatched species where they DO NOT line up:
 xdat<-ct_dat[,c(1:4,which(colnames(ct_dat)==sp.test))]
 colnames(xdat)[ncol(xdat)]<-"count_data"
 xdat<-cbind(xdat,cv_dat[,which(colnames(cv_dat)==sp.test)])
 colnames(xdat)[ncol(xdat)]<-"cover_data"
 head(xdat)
-xdat[which(!xdat$count_data==xdat$cover_data),]
+mm.dat<-xdat[which(!xdat$count_data==xdat$cover_data),]
+mm.dat$QUAD_ID<-paste(mm.dat$PLOT_ID, mm.dat$Treatment, sep="")
+mm.quads<-unique(as.character(mm.dat$QUAD_ID))
+mm.dat
 
-# Gal_div and Gal_sp. switched? No, it's not that simple...
-# Gal_div = 2017, J3, J4, M3, M4, M7
-# Gal_sp. = 2017, J3, J4, M3, M4, M7
+# For each QUAD, the first row is cover, the second count
+rahead(chk17,6,6)
+full.name<-pinfo[pinfo$Sp==sp.test,]$Species
+df.now<-data.frame(t(chk17[c(1:3,which(chk17$V1==full.name)),]))
+colnames(df.now)<-df.now[1,]
+df.now<-df.now[2:nrow(df.now),]
 
-# For Gal_div in 2017, M7C should be A for count and W for cover, but in our data, there is only a value for count, not cover...
+mm.dat
+df.now[which(df.now$QUAD_ID %in% mm.quads),]
+head(df.now)
 
+# Conclusion # 1: cover is more wrong than count, but there are problems with the count data as well. 
+
+# Gal_div, 2017:
+# J3C count correct, cover wrong
+# J4C count correct, cover wrong
+# J4A count correct, cover wrong
+# M3C count correct, cover wrong
+# M3A count correct, cover wrong
+# M3B count correct, cover wrong
+# M4C count correct, cover wrong
+# M7C count correct, cover wrong
+# M7A count correct, cover wrong
+
+# Gal_sp., 2017:
+# J3C count correct (3), cover wrong (should be 5)
+# "J4C" "J4A" "M3C" "M3A" "M3B" "M4C" "M7C" "M7A" count correct (all zeros), cover wrong (all 5, should be zero)
 
 # Lom_fil and Lom_cor switched?
 # What's happening with Lom_bra?
@@ -1162,6 +1283,8 @@ xdat[which(!xdat$count_data==xdat$cover_data),]
 # Wur_dio, 2017, 2018, 2019, Mulangarri many rows
 # Zor_dic 2017 J7, J8
 
+
+# Individual species to model:
 head(pinfo,3); dim(pinfo)
 
 ind.sp<-data.frame(ind_species=c("Eryngium ovinum", "Chrysocephalum apiculatum", "Arthropodium fimbriatum", "Wurmbea dioica", "Desmodium varians", "Plantago varia", "Tricoryne elatior", "Triptilodiscus pygmaeus","Lomandra coriacea filiformis", "Lomandra bracteata", "Lomandra filiformis","Lomandra multiflora","Glycine clandestina","Glycine tabacina"))
