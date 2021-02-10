@@ -51,7 +51,7 @@ a17<-read.table(paste(data_dir,"all_2017.txt",sep="/"),header=F)
 a18<-read.table(paste(data_dir,"all_2018.txt",sep="/"),header=F)
 a19<-read.table(paste(data_dir,"all_2019.txt",sep="/"),header=F)
 
-# Data order for each quadrat:
+# Data column order for each quadrat:
 # 1 = cover
 # 2 = count (main, unshaded, clump)
 # 3 = count (second column, shaded for Tricoryne and Lomandra only, tuft)
@@ -86,7 +86,6 @@ rahead(cv17,6,6); dim(cv17)
 rahead(cv18,6,6); dim(cv18)
 rahead(cv19,6,6); dim(cv19)
 
-
 # replace COUNT categories with numbers:
 
 # 16-50 	W	35
@@ -98,33 +97,88 @@ ct17d<-as.matrix(ct17[4:nrow(ct17),2:ncol(ct17)])
 ct17d[which(ct17d=="W")]<-35
 ct17d[which(ct17d=="X")]<-75
 ct17d[which(ct17d=="Y")]<-100
-ct17d<-data.frame(apply(ct17d,2,as.numeric)) # Warning NAs introduced by coercion
-rahead(ct17,6,6)
 ct17site<-ct17[1:3,]
 ct17site[,1:10]
 ct17<-data.frame(cbind(ct17[4:nrow(ct17),1]),ct17d)
 names(ct17)<-names(ct17site)
 ct17<-data.frame(rbind(ct17site, ct17))
-rahead(ct17, 6, 10)
 
-
-
-ct18d<-as.matrix(ct18[,which(colnames(ct18)=="Aca_ovi"):ncol(ct18)])
+ct18d<-as.matrix(ct18[4:nrow(ct18),2:ncol(ct18)])
 ct18d[which(ct18d=="W")]<-35
 ct18d[which(ct18d=="X")]<-75
 ct18d[which(ct18d=="Y")]<-100
-ct18d<-data.frame(apply(ct18d,2,as.numeric))
-ct18<-data.frame(cbind(ct18[,1:which(colnames(ct18)=="Treatment")],ct18d))
+ct18site<-ct18[1:3,]
+ct18site[,1:10]
+ct18<-data.frame(cbind(ct18[4:nrow(ct18),1]),ct18d)
+names(ct18)<-names(ct18site)
+ct18<-data.frame(rbind(ct18site, ct18))
 
-ct19d<-as.matrix(ct19[,which(colnames(ct19)=="Aca_ovi"):ncol(ct19)])
+ct19d<-as.matrix(ct19[4:nrow(ct19),2:ncol(ct19)])
 ct19d[which(ct19d=="W")]<-35
 ct19d[which(ct19d=="X")]<-75
 ct19d[which(ct19d=="Y")]<-100
-ct19d<-data.frame(apply(ct19d,2,as.numeric))
-ct19<-data.frame(cbind(ct19[,1:which(colnames(ct19)=="Treatment")],ct19d))
+ct19site<-ct19[1:3,]
+ct19site[,1:10]
+ct19<-data.frame(cbind(ct19[4:nrow(ct19),1]),ct19d)
+names(ct19)<-names(ct19site)
+ct19<-data.frame(rbind(ct19site, ct19))
+
+rahead(ct17, 6, 10)
+rahead(ct18, 6, 10)
+rahead(ct19, 6, 10)
+
+# preserve species names and transpose:
+ct17sp<-ct17$V1[4:nrow(ct17)]
+ct17t<-t(ct17)
+colnames(ct17t)<-ct17t[1,]
+ct17t<-ct17t[2:nrow(ct17t),]
+ct17<-data.frame(ct17t)
+ct17<-tidy.df(ct17)
+
+ct18sp<-ct18$V1[4:nrow(ct18)]
+ct18t<-t(ct18)
+colnames(ct18t)<-ct18t[1,]
+ct18t<-ct18t[2:nrow(ct18t),]
+ct18<-data.frame(ct18t)
+ct18<-tidy.df(ct18)
+
+ct19sp<-ct19$V1[4:nrow(ct19)]
+ct19t<-t(ct19)
+colnames(ct19t)<-ct19t[1,]
+ct19t<-ct19t[2:nrow(ct19t),]
+ct19<-data.frame(ct19t)
+ct19<-tidy.df(ct19)
+
+# Make numeric: 
+ct17[,4:ncol(ct17)]<-apply(ct17[,4:ncol(ct17)],2,as.numeric)
+ct18[,4:ncol(ct18)]<-apply(ct18[,4:ncol(ct18)],2,as.numeric)
+ct19[,4:ncol(ct19)]<-apply(ct19[,4:ncol(ct19)],2,as.numeric)
+
+# Rytidosperma sp (ALL) is only in ct19, not the other years, so we will remove this column:
+ct19sp[which(!ct19sp %in% ct17sp)]
+
+ct19<-ct19[,-which(colnames(ct19)=="Rytidosperma.sp..ALL.")]
+ct19sp<-ct19sp[-which(ct19sp=="Rytidosperma sp (ALL)")]
+
+# Check that all species columns are the same:
+table(ct17sp==ct18sp)
+table(ct17sp==ct19sp)
+table(ct18sp==ct19sp)
+
+# Find out which species have no data in ANY of the years:
+rahead(ct17,6,6); dim(ct17)
+rahead(ct18,6,6); dim(ct18)
+rahead(ct19,6,6); dim(ct19)
+
+sum17<-colSums(ct17[4:ncol(ct17)],na.rm = T)
+sum18<-colSums(ct18[4:ncol(ct18)],na.rm = T)
+sum19<-colSums(ct19[4:ncol(ct19)],na.rm = T)
+
+sumdat<-data.frame(name17=names(sum17),sum17=sum17,name18=names(sum18),sum18=sum18,name19=names(sum19),sum19=sum19)
+head(sumdat)
 
 # Make sure they're all numeric:
-table(apply(ct17[,5:ncol(ct17)],2,function(x)is.numeric(x)))
+table(apply(ct17[4:nrow(ct17),2:ncol(ct17)],2,function(x)is.numeric(x)))
 table(apply(ct18[,5:ncol(ct18)],2,function(x)is.numeric(x)))
 table(apply(ct19[,5:ncol(ct19)],2,function(x)is.numeric(x)))
 
