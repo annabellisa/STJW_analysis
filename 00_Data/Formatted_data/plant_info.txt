@@ -116,6 +116,7 @@ Species	Sp	Duration	Grass	Legume	Herb	func_grp	Significance	Status	Indicator	rar
 "Wahlenbergia communis"	Wah_com	Perennial	0	0	1	Herb	B	N	1	NA
 "Wahlenbergia luteola"	Wah_lut	Perennial	0	0	1	Herb	B	N	1	NA
 "Wahlenbergia sp."	Wah_sp.	Perennial	0	0	1	Herb	B	N	1	NA
+"Wahlenbergia sp. 1"	Wah_sp1	Perennial	0	0	1	Herb	B	N	1	NA
 "Wahlenbergia sp. 2"	Wah_sp2	Perennial	0	0	1	Herb	C	N	0	NA
 "Wahlenbergia stricta"	Wah_str	Perennial	0	0	1	Herb	B	N	1	NA
 "Wurmbea dioica"	Wur_dio	Perennial	0	0	1	Herb	A	N	1	NA

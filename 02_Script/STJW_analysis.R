@@ -45,7 +45,6 @@ pinfo<-tidy.df(pinfo)
 table(pinfo$func_grp)
 head(pinfo,2); dim(pinfo)
 
-
 # ALL data:
 a17<-read.table(paste(data_dir,"all_2017.txt",sep="/"),header=F)
 a18<-read.table(paste(data_dir,"all_2018.txt",sep="/"),header=F)
@@ -59,9 +58,9 @@ a19<-read.table(paste(data_dir,"all_2019.txt",sep="/"),header=F)
 # For count we will use the main, unshaded clump count, so remove the third column from all data files:
 # Warning: run only once:
 
-# a17<-a17[,-seq(4,ncol(a17), by=3)]
-# a18<-a18[,-seq(4,ncol(a18), by=3)]
-# a19<-a19[,-seq(4,ncol(a19), by=3)]
+a17<-a17[,-seq(4,ncol(a17), by=3)]
+a18<-a18[,-seq(4,ncol(a18), by=3)]
+a19<-a19[,-seq(4,ncol(a19), by=3)]
 
 rahead(a17,6,6); dim(a17)
 rahead(a18,6,6); dim(a18)
@@ -123,11 +122,78 @@ ct19<-data.frame(cbind(ct19[4:nrow(ct19),1]),ct19d)
 names(ct19)<-names(ct19site)
 ct19<-data.frame(rbind(ct19site, ct19))
 
-rahead(ct17, 6, 10)
-rahead(ct18, 6, 10)
-rahead(ct19, 6, 10)
+# replace COVER categories with numbers:
+
+# >5%	A	5
+# 5-10%	B	10
+# 11-20%	C 	20
+# 21-30%	D	30
+# 31-40%	E	40
+# 41-50%	F	50
+# 51-60%	G	60
+# 61-70%	H	70
+# 71-80%	I	80
+# 81-90%	J	90
+# 91-100%	K	100
+
+# ** WARNING: numeric subsets
+cv17d<-as.matrix(cv17[4:nrow(cv17),2:ncol(cv17)])
+cv17d[which(cv17d=="A")]<-5
+cv17d[which(cv17d=="B")]<-10
+cv17d[which(cv17d=="C")]<-20
+cv17d[which(cv17d=="D")]<-30
+cv17d[which(cv17d=="E")]<-40
+cv17d[which(cv17d=="F")]<-50
+cv17d[which(cv17d=="G")]<-60
+cv17d[which(cv17d=="H")]<-70
+cv17d[which(cv17d=="I")]<-80
+cv17d[which(cv17d=="J")]<-90
+cv17d[which(cv17d=="K")]<-100
+cv17site<-cv17[1:3,]
+cv17site[,1:10]
+cv17<-data.frame(cbind(cv17[4:nrow(cv17),1]),cv17d)
+names(cv17)<-names(cv17site)
+cv17<-data.frame(rbind(cv17site, cv17))
+
+cv18d<-as.matrix(cv18[4:nrow(cv18),2:ncol(cv18)])
+cv18d[which(cv18d=="A")]<-5
+cv18d[which(cv18d=="B")]<-10
+cv18d[which(cv18d=="C")]<-20
+cv18d[which(cv18d=="D")]<-30
+cv18d[which(cv18d=="E")]<-40
+cv18d[which(cv18d=="F")]<-50
+cv18d[which(cv18d=="G")]<-60
+cv18d[which(cv18d=="H")]<-70
+cv18d[which(cv18d=="I")]<-80
+cv18d[which(cv18d=="J")]<-90
+cv18d[which(cv18d=="K")]<-100
+cv18site<-cv18[1:3,]
+cv18site[,1:10]
+cv18<-data.frame(cbind(cv18[4:nrow(cv18),1]),cv18d)
+names(cv18)<-names(cv18site)
+cv18<-data.frame(rbind(cv18site, cv18))
+
+cv19d<-as.matrix(cv19[4:nrow(cv19),2:ncol(cv19)])
+cv19d[which(cv19d=="A")]<-5
+cv19d[which(cv19d=="B")]<-10
+cv19d[which(cv19d=="C")]<-20
+cv19d[which(cv19d=="D")]<-30
+cv19d[which(cv19d=="E")]<-40
+cv19d[which(cv19d=="F")]<-50
+cv19d[which(cv19d=="G")]<-60
+cv19d[which(cv19d=="H")]<-70
+cv19d[which(cv19d=="I")]<-80
+cv19d[which(cv19d=="J")]<-90
+cv19d[which(cv19d=="K")]<-100
+cv19site<-cv19[1:3,]
+cv19site[,1:10]
+cv19<-data.frame(cbind(cv19[4:nrow(cv19),1]),cv19d)
+names(cv19)<-names(cv19site)
+cv19<-data.frame(rbind(cv19site, cv19))
 
 # preserve species names and transpose:
+
+## COUNT
 ct17sp<-ct17$V1[4:nrow(ct17)]
 ct17t<-t(ct17)
 colnames(ct17t)<-ct17t[1,]
@@ -149,53 +215,134 @@ ct19t<-ct19t[2:nrow(ct19t),]
 ct19<-data.frame(ct19t)
 ct19<-tidy.df(ct19)
 
+## COVER
+cv17sp<-cv17$V1[4:nrow(cv17)]
+cv17t<-t(cv17)
+colnames(cv17t)<-cv17t[1,]
+cv17t<-cv17t[2:nrow(cv17t),]
+cv17<-data.frame(cv17t)
+cv17<-tidy.df(cv17)
+
+cv18sp<-cv18$V1[4:nrow(cv18)]
+cv18t<-t(cv18)
+colnames(cv18t)<-cv18t[1,]
+cv18t<-cv18t[2:nrow(cv18t),]
+cv18<-data.frame(cv18t)
+cv18<-tidy.df(cv18)
+
+cv19sp<-cv19$V1[4:nrow(cv19)]
+cv19t<-t(cv19)
+colnames(cv19t)<-cv19t[1,]
+cv19t<-cv19t[2:nrow(cv19t),]
+cv19<-data.frame(cv19t)
+cv19<-tidy.df(cv19)
+
 # Make numeric: 
 ct17[,4:ncol(ct17)]<-apply(ct17[,4:ncol(ct17)],2,as.numeric)
 ct18[,4:ncol(ct18)]<-apply(ct18[,4:ncol(ct18)],2,as.numeric)
 ct19[,4:ncol(ct19)]<-apply(ct19[,4:ncol(ct19)],2,as.numeric)
 
+cv17[,4:ncol(cv17)]<-apply(cv17[,4:ncol(cv17)],2,as.numeric)
+cv18[,4:ncol(cv18)]<-apply(cv18[,4:ncol(cv18)],2,as.numeric)
+cv19[,4:ncol(cv19)]<-apply(cv19[,4:ncol(cv19)],2,as.numeric)
+
 # Rytidosperma sp (ALL) is only in ct19, not the other years, so we will remove this column:
 ct19sp[which(!ct19sp %in% ct17sp)]
+cv19sp[which(!cv19sp %in% cv17sp)]
 
 ct19<-ct19[,-which(colnames(ct19)=="Rytidosperma.sp..ALL.")]
 ct19sp<-ct19sp[-which(ct19sp=="Rytidosperma sp (ALL)")]
+
+cv19<-cv19[,-which(colnames(cv19)=="Rytidosperma.sp..ALL.")]
+cv19sp<-cv19sp[-which(cv19sp=="Rytidosperma sp (ALL)")]
 
 # Check that all species columns are the same:
 table(ct17sp==ct18sp)
 table(ct17sp==ct19sp)
 table(ct18sp==ct19sp)
 
+table(cv17sp==cv18sp)
+table(cv17sp==cv19sp)
+table(cv18sp==cv19sp)
+
 # Find out which species have no data in ANY of the years:
 
-sum17<-colSums(ct17[4:ncol(ct17)],na.rm = T)
-sum18<-colSums(ct18[4:ncol(ct18)],na.rm = T)
-sum19<-colSums(ct19[4:ncol(ct19)],na.rm = T)
+## COUNT
 
-sumdat<-data.frame(name17=names(sum17),sum17=sum17,name18=names(sum18),sum18=sum18,name19=names(sum19),sum19=sum19)
-sumdat<-tidy.df(sumdat)
-table(sumdat$name17==sumdat$name18)
-table(sumdat$name17==sumdat$name19)
-sumdat$name18<-NULL
-sumdat$name19<-NULL
-sumdat$name_orig<-ct17sp
-check.rows(sumdat[,c("name17","name_orig")])
-sumdat$all_yrs<-rowSums(sumdat[,c("sum17","sum18","sum19")])
-check.rows(sumdat)
-head(sumdat)
+sum_ct17<-colSums(ct17[4:ncol(ct17)],na.rm = T)
+sum_ct18<-colSums(ct18[4:ncol(ct18)],na.rm = T)
+sum_ct19<-colSums(ct19[4:ncol(ct19)],na.rm = T)
+
+sum_ctdat<-data.frame(name17=names(sum_ct17),sum_ct17=sum_ct17,name18=names(sum_ct18),sum_ct18=sum_ct18,name19=names(sum_ct19),sum_ct19=sum_ct19)
+sum_ctdat<-tidy.df(sum_ctdat)
+table(sum_ctdat$name17==sum_ctdat$name18)
+table(sum_ctdat$name17==sum_ctdat$name19)
+sum_ctdat$name18<-NULL
+sum_ctdat$name19<-NULL
+sum_ctdat$all_yrs<-rowSums(sum_ctdat[,c("sum_ct17","sum_ct18","sum_ct19")])
+sum_ctdat$name_orig<-ct17sp
+check.rows(sum_ctdat[,c("name17","name_orig")])
+check.rows(sum_ctdat)
+head(sum_ctdat)
+
+## COVER
+
+sum_cv17<-colSums(cv17[4:ncol(cv17)],na.rm = T)
+sum_cv18<-colSums(cv18[4:ncol(cv18)],na.rm = T)
+sum_cv19<-colSums(cv19[4:ncol(cv19)],na.rm = T)
+
+sum_cvdat<-data.frame(name17=names(sum_cv17),sum_cv17=sum_cv17,name18=names(sum_cv18),sum_cv18=sum_cv18,name19=names(sum_cv19),sum_cv19=sum_cv19)
+sum_cvdat<-tidy.df(sum_cvdat)
+table(sum_cvdat$name17==sum_cvdat$name18)
+table(sum_cvdat$name17==sum_cvdat$name19)
+sum_cvdat$name18<-NULL
+sum_cvdat$name19<-NULL
+sum_cvdat$all_yrs<-rowSums(sum_cvdat[,c("sum_cv17","sum_cv18","sum_cv19")])
+sum_cvdat$name_orig<-cv17sp
+check.rows(sum_cvdat[,c("name17","name_orig")])
+check.rows(sum_cvdat)
+head(sum_cvdat)
 
 # These are the species with no data in any year:
-nodat<-sumdat[which(sumdat$all_yrs==0),]
-nodat_sp<-nodat$name17
-head(nodat)
+nodat_ct<-sum_ctdat[which(sum_ctdat$all_yrs==0),]
+nodat_ct_sp<-nodat_ct$name17
+head(nodat_ct); dim(nodat_ct)
+
+nodat_cv<-sum_cvdat[which(sum_cvdat$all_yrs==0),]
+nodat_cv_sp<-nodat_cv$name17
+head(nodat_cv); dim(nodat_cv)
+
+# Make sure that the species with no data are the same for count and cover:
+table(nodat_ct_sp==nodat_cv_sp)
 
 # Remove species with no data:
-# Reduces from 322 species to 126:
-ct17<-ct17[,-which(colnames(ct17) %in% nodat_sp)]
-ct18<-ct18[,-which(colnames(ct18) %in% nodat_sp)]
-ct19<-ct19[,-which(colnames(ct19) %in% nodat_sp)]
+# Reduces from 322 columns to 126 (123 species):
+ct17<-ct17[,-which(colnames(ct17) %in% nodat_ct_sp)]
+ct18<-ct18[,-which(colnames(ct18) %in% nodat_ct_sp)]
+ct19<-ct19[,-which(colnames(ct19) %in% nodat_ct_sp)]
+
+cv17<-cv17[,-which(colnames(cv17) %in% nodat_cv_sp)]
+cv18<-cv18[,-which(colnames(cv18) %in% nodat_cv_sp)]
+cv19<-cv19[,-which(colnames(cv19) %in% nodat_cv_sp)]
+
+# Remove unidentified species:
+# Reduces to 120 species:
+ct17<-ct17[,-grep("Unidentified",colnames(ct17))]
+ct18<-ct18[,-grep("Unidentified",colnames(ct18))]
+ct19<-ct19[,-grep("Unidentified",colnames(ct19))]
+
+cv17<-cv17[,-grep("Unidentified",colnames(cv17))]
+cv18<-cv18[,-grep("Unidentified",colnames(cv18))]
+cv19<-cv19[,-grep("Unidentified",colnames(cv19))]
+
+# Make sure count and cover colnames are the same
+table(colnames(ct17)==colnames(cv17))
+table(colnames(ct18)==colnames(cv18))
+table(colnames(ct19)==colnames(cv19))
 
 # Create data set of plant names in new data
-spdat<-sumdat[-which(sumdat$name17 %in% nodat_sp),]
+# Since the colnames are lining up precisely, this can be done on only one dataset and applied to all:
+spdat<-sum_ctdat[-which(sum_ctdat$name17 %in% nodat_ct_sp),]
 which(spdat$all_yrs==0)
 
 # remove unidentified species from name data:
@@ -203,26 +350,79 @@ spdat<-spdat[-grep("Unidentified", spdat$name_orig),]
 spdat<-tidy.df(spdat)
 head(spdat); dim(spdat)
 
-# Duplicated in the data
+# Duplicated in the data:
 # Rytidosperma sp.
 # Wahlenbergia sp.
 spdat[which(duplicated(spdat$name_orig)),]
 spdat[which(spdat$name_orig %in% c("Rytidosperma sp.","Wahlenbergia sp.")),]
+
 # "Rytidosperma.sp." and "Wahlenbergia sp." are duplicated in the data. R re-names duplictae colnames with ".1", so the second records are coming up as "Rytidosperma.sp..1" and "Wahlenbergia.sp..1"
+
+# FIX Rytidosperma sp.
 # In 2017 and 2019 the first Rytidosperma.sp. col was used, while in 2018 the second was used. 
-# So for Rytidosperma, it's a case of having to change the second Rytidosperma sp. in 2018 to the first one, and deleting the second column in all data files
-spdat[grep("Rytid",spdat$name_orig),]
+# For 2018 data, the second Rytidosperma sp. column is the correct one (called "Rytidosperma.sp..1" in R notation). Take this column and overwirte the first Rytidosperma sp. column (called "Rytidosperma.sp."). Then delete the second one. 
+# For 2017 and 2019 simply delete the second Rytidosperma sp. ("Rytidosperma.sp..1")
 
 # Rytidosperma 2018
-rahead(ct17, 6, 6)
-rahead(cv17, 6, 6)
+# Overwrite the first col using data from the second
+ct18[,which(colnames(ct18)=="Rytidosperma.sp.")]<-ct18[,which(colnames(ct18)=="Rytidosperma.sp..1")]
+cv18[,which(colnames(cv18)=="Rytidosperma.sp.")]<-cv18[,which(colnames(cv18)=="Rytidosperma.sp..1")]
 
-rahead(ct18, 6, 10)
-rahead(ct19, 6, 10)
+# Check it worked:
+ct18[,which(colnames(ct18)=="Rytidosperma.sp.")]
+ct18[,which(colnames(ct18)=="Rytidosperma.sp..1")]
 
-# For Whalenbergia, it's more complicated. There are 2 x "Whalenbergia sp." in the data. The first has data in all years and the second has data in 2017 and 2019
-# In this case, we should keep the first one in all data files and change the second one to "Wahlenbergia. sp. 1"
+cv18[,which(colnames(cv18)=="Rytidosperma.sp.")]
+cv18[,which(colnames(cv18)=="Rytidosperma.sp..1")]
+
+# Then delete the second column:
+ct18[,which(colnames(ct18)=="Rytidosperma.sp..1")]<-NULL
+cv18[,which(colnames(cv18)=="Rytidosperma.sp..1")]<-NULL
+
+# Rytidosperma 2017 and 2019
+# Delete the second Rytidosperma col ("Rytidosperma.sp..1")
+ct17[,which(colnames(ct17)=="Rytidosperma.sp.")]
+ct17[,which(colnames(ct17)=="Rytidosperma.sp..1")]
+ct19[,which(colnames(ct19)=="Rytidosperma.sp.")]
+ct19[,which(colnames(ct19)=="Rytidosperma.sp..1")]
+
+cv17[,which(colnames(cv17)=="Rytidosperma.sp.")]
+cv17[,which(colnames(cv17)=="Rytidosperma.sp..1")]
+cv19[,which(colnames(cv19)=="Rytidosperma.sp.")]
+cv19[,which(colnames(cv19)=="Rytidosperma.sp..1")]
+
+ct17[,which(colnames(ct17)=="Rytidosperma.sp..1")]<-NULL
+ct19[,which(colnames(ct19)=="Rytidosperma.sp..1")]<-NULL
+cv17[,which(colnames(cv17)=="Rytidosperma.sp..1")]<-NULL
+cv19[,which(colnames(cv19)=="Rytidosperma.sp..1")]<-NULL
+
+# 119 species:
+rahead(ct18,6,6); dim(ct18)
+rahead(ct17,6,6); dim(ct17)
+rahead(ct19,6,6); dim(ct19)
+
+rahead(cv18,6,6); dim(cv18)
+rahead(cv17,6,6); dim(cv17)
+rahead(cv19,6,6); dim(cv19)
+
+# Also remove from spdat:
+spdat[grep("Rytid",spdat$name_orig),]
+spdat<-spdat[-which(spdat$name17=="Rytidosperma.sp..1"),]
+spdat<-tidy.df(spdat)
+head(spdat); dim(spdat)
+
+# FIX Whalenbergia
+# There are 2 x "Whalenbergia sp." in the data. The first has data in all years and the second has data in 2017 and 2019
+# In this case, keep the first one in all data files and change the second one to "Wahlenbergia. sp. 1"
+# Since R has already done this in its automated column re-naming, I've added the second Wahlenbergia ("Wahlenbergia. sp. 1") to the master pinfo, making it 119 species
+# Also need to update it in spdat:
+head(spdat); dim(spdat)
 spdat[grep("Wahl",spdat$name_orig),]
+spdat$name_orig[which(spdat$name17=="Wahlenbergia.sp..1")]<-"Wahlenbergia sp. 1"
+spdat<-tidy.df(spdat)
+head(spdat); dim(spdat)
+
+#####***** UP TO HERE ****** 
 
 
 
@@ -253,6 +453,8 @@ problem_names$pinfo_name[which(problem_names$dat_name=="Dichelachne sp.")]<-"Dic
 
 
 is.unsorted(pinfo$Species)
+
+# OLD code:
 
 # Make sure they're all numeric:
 table(apply(ct17[4:nrow(ct17),2:ncol(ct17)],2,function(x)is.numeric(x)))
