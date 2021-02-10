@@ -166,16 +166,93 @@ table(ct17sp==ct19sp)
 table(ct18sp==ct19sp)
 
 # Find out which species have no data in ANY of the years:
-rahead(ct17,6,6); dim(ct17)
-rahead(ct18,6,6); dim(ct18)
-rahead(ct19,6,6); dim(ct19)
 
 sum17<-colSums(ct17[4:ncol(ct17)],na.rm = T)
 sum18<-colSums(ct18[4:ncol(ct18)],na.rm = T)
 sum19<-colSums(ct19[4:ncol(ct19)],na.rm = T)
 
 sumdat<-data.frame(name17=names(sum17),sum17=sum17,name18=names(sum18),sum18=sum18,name19=names(sum19),sum19=sum19)
+sumdat<-tidy.df(sumdat)
+table(sumdat$name17==sumdat$name18)
+table(sumdat$name17==sumdat$name19)
+sumdat$name18<-NULL
+sumdat$name19<-NULL
+sumdat$name_orig<-ct17sp
+check.rows(sumdat[,c("name17","name_orig")])
+sumdat$all_yrs<-rowSums(sumdat[,c("sum17","sum18","sum19")])
+check.rows(sumdat)
 head(sumdat)
+
+# These are the species with no data in any year:
+nodat<-sumdat[which(sumdat$all_yrs==0),]
+nodat_sp<-nodat$name17
+head(nodat)
+
+# Remove species with no data:
+# Reduces from 322 species to 126:
+ct17<-ct17[,-which(colnames(ct17) %in% nodat_sp)]
+ct18<-ct18[,-which(colnames(ct18) %in% nodat_sp)]
+ct19<-ct19[,-which(colnames(ct19) %in% nodat_sp)]
+
+# Create data set of plant names in new data
+spdat<-sumdat[-which(sumdat$name17 %in% nodat_sp),]
+which(spdat$all_yrs==0)
+
+# remove unidentified species from name data:
+spdat<-spdat[-grep("Unidentified", spdat$name_orig),]
+spdat<-tidy.df(spdat)
+head(spdat); dim(spdat)
+
+# Duplicated in the data
+# Rytidosperma sp.
+# Wahlenbergia sp.
+spdat[which(duplicated(spdat$name_orig)),]
+spdat[which(spdat$name_orig %in% c("Rytidosperma sp.","Wahlenbergia sp.")),]
+# "Rytidosperma.sp." and "Wahlenbergia sp." are duplicated in the data. R re-names duplictae colnames with ".1", so the second records are coming up as "Rytidosperma.sp..1" and "Wahlenbergia.sp..1"
+# In 2017 and 2019 the first Rytidosperma.sp. col was used, while in 2018 the second was used. 
+# So for Rytidosperma, it's a case of having to change the second Rytidosperma sp. in 2018 to the first one, and deleting the second column in all data files
+spdat[grep("Rytid",spdat$name_orig),]
+
+# Rytidosperma 2018
+rahead(ct17, 6, 6)
+rahead(cv17, 6, 6)
+
+rahead(ct18, 6, 10)
+rahead(ct19, 6, 10)
+
+# For Whalenbergia, it's more complicated. There are 2 x "Whalenbergia sp." in the data. The first has data in all years and the second has data in 2017 and 2019
+# In this case, we should keep the first one in all data files and change the second one to "Wahlenbergia. sp. 1"
+spdat[grep("Wahl",spdat$name_orig),]
+
+
+
+# Find which data set has duplicates:
+
+rahead(ct17,6,6); dim(ct17)
+rahead(ct18,6,6); dim(ct18)
+rahead(ct19,6,6); dim(ct19)
+
+which(duplicated(colnames(ct17[,4:ncol(ct17)])))
+which(duplicated(colnames(ct18[,4:ncol(ct18)])))
+which(duplicated(colnames(ct19[,4:ncol(ct19)])))
+
+# Make data set of species names that don't appear in pinfo:
+head(pinfo,2); dim(pinfo)
+problem_names<-data.frame(dat_name=spdat$name_orig[which(!spdat$name_orig %in% pinfo$Species)])
+
+# Find the proper names in pinfo, if they exist (brute force):
+problem_names$pinfo_name<-NA
+problem_names$pinfo_name[which(problem_names$dat_name=="Anthosachne scaber")]<-pinfo$Species[grep("Anthosachne", pinfo$Species)]
+problem_names$pinfo_name[which(problem_names$dat_name=="Lomandra filiformis coriacea")]<-pinfo$Species[grep("Lomandra coriacea filiformis", pinfo$Species)]
+problem_names$pinfo_name[which(problem_names$dat_name=="Rytidosperma sp.")]<-"Rytidosperma sp"
+problem_names$pinfo_name[which(problem_names$dat_name=="Dichelachne sp.")]<-"Dichelachne sp"
+
+
+
+
+
+
+is.unsorted(pinfo$Species)
 
 # Make sure they're all numeric:
 table(apply(ct17[4:nrow(ct17),2:ncol(ct17)],2,function(x)is.numeric(x)))
