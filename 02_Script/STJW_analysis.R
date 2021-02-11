@@ -635,33 +635,137 @@ cv19$Treatment<-factor(cv19$Treatment,levels=c("C","A","B"))
 # We will use data from the other clump/tuft observations to impute clump counts at these sites
 # M1A, M1B, M1C, M4A, J4C, J6A
 
-rahead(ct17,4,10); dim(ct17)
-ct17[,c("PLOT_ID","Treatment","Tri_ela")]
-unlist(apply(ct17,2,function(x) which(is.na(x))))
-
+# Tri_ela data:
 te<-read.table(paste(data_dir, "Tri_ela_dat.txt", sep="/"), header=T)
 te$reserve<-te$PLOT_ID 
 te$reserve<- substr(te$reserve,1,1)
 te$reserve<-as.factor(te$reserve)
 te<-te[-which(te$type=="cover"),]
 te<-tidy.df(te)
+
+# Divide clump and tuft
 te_clump<-te[te$type=="clump",]
 te_tuft<-te[te$type=="tuft",]
+head(te_clump,3); dim(te_clump)
 head(te_tuft,3); dim(te_tuft)
 
+# Combine so that clump and tuft have their own columns:
 te<-te_clump
-colnames(te)[which(colnames(te)=="Tri_ela")]<-"te_clump"
+colnames(te)[which(colnames(te)=="Tri_ela")]<-"clump"
 te$type<-NULL
+
+# Make sure quadrats are in the same order:
 table(te$QUAD_ID==te_tuft$QUAD_ID)
+
+# Then combine and re-name columns:
 te<-cbind(te, te_tuft$Tri_ela)
-colnames(te)[which(colnames(te)=="te_tuft$Tri_ela")]<-"te_tuft"
+colnames(te)[which(colnames(te)=="te_tuft$Tri_ela")]<-"tuft"
+
+# Add yr
+te$yr<-te$year-min(te$year)
+
+# Correlation:
+# plot(te$clump, te$tuft)
+cor.test(te$clump, te$tuft)
+
+# Remove outlier:
+te<-te[-which(te$clump>25),]
 head(te,3); dim(te)
 
-#### UP TO HERE
+# Fit models:
+temod1<-lm(clump~tuft*yr+reserve,data=te) 
+temod2<-lm(clump~tuft+yr+reserve,data=te) 
+temod3<-lm(clump~tuft*yr,data=te) 
+temod4<-lm(clump~tuft+yr,data=te) 
+summary(temod1)
+summary(temod2)
+AIC(temod1); AIC(temod2); AIC(temod3); AIC(temod4)
 
-temod1<-lm(clump~tuft+reserve,data=Tri_eladat[Tri_eladat$clump<20,]) 
-summary(temod1) #reserve not significant
-temod2<-lm(clump~tuft,data=Tri_eladat[Tri_eladat$clump<20,
+# Predict from model:
+te.nd<-data.frame(tuft=seq(min(te$tuft),max(te$tuft),length.out = 50), yr=rep(seq(min(te$yr),max(te$yr)),rep(50,3)),reserve=rep(c("J","M"),rep(150,2)))
+te.pr<-predict(temod1, newdata = te.nd)
+te.nd$predicted_clump<-te.pr
+
+# Plot predictions:
+# plot(te.nd$tuft[te.nd$yr==0 & te.nd$reserve=="J"], te.nd$predicted_clump[te.nd$yr==0  & te.nd$reserve=="J"], type="l", col="red")
+# lines(te.nd$tuft[te.nd$yr==0 & te.nd$reserve=="M"], te.nd$predicted_clump[te.nd$yr==0  & te.nd$reserve=="M"], lty=2, col="red")
+# lines(te.nd$tuft[te.nd$yr==1 & te.nd$reserve=="J"], te.nd$predicted_clump[te.nd$yr==1  & te.nd$reserve=="J"], lty=1, col="orange")
+# lines(te.nd$tuft[te.nd$yr==1 & te.nd$reserve=="M"], te.nd$predicted_clump[te.nd$yr==1  & te.nd$reserve=="M"], lty=2, col="orange")
+# lines(te.nd$tuft[te.nd$yr==2 & te.nd$reserve=="J"], te.nd$predicted_clump[te.nd$yr==2  & te.nd$reserve=="J"], lty=1, col="yellow")
+# lines(te.nd$tuft[te.nd$yr==2 & te.nd$reserve=="M"], te.nd$predicted_clump[te.nd$yr==2  & te.nd$reserve=="M"], lty=2, col="yellow")
+
+# Use yr zero only:
+head(te.nd)
+te17<-te.nd[te.nd$yr==0,]
+te17<-tidy.df(te17)
+
+# PREDICTED DATA, round variables:
+te17$tuft<-round(te17$tuft,0)
+te17$predicted_clump<-round(te17$predicted_clump,0)
+head(te17); dim(te17)
+
+# Original Tri_ela data, including tuft counts:
+te_dat17<-te[which(te$year==2017),]
+te_dat17<-tidy.df(te_dat17)
+imp_dat<-te_dat17[which(is.na(te_dat17$clump)),]
+
+# Merge original data with predicted data:
+imp_dat<-merge(imp_dat, te17, by.x=c("reserve","tuft"), by.y=c("reserve","tuft"), all.x=T, all.y=F)
+
+# check it:
+head(imp_dat); dim(imp_dat)
+te17[which(te17$tuft==113),]
+te17[which(te17$tuft==51),]
+te17[which(te17$tuft==98),]
+te17[which(te17$tuft==113),]
+
+# There's no value for 74, so use 75
+imp_dat$predicted_clump[which(imp_dat$tuft==74)]<-te17$predicted_clump[which(te17$tuft==75 & te17$reserve=="M")]
+imp_dat<-imp_dat[,c("reserve","PLOT_ID","QUADRAT_Direction", "predicted_clump")]
+colnames(imp_dat)[which(colnames(imp_dat)=="QUADRAT_Direction")]<-"Treatment"
+
+# Impute missing data in 2017:
+te.missing<-ct17[,c(1:4,which(colnames(ct17)=="Tri_ela"))]
+te.missing[which(is.na(te.missing$Tri_ela)),]
+
+te.missing<-merge(te.missing, imp_dat, by=c("reserve","PLOT_ID","Treatment"), all.x=T, all.y=F)
+te.missing$Tri_ela[which(is.na(te.missing$Tri_ela))]<-te.missing$predicted_clump[which(is.na(te.missing$Tri_ela))]
+te.missing$predicted_clump<-NULL
+te.missing$DATE<-NULL
+head(te.missing); dim(te.missing)
+
+# Merge with original data
+# This is going to change the row order of the main data frame AND the column order:
+ct17$Tri_ela<-NULL
+ct17<-merge(ct17, te.missing, by=c("reserve","PLOT_ID","Treatment"))
+
+# Re-order ALL data frames:
+ct17<-ct17[,c("DATE","reserve","PLOT_ID","Treatment",colnames(ct17)[5:ncol(ct17)][order(colnames(ct17)[5:ncol(ct17)])])]
+ct18<-ct18[,c("DATE","reserve","PLOT_ID","Treatment",colnames(ct18)[5:ncol(ct18)][order(colnames(ct18)[5:ncol(ct18)])])]
+ct19<-ct19[,c("DATE","reserve","PLOT_ID","Treatment",colnames(ct19)[5:ncol(ct19)][order(colnames(ct19)[5:ncol(ct19)])])]
+
+cv17<-cv17[,c("DATE","reserve","PLOT_ID","Treatment",colnames(cv17)[5:ncol(cv17)][order(colnames(cv17)[5:ncol(cv17)])])]
+cv18<-cv18[,c("DATE","reserve","PLOT_ID","Treatment",colnames(cv18)[5:ncol(cv18)][order(colnames(cv18)[5:ncol(cv18)])])]
+cv19<-cv19[,c("DATE","reserve","PLOT_ID","Treatment",colnames(cv19)[5:ncol(cv19)][order(colnames(cv19)[5:ncol(cv19)])])]
+
+# Re-order rows:
+ct17<-ct17[order(ct17$reserve,ct17$PLOT_ID,ct17$Treatment),]
+ct18<-ct18[order(ct18$reserve,ct18$PLOT_ID,ct18$Treatment),]
+ct19<-ct19[order(ct19$reserve,ct19$PLOT_ID,ct19$Treatment),]
+
+cv17<-cv17[order(cv17$reserve,cv17$PLOT_ID,cv17$Treatment),]
+cv18<-cv18[order(cv18$reserve,cv18$PLOT_ID,cv18$Treatment),]
+cv19<-cv19[order(cv19$reserve,cv19$PLOT_ID,cv19$Treatment),]
+
+rahead(ct17,4,10); dim(ct17)
+rahead(ct18,4,10); dim(ct18)
+rahead(ct19,4,10); dim(ct19)
+
+rahead(cv17,4,10); dim(cv17)
+rahead(cv18,4,10); dim(cv18)
+rahead(cv19,4,10); dim(cv19)
+
+# save.image("03_Workspaces/stjw_analysis.RData")
 
 # Combine count and cover data:
 
@@ -701,6 +805,7 @@ rahead(cv_dat,3,7); dim(cv_dat)
 
 head(pinfo,3); dim(pinfo)
 str(pinfo)
+table(pinfo$func_grp)
 
 # Set-up vectors for grouping:
 
@@ -773,6 +878,8 @@ sed_rus<-as.character(pinfo$Sp[which(pinfo$func_grp=="Sedge_Rush")])
 
 # Categories to analyse
 group_df<-data.frame(group=c("all","native","exotic","indic","sigA","sigB","sigC","sigXY","sigZ","native_herb","exotic_herb","exann_herb","exper_herb","natann_herb","natper_herb","native_nonlegherb","exotic_nonlegherb","native_legherb","exotic_legherb","native_grass","exotic_grass","exotic_anngrass","exotic_perengrass","c3_grass","native_c3","native_c4","exotic_c3","sed_rus"))
+
+# save.image("03_Workspaces/stjw_analysis.RData")
 
 # close diversity groups ----
 
@@ -1063,16 +1170,10 @@ for (i in 1:nrow(gdf)){
 
 summary(fits.shan[[1]])
 coef.shan
-anova.shan[[19]] # only 19 significant three-way
+anova.shan[[19]] # 19 and 6 significant three-way
 preds.shan
 
 rahead(shan_sc,3,5)
-
-# what's going on with native_legherb?
-nlh<-lmer(native_legherb~Treatment+DATE+reserve+Treatment:DATE+(1|PLOT_ID), data=shan_sc)
-summary(nlh)
-# hist(shan_sc$native_legherb) # there's very little data in this group and there isvery high proportion of zeros
-gdf.shan
 
 # save.image("03_Workspaces/stjw_analysis.RData")
 
@@ -1109,6 +1210,12 @@ gdf.shan$sig.res[which(gdf.shan$sig.3way=="yes")]<-NA
 head(gdf.shan); dim(gdf.shan)
 
 # save.image("03_Workspaces/stjw_analysis.RData")
+
+# what's going on with native_legherb?
+nlh<-lmer(native_legherb~Treatment+DATE+reserve+Treatment:DATE+(1|PLOT_ID), data=shan_sc)
+summary(nlh)
+# hist(shan_sc$native_legherb) # there's very little data in this group and there isvery high proportion of zeros
+gdf.shan
 
 # close analysis ----
 
@@ -1248,12 +1355,12 @@ text(1,8,labels="Estimates of reserve\neffects displayed for\ncontrol in 2017", 
 # Diversity:
 
 # Twenty-six fitted models
-# One significant 3-way (Exotic leg. forb) 
+# Two significant 3-way (Exotic leg. forb and SigB) 
 # One significant 2-way (Exotic forb)
-# Fourteen significant reserve effects
+# Thirteen significant reserve effects
 
 # For all models, plot the treatment by year effect, even if the two way wasn't significant. This is so we have an overall visual of the results. 
-# This will give 26 treatment:year plots + one 3-way = 27 panels
+# This will give 24 treatment:year plots + two 3-way = 28 panels
 # For all models without a three-way, plot MULANGARRI only. We will plot the reserve effects separately, on another panel. For the three way, plot both reserves
 
 head(gdf.shan); dim(gdf.shan)
@@ -1448,6 +1555,9 @@ for (i in 1:length(sp.totest)){
   } # close if
   
 } # close for
+
+# NO more problems in re-formatted data. 
+sp.testout
 
 # These are the species with problems:
 mismatch.sp<-sp.testout[sp.testout$lineup=="no",]
