@@ -657,7 +657,7 @@ te<-cbind(te, te_tuft$Tri_ela)
 colnames(te)[which(colnames(te)=="te_tuft$Tri_ela")]<-"te_tuft"
 head(te,3); dim(te)
 
-
+#### UP TO HERE
 
 temod1<-lm(clump~tuft+reserve,data=Tri_eladat[Tri_eladat$clump<20,]) 
 summary(temod1) #reserve not significant
