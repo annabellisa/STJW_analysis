@@ -498,6 +498,12 @@ table(apply(ct17[2:nrow(ct17),4:ncol(ct17)],2,function(x)is.numeric(x)))
 table(apply(ct18[2:nrow(ct17),4:ncol(ct18)],2,function(x)is.numeric(x)))
 table(apply(ct19[2:nrow(ct17),4:ncol(ct19)],2,function(x)is.numeric(x)))
 
+# Make sure there's no NAs:
+# The only NAs should be six plots in 2017 for Tri_ela
+table(unlist(apply(ct17[2:nrow(ct17),4:ncol(ct17)],2,function(x) which(is.na(x)))))
+table(unlist(apply(ct18[2:nrow(ct18),4:ncol(ct18)],2,function(x) which(is.na(x)))))
+table(unlist(apply(ct19[2:nrow(ct19),4:ncol(ct19)],2,function(x) which(is.na(x)))))
+
 # these should all be TRUE:
 
 # Are all names matching across yearS? 
@@ -518,6 +524,8 @@ table(colnames(cv18)[4:ncol(cv18)]==colnames(cv19)[4:ncol(cv19)])
 table(colnames(cv17)[4:ncol(cv17)] %in% colnames(cv18)[4:ncol(cv18)])
 table(colnames(cv17)[4:ncol(cv17)] %in% colnames(cv19)[4:ncol(cv19)])
 table(colnames(cv18)[4:ncol(cv18)] %in% colnames(cv19)[4:ncol(cv19)])
+
+# save.image("03_Workspaces/stjw_analysis.RData")
 
 # close import data ----
 
@@ -583,14 +591,6 @@ cv17<-cv17[,c(which(colnames(cv17) %in% c("DATE", "reserve")),which(!colnames(cv
 cv18<-cv18[,c(which(colnames(cv18) %in% c("DATE", "reserve")),which(!colnames(cv18) %in% c("DATE", "reserve")))]
 cv19<-cv19[,c(which(colnames(cv19) %in% c("DATE", "reserve")),which(!colnames(cv19) %in% c("DATE", "reserve")))]
 
-rahead(ct17,4,10); dim(ct17)
-rahead(ct18,4,10); dim(ct18)
-rahead(ct19,4,10); dim(ct19)
-
-rahead(cv17,4,10); dim(cv17)
-rahead(cv18,4,10); dim(cv18)
-rahead(cv19,4,10); dim(cv19)
-
 # remove unwanted columns:
 # COUNT:
 ct17$QUAD_ID<-NULL
@@ -601,9 +601,6 @@ ct19$QUAD_ID<-NULL
 cv17$QUAD_ID<-NULL
 cv18$QUAD_ID<-NULL
 cv19$QUAD_ID<-NULL
-
-
-#### UP TO HERE
 
 # factorise variables which should be factors and make control the baseline level:
 #COUNT:
@@ -632,148 +629,53 @@ cv19$reserve<-as.factor(cv19$reserve)
 cv19$PLOT_ID<-as.factor(cv19$PLOT_ID)
 cv19$Treatment<-factor(cv19$Treatment,levels=c("C","A","B"))
 
-# replace COUNT categories with numbers:
+# IMPUTE Tricoryne
 
-# 16-50 	W	35
-# 51-100	X	75
-# >100	  Y	100
+# For Tricoryne, there were six plots in 2017, where only a tuft count (shaded column) and no clump was recorded
+# We will use data from the other clump/tuft observations to impute clump counts at these sites
+# M1A, M1B, M1C, M4A, J4C, J6A
 
-ct17d<-as.matrix(ct17[,which(colnames(ct17)=="Aca_ovi"):ncol(ct17)])
-ct17d[which(ct17d=="W")]<-35
-ct17d[which(ct17d=="X")]<-75
-ct17d[which(ct17d=="Y")]<-100
-ct17d<-data.frame(apply(ct17d,2,as.numeric)) #Warning messages: 1: In apply(ct17d, 2, as.numeric) : NAs introduced by coercion; 2: In apply(ct17d, 2, as.numeric) : NAs introduced by coercion
+rahead(ct17,4,10); dim(ct17)
+ct17[,c("PLOT_ID","Treatment","Tri_ela")]
+unlist(apply(ct17,2,function(x) which(is.na(x))))
 
-ct17<-data.frame(cbind(ct17[,1:which(colnames(ct17)=="Treatment")],ct17d))
+te<-read.table(paste(data_dir, "Tri_ela_dat.txt", sep="/"), header=T)
+te$reserve<-te$PLOT_ID 
+te$reserve<- substr(te$reserve,1,1)
+te$reserve<-as.factor(te$reserve)
+te<-te[-which(te$type=="cover"),]
+te<-tidy.df(te)
+te_clump<-te[te$type=="clump",]
+te_tuft<-te[te$type=="tuft",]
+head(te_tuft,3); dim(te_tuft)
 
-ct18d<-as.matrix(ct18[,which(colnames(ct18)=="Aca_ovi"):ncol(ct18)])
-ct18d[which(ct18d=="W")]<-35
-ct18d[which(ct18d=="X")]<-75
-ct18d[which(ct18d=="Y")]<-100
-ct18d<-data.frame(apply(ct18d,2,as.numeric))
-ct18<-data.frame(cbind(ct18[,1:which(colnames(ct18)=="Treatment")],ct18d))
-
-ct19d<-as.matrix(ct19[,which(colnames(ct19)=="Aca_ovi"):ncol(ct19)])
-ct19d[which(ct19d=="W")]<-35
-ct19d[which(ct19d=="X")]<-75
-ct19d[which(ct19d=="Y")]<-100
-ct19d<-data.frame(apply(ct19d,2,as.numeric))
-ct19<-data.frame(cbind(ct19[,1:which(colnames(ct19)=="Treatment")],ct19d))
-
-# Make sure they're all numeric:
-table(apply(ct17[,5:ncol(ct17)],2,function(x)is.numeric(x)))
-table(apply(ct18[,5:ncol(ct18)],2,function(x)is.numeric(x)))
-table(apply(ct19[,5:ncol(ct19)],2,function(x)is.numeric(x)))
-
-#replace COVER categories with numbers:
-
-# >5%	A	5
-# 5-10%	B	10
-# 11-20%	C 	20
-# 21-30%	D	30
-# 31-40%	E	40
-# 41-50%	F	50
-# 51-60%	G	60
-# 61-70%	H	70
-# 71-80%	I	80
-# 81-90%	J	90
-# 91-100%	K	100
-
-cv17d<-as.matrix(cv17[,which(colnames(cv17)=="Aca_ovi"):ncol(cv17)])
-cv17d[which(cv17d=="A")]<-5
-cv17d[which(cv17d=="B")]<-10
-cv17d[which(cv17d=="C")]<-20
-cv17d[which(cv17d=="D")]<-30
-cv17d[which(cv17d=="E")]<-40
-cv17d[which(cv17d=="F")]<-50
-cv17d[which(cv17d=="G")]<-60
-cv17d[which(cv17d=="H")]<-70
-cv17d[which(cv17d=="I")]<-80
-cv17d[which(cv17d=="J")]<-90
-cv17d[which(cv17d=="K")]<-100
-cv17d<-data.frame(apply(cv17d,2,as.numeric))
-cv17<-data.frame(cbind(cv17[,1:which(colnames(cv17)=="Treatment")],cv17d))
-
-cv18d<-as.matrix(cv18[,which(colnames(cv18)=="Aca_ovi"):ncol(cv18)])
-cv18d[which(cv18d=="A")]<-5
-cv18d[which(cv18d=="B")]<-10
-cv18d[which(cv18d=="C")]<-20
-cv18d[which(cv18d=="D")]<-30
-cv18d[which(cv18d=="E")]<-40
-cv18d[which(cv18d=="F")]<-50
-cv18d[which(cv18d=="G")]<-60
-cv18d[which(cv18d=="H")]<-70
-cv18d[which(cv18d=="I")]<-80
-cv18d[which(cv18d=="J")]<-90
-cv18d[which(cv18d=="K")]<-100
-cv18d<-data.frame(apply(cv18d,2,as.numeric))
-cv18<-data.frame(cbind(cv18[,1:which(colnames(cv18)=="Treatment")],cv18d))
-
-cv19d<-as.matrix(cv19[,which(colnames(cv19)=="Aca_ovi"):ncol(cv19)])
-cv19d[which(cv19d=="A")]<-5
-cv19d[which(cv19d=="B")]<-10
-cv19d[which(cv19d=="C")]<-20
-cv19d[which(cv19d=="D")]<-30
-cv19d[which(cv19d=="E")]<-40
-cv19d[which(cv19d=="F")]<-50
-cv19d[which(cv19d=="G")]<-60
-cv19d[which(cv19d=="H")]<-70
-cv19d[which(cv19d=="I")]<-80
-cv19d[which(cv19d=="J")]<-90
-cv19d[which(cv19d=="K")]<-100
-cv19d<-data.frame(apply(cv19d,2,as.numeric))
-cv19<-data.frame(cbind(cv19[,1:which(colnames(cv19)=="Treatment")],cv19d))
-
-rahead(cv17,3,10)
-rahead(cv18,3,10)
-rahead(cv19,3,10)
-
-# Make sure they're all numeric:
-table(apply(cv17[,5:ncol(cv17)],2,function(x)is.numeric(x)))
-table(apply(cv18[,5:ncol(cv18)],2,function(x)is.numeric(x)))
-table(apply(cv19[,5:ncol(cv19)],2,function(x)is.numeric(x)))
+te<-te_clump
+colnames(te)[which(colnames(te)=="Tri_ela")]<-"te_clump"
+te$type<-NULL
+table(te$QUAD_ID==te_tuft$QUAD_ID)
+te<-cbind(te, te_tuft$Tri_ela)
+colnames(te)[which(colnames(te)=="te_tuft$Tri_ela")]<-"te_tuft"
+head(te,3); dim(te)
 
 
-ct17<-ct17[,-which(colnames(ct17) %in% unid)]
-ct18<-ct18[,-which(colnames(ct18) %in% unid)]
-ct19<-ct19[,-which(colnames(ct19) %in% unid)]
 
-rahead(ct17,3,7); dim(ct17)
-rahead(ct18,3,7); dim(ct18)
-rahead(ct19,3,7); dim(ct19)
-
-#COVER:
-
-cv17<-cv17[,-which(colnames(cv17) %in% unid)]
-cv18<-cv18[,-which(colnames(cv18) %in% unid)]
-cv19<-cv19[,-which(colnames(cv19) %in% unid)]
-
-rahead(cv17,3,7); dim(cv17)
-rahead(cv18,3,7); dim(cv18)
-rahead(cv19,3,7); dim(cv19)
-
+temod1<-lm(clump~tuft+reserve,data=Tri_eladat[Tri_eladat$clump<20,]) 
+summary(temod1) #reserve not significant
+temod2<-lm(clump~tuft,data=Tri_eladat[Tri_eladat$clump<20,
 
 # Combine count and cover data:
 
 # COUNT:
-rahead(ct17,3,7); dim(ct17)
-rahead(ct18,3,7); dim(ct18)
-rahead(ct19,3,7); dim(ct19)
+rahead(ct17,4,10); dim(ct17)
+rahead(ct18,4,10); dim(ct18)
+rahead(ct19,4,10); dim(ct19)
 
-# Aus_den and Aus_sca are switched in ct19
-# Flip them around:
+# Check colname order:
 table(colnames(ct17)==colnames(ct18))
 table(colnames(ct17)==colnames(ct19))
+table(colnames(ct18)==colnames(ct19))
 colnames(ct17)[which(!colnames(ct17)==colnames(ct19))]
 colnames(ct19)[which(!colnames(ct19)==colnames(ct17))]
-
-head(ct17[,1:15],3)
-head(ct18[,1:15],3)
-head(ct19[,1:15],3)
-
-# Warning: run this only once
-# Already saved in workspace
-# ct19<-ct19[,c(1:which(colnames(ct19)=="Aus_big"),which(colnames(ct19)=="Aus_den"),which(colnames(ct19)=="Aus_sca"),which(colnames(ct19)=="Ave_sp."):ncol(ct19))]
 
 ct_dat<-rbind(ct17, ct18, ct19)
 rahead(ct_dat,3,7); dim(ct_dat)
@@ -783,7 +685,7 @@ rahead(cv17,3,7); dim(ct17)
 rahead(cv18,3,7); dim(ct18)
 rahead(cv19,3,7); dim(ct19)
 
-# For cover, they're in the correct order:
+# Check colname order:
 table(colnames(cv17)==colnames(cv18))
 table(colnames(cv17)==colnames(cv19))
 table(colnames(cv18)==colnames(cv19))
@@ -798,7 +700,6 @@ rahead(cv_dat,3,7); dim(cv_dat)
 #  species DIVERSITY GROUPS:    	# ----
 
 head(pinfo,3); dim(pinfo)
-
 str(pinfo)
 
 # Set-up vectors for grouping:
