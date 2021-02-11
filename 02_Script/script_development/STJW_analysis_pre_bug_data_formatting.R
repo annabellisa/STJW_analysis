@@ -15,7 +15,7 @@ library(lme4); library(vegan); library(AICcmodavg); library(lmerTest)
 # Load workspace
 load("03_Workspaces/stjw_analysis.RData")
 
-#  IMPORT, clean & transform data:    	# ----
+#  IMPORT & check data:    	# ----
 
 data_dir<-"00_Data/Formatted_data/"
 dir(data_dir)
@@ -453,83 +453,112 @@ problem_names<-data.frame(dat_name=spdat$name_orig[which(!spdat$name_orig %in% p
 # this should now be zero:
 nrow(problem_names)
 
-# Use names in spdat and pinfo to replace the column names with species codes:
-head(pinfo,2); dim(pinfo)
 
-table(spdat$name_orig %in% pinfo$Species)
-pin2<-pinfo[,c("Species","Sp")]
 
-spdat<-merge(spdat, pin2, by.x="name_orig", by.y="Species", all.x=T, all.y=F)
+# In the original data files, Rytidosperma sp. includes the full stop, but in pinfo it does not. 
+rahead(a17, 6, 6)
+a17[grep("Rytidosperma", a17$V1),1:5]
+pinfo[grep("Rytidosperma", pinfo$Species),]
 
-# spdat is sorted by the name_orig col
-# the data are in their orignal order and are unsorted
-is.unsorted(spdat$name_orig)
-is.unsorted(colnames(ct17)[4:ncol(ct17)])
+# Find the proper names in pinfo, if they exist (brute force):
+problem_names$pinfo_name<-NA
+problem_names$pinfo_name[which(problem_names$dat_name=="Anthosachne scaber")]<-pinfo$Species[grep("Anthosachne", pinfo$Species)]
+problem_names$pinfo_name[which(problem_names$dat_name=="Lomandra filiformis coriacea")]<-pinfo$Species[grep("Lomandra coriacea filiformis", pinfo$Species)]
+problem_names$pinfo_name[which(problem_names$dat_name=="Rytidosperma sp.")]<-"Rytidosperma sp"
+problem_names$pinfo_name[which(problem_names$dat_name=="Dichelachne sp.")]<-"Dichelachne sp"
 
-cnames17<-data.frame(cname=colnames(ct17)[4:ncol(ct17)], index=1:length(colnames(ct17)[4:ncol(ct17)]))
-head(cnames17); dim(cnames17)
 
-# Order spdat so it's in the same order as the data:
-spdat<-merge(spdat, cnames17, by.x="name17", by.y="cname", all.x=T, all.y=F)
-spdat<-spdat[order(spdat$index),]
-spdat<-tidy.df(spdat)
-head(spdat); dim(spdat)
 
-# Check that the new order lines up with all data files:
-table(spdat$name17==colnames(ct17)[4:ncol(ct17)])
-table(spdat$name17==colnames(ct18)[4:ncol(ct18)])
-table(spdat$name17==colnames(ct19)[4:ncol(ct19)])
 
-table(spdat$name17==colnames(cv17)[4:ncol(cv17)])
-table(spdat$name17==colnames(cv18)[4:ncol(cv18)])
-table(spdat$name17==colnames(cv19)[4:ncol(cv19)])
 
-# Replace the colnames with species codes
-colnames(ct17)[4:ncol(ct17)]<-spdat$Sp
-colnames(ct18)[4:ncol(ct18)]<-spdat$Sp
-colnames(ct19)[4:ncol(ct19)]<-spdat$Sp
 
-colnames(cv17)[4:ncol(cv17)]<-spdat$Sp
-colnames(cv18)[4:ncol(cv18)]<-spdat$Sp
-colnames(cv19)[4:ncol(cv19)]<-spdat$Sp
+is.unsorted(pinfo$Species)
+
+# OLD code:
 
 # Make sure they're all numeric:
-table(apply(ct17[2:nrow(ct17),4:ncol(ct17)],2,function(x)is.numeric(x)))
-table(apply(ct18[2:nrow(ct17),4:ncol(ct18)],2,function(x)is.numeric(x)))
-table(apply(ct19[2:nrow(ct17),4:ncol(ct19)],2,function(x)is.numeric(x)))
+table(apply(ct17[4:nrow(ct17),2:ncol(ct17)],2,function(x)is.numeric(x)))
+table(apply(ct18[,5:ncol(ct18)],2,function(x)is.numeric(x)))
+table(apply(ct19[,5:ncol(ct19)],2,function(x)is.numeric(x)))
+
+
+
+
+
+
+# COUNT DATA:
+
+ct17<-read.table(paste(data_dir,"count_2017.txt",sep=""),header=T)
+ct18<-read.table(paste(data_dir,"count_2018.txt",sep=""),header=T)
+ct19<-read.table(paste(data_dir,"count_2019.txt",sep=""),header=T)
+rahead(ct17,3,7)
+rahead(ct18,3,7)
+rahead(ct19,3,7)
+
+#COVER DATA:
+cv17<-read.table(paste(data_dir,"cover_2017.txt",sep=""),header=T)
+cv18<-read.table(paste(data_dir,"cover_2018.txt",sep=""),header=T)
+cv19<-read.table(paste(data_dir,"cover_2019.txt",sep=""),header=T)
+rahead(cv17,3,7)
+rahead(cv18,3,7)
+rahead(cv19,3,7)
+
+
+# CHECK COUNT:
+
+cnames17<-colnames(ct17)[which(colnames(ct17)=="Aca_ovi"):ncol(ct17)]
+cnames18<-colnames(ct18)[which(colnames(ct18)=="Aca_ovi"):ncol(ct18)]
+cnames19<-colnames(ct19)[which(colnames(ct19)=="Aca_ovi"):ncol(ct19)]
+
+#CHECK COVER:
+
+cvnames17<-colnames(cv17)[which(colnames(cv17)=="Aca_ovi"):ncol(cv17)]
+cvnames18<-colnames(cv18)[which(colnames(cv17)=="Aca_ovi"):ncol(cv18)]
+cvnames19<-colnames(cv19)[which(colnames(cv19)=="Aca_ovi"):ncol(cv19)]
 
 # these should all be TRUE:
 
 # Are all names matching across yearS? 
 #COUNT:
-table(colnames(ct17)[4:ncol(ct17)]==colnames(ct18)[4:ncol(ct18)])
-table(colnames(ct17)[4:ncol(ct17)]==colnames(ct19)[4:ncol(ct19)])
-table(colnames(ct18)[4:ncol(ct18)]==colnames(ct19)[4:ncol(ct19)])
+length(cnames17)==length(cnames18)
+length(cnames17)==length(cnames19)
+length(cnames18)==length(cnames19)
 
-table(colnames(ct17)[4:ncol(ct17)] %in% colnames(ct18)[4:ncol(ct18)])
-table(colnames(ct17)[4:ncol(ct17)] %in% colnames(ct19)[4:ncol(ct19)])
-table(colnames(ct18)[4:ncol(ct18)] %in% colnames(ct19)[4:ncol(ct19)])
+table(cnames17 %in% cnames18)
+table(cnames17 %in% cnames19)
+table(cnames18 %in% cnames19)
 
 #COVER:
-table(colnames(cv17)[4:ncol(cv17)]==colnames(cv18)[4:ncol(cv18)])
-table(colnames(cv17)[4:ncol(cv17)]==colnames(cv19)[4:ncol(cv19)])
-table(colnames(cv18)[4:ncol(cv18)]==colnames(cv19)[4:ncol(cv19)])
+length(cvnames17)==length(cvnames18)
+length(cvnames17)==length(cvnames19)
+length(cvnames18)==length(cvnames19)
 
-table(colnames(cv17)[4:ncol(cv17)] %in% colnames(cv18)[4:ncol(cv18)])
-table(colnames(cv17)[4:ncol(cv17)] %in% colnames(cv19)[4:ncol(cv19)])
-table(colnames(cv18)[4:ncol(cv18)] %in% colnames(cv19)[4:ncol(cv19)])
+table(cvnames17 %in% cvnames18)
+table(cvnames17 %in% cvnames19)
+table(cvnames18 %in% cvnames19)
+
+#Are all names in the data present in plant_info?
+#COUNT:
+table(cnames17 %in% pinfo$Sp)
+table(cnames18 %in% pinfo$Sp)
+table(cnames19 %in% pinfo$Sp)
+
+#COVER:
+table(cvnames17 %in% pinfo$Sp)
+table(cvnames18 %in% pinfo$Sp)
+table(cvnames19 %in% pinfo$Sp)
 
 # close import data ----
 
 #  FORMAT data:    	# ----
 
-# Add year:
-# COUNT:
+#replace date with year:
+#COUNT:
 ct17$DATE<-2017
 ct18$DATE<-2018
 ct19$DATE<-2019
 
-# COVER:
+#COVER:
 cv17$DATE<-2017
 cv18$DATE<-2018
 cv19$DATE<-2019
@@ -546,7 +575,7 @@ colnames(cv18)[which(colnames(cv18)=="QUADRAT_Direction")]<-"Treatment"
 colnames(cv19)[which(colnames(cv19)=="QUADRAT_Direction")]<-"Treatment"
 
 # create reserve variable from PLOT_ID:
-# COUNT:
+#COUNT:
 ct17$reserve<-ct17$PLOT_ID
 ct17$reserve[grep("J", ct17$reserve)]<-"J"
 ct17$reserve[grep("M", ct17$reserve)]<-"M"
@@ -559,7 +588,7 @@ ct19$reserve<-ct19$PLOT_ID
 ct19$reserve[grep("J", ct19$reserve)]<-"J"
 ct19$reserve[grep("M", ct19$reserve)]<-"M"
 
-# COVER:
+#COVER:
 cv17$reserve<-cv17$PLOT_ID
 cv17$reserve[grep("J", cv17$reserve)]<-"J"
 cv17$reserve[grep("M", cv17$reserve)]<-"M"
@@ -573,37 +602,26 @@ cv19$reserve[grep("J", cv19$reserve)]<-"J"
 cv19$reserve[grep("M", cv19$reserve)]<-"M"
 
 # re-arrange columns:
-# COUNT:
+#COUNT:
 ct17<-ct17[,c(which(colnames(ct17) %in% c("DATE", "reserve")),which(!colnames(ct17) %in% c("DATE", "reserve")))]
 ct18<-ct18[,c(which(colnames(ct18) %in% c("DATE", "reserve")),which(!colnames(ct18) %in% c("DATE", "reserve")))]
 ct19<-ct19[,c(which(colnames(ct19) %in% c("DATE", "reserve")),which(!colnames(ct19) %in% c("DATE", "reserve")))]
 
-# COVER:
+#COVER:
 cv17<-cv17[,c(which(colnames(cv17) %in% c("DATE", "reserve")),which(!colnames(cv17) %in% c("DATE", "reserve")))]
 cv18<-cv18[,c(which(colnames(cv18) %in% c("DATE", "reserve")),which(!colnames(cv18) %in% c("DATE", "reserve")))]
 cv19<-cv19[,c(which(colnames(cv19) %in% c("DATE", "reserve")),which(!colnames(cv19) %in% c("DATE", "reserve")))]
 
-rahead(ct17,4,10); dim(ct17)
-rahead(ct18,4,10); dim(ct18)
-rahead(ct19,4,10); dim(ct19)
-
-rahead(cv17,4,10); dim(cv17)
-rahead(cv18,4,10); dim(cv18)
-rahead(cv19,4,10); dim(cv19)
-
 # remove unwanted columns:
-# COUNT:
+#COUNT:
 ct17$QUAD_ID<-NULL
 ct18$QUAD_ID<-NULL
 ct19$QUAD_ID<-NULL
 
-# COVER:
+#COVER:
 cv17$QUAD_ID<-NULL
 cv18$QUAD_ID<-NULL
 cv19$QUAD_ID<-NULL
-
-
-#### UP TO HERE
 
 # factorise variables which should be factors and make control the baseline level:
 #COUNT:
