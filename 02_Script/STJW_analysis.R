@@ -1216,6 +1216,16 @@ nlh<-lmer(native_legherb~Treatment+DATE+reserve+Treatment:DATE+(1|PLOT_ID), data
 summary(nlh)
 # hist(shan_sc$native_legherb) # there's very little data in this group and there isvery high proportion of zeros
 gdf.shan
+rahead(shan_sc,6,6)
+range(shan_sc$native_legherb)
+range(rich_sc$native_legherb)
+range(shan_sc[2:nrow(shan_sc),5:ncol(shan_sc)])
+range(rich_sc[2:nrow(rich_sc),5:ncol(rich_sc)])
+
+# what's going on with exann_herb?
+exanh_mod<-lmer(exann_herb~Treatment+DATE+reserve+Treatment:DATE+(1|PLOT_ID), data=shan_sc)
+summary(exanh_mod)
+anova(exanh_mod)
 
 # close analysis ----
 
@@ -1493,21 +1503,6 @@ table(pinfo$func_grp)
 
 # save.image("03_Workspaces/stjw_analysis.RData")
 
-# ORDER data so the columns match:
-
-ct_dat<-ct_dat[order(ct_dat$DATE, ct_dat$reserve, ct_dat$PLOT_ID, ct_dat$Treatment),]
-ct_dat<-tidy.df(ct_dat)
-cv_dat<-cv_dat[order(cv_dat$DATE, cv_dat$reserve, cv_dat$PLOT_ID, cv_dat$Treatment),]
-cv_dat<-tidy.df(cv_dat)
-
-# Make sure all site-data columns match:
-
-table(ct_dat$DATE==cv_dat$DATE)
-table(ct_dat$reserve==cv_dat$reserve)
-table(ct_dat$PLOT_ID==cv_dat$PLOT_ID)
-table(ct_dat$Treatment==cv_dat$Treatment)
-table(paste(ct_dat$PLOT_ID,ct_dat$Treatment,sep="")==paste(cv_dat$PLOT_ID,cv_dat$Treatment,sep=""))
-
 # Make sure all species data columns match:
 
 rahead(ct_dat,3,7); dim(ct_dat)
@@ -1559,81 +1554,14 @@ for (i in 1:length(sp.totest)){
 # NO more problems in re-formatted data. 
 sp.testout
 
-# These are the species with problems:
-mismatch.sp<-sp.testout[sp.testout$lineup=="no",]
-
-chk17<-read.table("00_Data/check17.txt",header=F)
-chk18<-read.table("00_Data/check18.txt",header=F)
-chk19<-read.table("00_Data/check19.txt",header=F)
-
-# Update species code and check data for each:
-sp.test<-"Lom_bra"
-
-# Get count and cover data for mismatched species where they DO NOT line up:
-xdat<-ct_dat[,c(1:4,which(colnames(ct_dat)==sp.test))]
-colnames(xdat)[ncol(xdat)]<-"count_data"
-xdat<-cbind(xdat,cv_dat[,which(colnames(cv_dat)==sp.test)])
-colnames(xdat)[ncol(xdat)]<-"cover_data"
-head(xdat)
-mm.dat<-xdat[which(!xdat$count_data==xdat$cover_data),]
-mm.dat$QUAD_ID<-paste(mm.dat$PLOT_ID, mm.dat$Treatment, sep="")
-mm.quads<-unique(as.character(mm.dat$QUAD_ID))
-mm.dat
-
-# For each QUAD, the first row is cover, the second count
-rahead(chk17,6,6)
-full.name<-pinfo[pinfo$Sp==sp.test,]$Species
-df.now<-data.frame(t(chk17[c(1:3,which(chk17$V1==full.name)),]))
-colnames(df.now)<-df.now[1,]
-df.now<-df.now[2:nrow(df.now),]
-
-mm.dat
-df.now[which(df.now$QUAD_ID %in% mm.quads),]
-head(df.now)
-
-# Conclusion # 1: cover is more wrong than count, but there are problems with the count data as well. 
-
-# Gal_div, 2017:
-# J3C count correct, cover wrong
-# J4C count correct, cover wrong
-# J4A count correct, cover wrong
-# M3C count correct, cover wrong
-# M3A count correct, cover wrong
-# M3B count correct, cover wrong
-# M4C count correct, cover wrong
-# M7C count correct, cover wrong
-# M7A count correct, cover wrong
-
-# Gal_sp., 2017:
-# J3C count correct (3), cover wrong (should be 5)
-# "J4C" "J4A" "M3C" "M3A" "M3B" "M4C" "M7C" "M7A" count correct (all zeros), cover wrong (all 5, should be zero)
-
-# Lom_fil and Lom_cor switched?
-# What's happening with Lom_bra?
-# Lom_bra = 2018, M2, M6; 2019, M6
-# Lom_fil = almost everything mismatched
-# Lom_cor = almost everything mismatched
-
-# Ryt_sp2 and Ryt_sp4 switched?
-
-# Vit_gre and Vit_gra switched?
-# Vit_cun, 2017 and 2019, many rows
-# Vit_gre 2017 J2, 2018 M1, J6
-# Vit_gra 2017 J2, 2018 M1, J6
-
-# Wah_com 2017, 2018 many rows
-# Wah_lut, all years, many rows
-# Wah_sp., all years, many rows
-# Wah_sp2 2017 J5, J6, J7, J8
-
-# Wur_dio, 2017, 2018, 2019, Mulangarri many rows
-# Zor_dic 2017 J7, J8
-
-
 # Individual species to model:
 head(pinfo,3); dim(pinfo)
 
-ind.sp<-data.frame(ind_species=c("Eryngium ovinum", "Chrysocephalum apiculatum", "Arthropodium fimbriatum", "Wurmbea dioica", "Desmodium varians", "Plantago varia", "Tricoryne elatior", "Triptilodiscus pygmaeus","Lomandra coriacea filiformis", "Lomandra bracteata", "Lomandra filiformis","Lomandra multiflora","Glycine clandestina","Glycine tabacina"))
+ind.sp<-data.frame(ind_species=c("Eryngium ovinum", "Chrysocephalum apiculatum", "Arthropodium fimbriatum", "Wurmbea dioica", "Desmodium varians", "Plantago varia", "Tricoryne elatior", "Triptilodiscus pygmaeus","Lomandra filiformis coriacea", "Lomandra bracteata", "Lomandra filiformis","Lomandra multiflora","Glycine clandestina","Glycine tabacina"))
+
+# These should all be TRUE:
+table(ind.sp$ind_species %in% pinfo$Species)
+
 ind.sp<-merge(ind.sp, pinfo, by.x="ind_species", by.y="Species")
 ind.sp
 indsp<-ind.sp$Sp
@@ -1641,30 +1569,22 @@ indsp<-ind.sp$Sp
 ct_ind<-ct_dat[,c(1:4, which(colnames(ct_dat) %in% indsp))]
 cv_ind<-cv_dat[,c(1:4, which(colnames(cv_dat) %in% indsp))]
 
+# Make sure columns match:
+table(colnames(ct_ind)==colnames(cv_ind))
 
-# ORDER so the columns match:
+# Model individual species using these data sets:
+rahead(ct_ind,6,6)
+rahead(cv_ind,6,6)
 
-ct_ind<-ct_ind[order(ct_ind$DATE, ct_ind$reserve, ct_ind$PLOT_ID, ct_ind$Treatment),]
-ct_ind<-tidy.df(ct_ind)
-cv_ind<-cv_ind[order(cv_ind$DATE, cv_ind$reserve, cv_ind$PLOT_ID, cv_ind$Treatment),]
-cv_ind<-tidy.df(cv_ind)
-rahead(ct_ind,3,7); dim(ct_ind)
-rahead(cv_ind,3,7); dim(cv_ind)
+ind_po<-ct_ind
+rahead(ind_po,6,6); dim(ind_po)
 
-head(ind.sp); dim(ind.sp)
-# Lom_bra (7), Lom_cor (8), Lom_fil (9), Wur_dio (14) cover and count not lining up
-table((ct_ind[ind.sp$Sp[9]]>0)==(cv_ind[ind.sp$Sp[9]]>0))
+ind_po$Chr_api<-ifelse(ind_po$Chr_api>0,1,0)
+ind_po$DATE<-ind_po$DATE-min(ind_po$DATE)
 
-sum(ct_ind$Lom_bra)
-sum(cv_ind$Lom_bra)
+test_mod<-glmer(Chr_api~DATE*Treatment*reserve+(1|PLOT_ID), family="binomial", data=ind_po)
+summary(test_mod)
 
-# Lom_bra
-# M2B 2018 should be count=2, cover=A (5)
-# Cover is zero for 2018
-cbind(ct_ind[,c(1:4,which(colnames(ct_ind)=="Lom_bra"))],cv_ind[,c(1:4,which(colnames(cv_ind)=="Lom_bra"))])
-
-rahead(cv18,3,5)
-cv18[,c(1:4,which(colnames(cv18)=="Lom_bra"))]
 
 # close indiv species ----
 
