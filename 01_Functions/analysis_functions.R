@@ -258,6 +258,64 @@ overdisp_fun <- function(model) {
   c(chisq=Pearson.chisq,ratio=prat,rdf=rdf,p=pval)
 }
 
+<<<<<<< HEAD
+=======
+# WALD TEST: to calculate p-vals from a factor with three or more levels:
+# NOTE THAT q MUST BE THE LENGTH OF THE MATRIX IN QUESTION.
+Wald<-function(object,R,q) {
+  if (!is.matrix(R)) stop("Restrictions must be a matrix")
+  b<-fixef(object) 
+  vc<-vcov(object)
+  w<-t(R%*%b-q)%*%solve(R%*%vc%*%t(R))%*%(R%*%b-q)
+  pw<-1-pchisq(w[1],length(q))
+  return(invisible(list(chisq=as.vector(w),pvalue=pw)))
+} # close Wald test
+
+# R MATRIX FOR WALD TEST. 
+R.mat<-function(model,coef.name){
+  if (class(model)=="glmmadmb") {
+    coef.tab<-summary(model)$coefficients
+    mod.fr<-"model$frame"}
+  if (class(model)=="lmerMod") {
+    coef.tab<-summary(model)$coefficients
+    mod.fr<-"model@frame"}
+  if (class(model)=="glmerMod") {
+    coef.tab<-summary(model)$coefficients
+    mod.fr<-"model@frame"}
+  # STEP 1. Determine what type of variable (main or interaction) coef.name is. Get the names of the variables that make up the variable in question. t.names of main effects will = 1 and of interactions will = 2. t.names should never = 3 unless there are three way interactions.
+  t.mat<-attr(terms(model),"factors")
+  t.names<-names(which(t.mat[,colnames(t.mat)==coef.name]==1))
+  
+  # STEP 2. Get the levels of the factor so that they can be appended to the coef.name:
+  if (length(t.names)==1) lev<-levels(eval(parse(text=paste(mod.fr,"$",coef.name,sep=""))))
+  
+  if (length(t.names)==2){
+    # the classes of the interaction terms:
+    int.terms<-data.frame(term=t.names,class=c(class(eval(parse(text=paste(mod.fr,"$",t.names[1],sep="")))),class(eval(parse(text=paste(mod.fr,"$",t.names[2],sep=""))))))
+    factor.term<-int.terms$term[which(int.terms$class=="factor")]
+    if(length(factor.term)==1) lev<-levels(eval(parse(text=paste(mod.fr,"$",factor.term,sep=""))))
+    else stop("more than one factor in interaction term")
+    # This line was added to make the function work on Alice's treatment:yr models. NOTE THAT IT MIGHT NOT WORK FOR ALL INTERACTION MODELS:
+    lev<-paste(factor.term,lev,":",levels(factor.term)[which(levels(factor.term)!=factor.term)],sep="")
+  }
+  
+  # STEP 3: generate the R matrix using the levels and the length of the levels:
+  if (length(t.names)==1){
+    R<-matrix(data=0,nrow=length(lev)-1,ncol=length(coef.tab[,1]))
+    for(k in 1:(length(lev)-1)){
+      R[k,which(rownames(coef.tab)==paste(coef.name,lev[k+1],sep=""))]<-1
+    }
+  }
+  if(length(t.names)==2){
+    R<-matrix(data=0,nrow=length(lev)-1,ncol=length(coef.tab[,1]))
+    for(k in 1:(length(lev)-1)){
+      R[k,which(rownames(coef.tab)==lev[k+1])]<-1
+    }
+  }
+  R<-R
+} # close R.mat function
+
+>>>>>>> 14dd01c2992400b365253786a26bb550caa8d875
 
 
 

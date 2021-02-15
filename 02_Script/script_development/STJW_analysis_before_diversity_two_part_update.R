@@ -1112,20 +1112,14 @@ nd1<-data.frame(DATE=rep(c(0,1,2),rep(3,3)),Treatment=as.factor(c("C","A","B")),
 
 # RUN MODELLING LOOP:
 # **** DIVERSITY:
-<<<<<<< HEAD
-=======
 # **** BINOMIAL PART:
->>>>>>> 14dd01c2992400b365253786a26bb550caa8d875
 
 for (i in 1:nrow(gdf)){
   
   resp.thisrun<-gdf$group[i]
   data.set<-shan_sc
-<<<<<<< HEAD
-=======
-  rahead(data.set,6,6); dim(data.set)
-  data.set[,resp.thisrun]<-ifelse(data.set[,resp.thisrun]==0,0,1)
-  data.thisrun<-data.set[,resp.thisrun]
+  data.thisrun<-shan_sc[,resp.thisrun]
+  rahead(data.thisrun)
   
   form.thisrun<-paste(resp.thisrun,"~Treatment+DATE+reserve+Treatment:DATE+Treatment:DATE:reserve+(1|PLOT_ID)", sep="")
   
@@ -1138,53 +1132,33 @@ for (i in 1:nrow(gdf)){
     next
   }
   
-  # some functional groups have data present in every quad, 
-  if(length(which(data.thisrun==0))==0){
-    fits.shan[[i]]<-NULL
-    coef.shan[[i]]<-NULL
-    anova.shan[[i]]<-NULL
-    preds.shan[[i]]<-NULL
-    next
-  }
-  
-  m1<-glmer(formula = form.thisrun, family="binomial", data=data.set)
+  m1<-lmer(formula = form.thisrun, data=data.set)
   summary(m1)
   anova(m1)
   
-  # run model without three-way:
-  form.twoway<-paste(resp.thisrun,"~Treatment+DATE+reserve+Treatment:DATE+(1|PLOT_ID)", sep="")
-  mod_twoway<-glmer(formula = form.twoway, family="binomial", data=data.set)
-  
   m1_coef<-coef.ext(m1)
-  m1_anova<-anova(mod_twoway, m1)
-  
-  p_anova<-m1_anova[2,8]
-  anova.shan[[i]]<-m1_anova
+  m1_anova<-anova.ext(m1)
   
   # simplify model if the three way is not significant:
-  if(p_anova>0.05){
+  if(m1_anova[which(m1_anova$term=="Treatment:DATE:reserve"),"p"]>0.05){
     
     # remove three way term from formula:
     form.thisrun<-paste(resp.thisrun,"~Treatment+DATE+reserve+Treatment:DATE+(1|PLOT_ID)", sep="")
     
     # re-run model without three way:
-    m1<-glmer(formula = form.thisrun, family="binomial", data=data.set)
+    m1<-lmer(formula = form.thisrun, data=data.set)
     summary(m1)
+    anova(m1)
     
     m1_coef<-coef.ext(m1)
-    
-    # run model without any interaction (to figure out if the two way interaction is significant):
-    form.noint<-paste(resp.thisrun,"~Treatment+DATE+reserve+(1|PLOT_ID)", sep="")
-    mod_noint<-glmer(formula = form.noint, family="binomial", data=data.set)
-    
-    int_term_anova<-anova(mod_noint, m1)
-    anova.shan[[i]]<-int_term_anova
+    m1_anova<-anova.ext(m1)
     
   } # close if three way not signif
   
   fits.shan[[i]]<-m1
   coef.shan[[i]]<-m1_coef
-
+  anova.shan[[i]]<-m1_anova
+  
   # generate model predictions:
   
   m1_pr<-predictSE(mod=m1,newdata=nd1, se.fit = T)
@@ -1202,13 +1176,12 @@ coef.shan
 anova.shan[[19]] # 19 and 6 significant three-way
 preds.shan
 
-# **** GAMMA PART:
-# not updated
+# **** BINOMIAL PART:
+
 for (i in 1:nrow(gdf)){
   
   resp.thisrun<-gdf$group[i]
   data.set<-shan_sc
->>>>>>> 14dd01c2992400b365253786a26bb550caa8d875
   data.thisrun<-shan_sc[,resp.thisrun]
   form.thisrun<-paste(resp.thisrun,"~Treatment+DATE+reserve+Treatment:DATE+Treatment:DATE:reserve+(1|PLOT_ID)", sep="")
   
@@ -1260,13 +1233,10 @@ for (i in 1:nrow(gdf)){
   
 } # close model
 
-<<<<<<< HEAD
 summary(fits.shan[[1]])
 coef.shan
 anova.shan[[19]] # 19 and 6 significant three-way
 preds.shan
-=======
->>>>>>> 14dd01c2992400b365253786a26bb550caa8d875
 
 rahead(shan_sc,3,5)
 
@@ -1309,8 +1279,6 @@ head(gdf.shan); dim(gdf.shan)
 # what's going on with native_legherb?
 nlh<-lmer(native_legherb~Treatment+DATE+reserve+Treatment:DATE+(1|PLOT_ID), data=shan_sc)
 summary(nlh)
-<<<<<<< HEAD
-=======
 anova(nlh)
 
 head(nd1,3)
@@ -1352,16 +1320,12 @@ for (i in 1:length(sp.toplot)){
   hist(data.thisrun, main=sp.thisrun)
 } # close
 
->>>>>>> 14dd01c2992400b365253786a26bb550caa8d875
 # hist(shan_sc$native_legherb) # there's very little data in this group and there isvery high proportion of zeros
 gdf.shan
 rahead(shan_sc,6,6)
 range(shan_sc$native_legherb)
 range(rich_sc$native_legherb)
 range(shan_sc[2:nrow(shan_sc),5:ncol(shan_sc)])
-<<<<<<< HEAD
-range(rich_sc[2:nrow(rich_sc),5:ncol(rich_sc)])
-=======
 range(rich_sc[2:nrow(rich_sc),5:ncol(rich_sc)]).
 
 # what's going on with native_legherb?
@@ -1371,17 +1335,12 @@ summary(nlh.g)
 anova(nlh)
 
 nlh.dat<-shan_sc[,c(1:4, which(colnames(shan_sc)=="native_legherb"))]
-head(nlh.dat, 3); dim(nlh.dat)
+head(nlh.dat, 3)
 nlh.dat$nlh_bin<-ifelse(nlh.dat$native_legherb==0,0,1)
 
 nlh.bin<-glmer(nlh_bin~Treatment+DATE+reserve+Treatment:DATE+(1|PLOT_ID), family="binomial", data=nlh.dat)
-nlh.null<-glmer(nlh_bin~Treatment+DATE+reserve+(1|PLOT_ID), family="binomial", data=nlh.dat)
-
 summary(nlh.bin)
-anova(nlh.bin)
-anova(nlh.bin, nlh.null)
-
->>>>>>> 14dd01c2992400b365253786a26bb550caa8d875
+anova(nlh)
 
 # what's going on with exann_herb?
 exanh_mod<-lmer(exann_herb~Treatment+DATE+reserve+Treatment:DATE+(1|PLOT_ID), data=shan_sc)
@@ -1390,8 +1349,6 @@ anova(exanh_mod)
 
 # close analysis ----
 
-<<<<<<< HEAD
-=======
 #  SIGNIFICANCE LEVELS (COMPONENT 1):    	# ----
 
 summary(fits.rich[[3]])
@@ -1411,7 +1368,6 @@ head(gdf.rich); dim(gdf.rich)
 
 # close significance ----
 
->>>>>>> 14dd01c2992400b365253786a26bb550caa8d875
 #  PLOT ESTIMATES (COMPONENT 1):    	# ----
 
 # Species Richness:
