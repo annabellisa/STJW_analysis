@@ -22,7 +22,7 @@ calc.div<-function(species.data, site.data){
     
     rich.data[[i]]<-apply(data.thisrun,1,function(x)length(which(x>0)))
     
-    # if there is only one species in a community (quadrat), shannon's diversity == 0, regardless of how many species are in functional group i. Thus, for functional groups with only one species, the value zero for all quadrats should be zero:
+    # if there is only one species in a community (quadrat), shannon's diversity == 0, regardless of how many species are in functional group i. Thus, for functional groups with only one species, the value for all quadrats should be zero:
     if(length(vec.thisrun)==1) shan.data[[i]]<-rep(0, nrow(data.thisrun)) else shan.data[[i]]<-diversity(data.thisrun,index="shannon")
     
   } # close i for

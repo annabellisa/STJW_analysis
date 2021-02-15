@@ -258,8 +258,6 @@ overdisp_fun <- function(model) {
   c(chisq=Pearson.chisq,ratio=prat,rdf=rdf,p=pval)
 }
 
-<<<<<<< HEAD
-=======
 # WALD TEST: to calculate p-vals from a factor with three or more levels:
 # NOTE THAT q MUST BE THE LENGTH OF THE MATRIX IN QUESTION.
 Wald<-function(object,R,q) {
@@ -314,8 +312,6 @@ R.mat<-function(model,coef.name){
   }
   R<-R
 } # close R.mat function
-
->>>>>>> 14dd01c2992400b365253786a26bb550caa8d875
 
 
 
