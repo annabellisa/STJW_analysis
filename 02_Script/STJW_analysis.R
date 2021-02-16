@@ -963,13 +963,19 @@ rich[,"exotic"]
 # hist(gdf$prop0_rich)
 # hist(gdf$prop0_shan)
 
-# CUT-OFF # 1: choose 20 quadrats with zeros as the cut-off for fitting a binomial model, but use the diversity zeros, because this will reflect plots with only single species recorded. 
+# CUT-OFF # 1: choose 20 quadrats with zeros as the cut-off for fitting a binomial model, but use the diversity zeros, because this will reflect plots with only single species recorded. This is not right... need to update.
 
-gdf$fit_bin<-ifelse(gdf$no_shan>=20, "yes", "no")
+gdf$fit_bin<-ifelse(gdf$no_shan0>=20, "yes", "no")
 head(gdf); dim(gdf)
+gdf[,c("group", "no_rich0", "no_shan0")]
+
 
 # CUT-OFF # 2: don't fit models for +ve data to groups where more than two-thirds of the data are zeros. For now, use richness to get an idea of results... Might update this later:
 gdf$fit_pos<-ifelse(gdf$no_rich0>=(nrow(rich)/3)*2, "no", "yes")
+
+# CUT-OFF # 3: for now, don't fit models where there are less than ten zeros out of 144
+
+gdf$fit_bin[gdf$no_rich0<10]<-"no"
 
 # save workspace:
 # save.image("03_Workspaces/stjw_analysis.RData")
@@ -1005,7 +1011,7 @@ anova.shan<-list()
 
 # Add summary data to gdf:
 head(gdf,3); dim(gdf)
-gdf[,c(1,(ncol(gdf)-4):ncol(gdf))]
+# gdf[,c(1,(ncol(gdf)-4):ncol(gdf))]
 
 gdf$bin_3wayP<-NA
 gdf$bin_2wayP<-NA
@@ -1016,98 +1022,201 @@ gdf$rich_2wayP<-NA
 gdf$shan_3wayP<-NA
 gdf$shan_2wayP<-NA
 
+
 library("glmmADMB")
 
+head(gdf,3); dim(gdf)
+
+rahead(rich_sc,4,7); dim(rich_sc)
+rahead(shan_sc,4,7); dim(shan_sc)
+
+# This is probability of occurrence based on richness, so that zeros are true zeros. 
+# Don't use shannon's diversity for modelling zeros because they can either be zero values or ones
 
 for (i in 1:nrow(gdf)){
   
   resp.thisrun<-gdf$group[i]
-  data.set<-shan_sc
+  bin.thisrun<-gdf$fit_bin[i]
   
-  rahead(data.set,6,6); dim(data.set)
-  data.set[,resp.thisrun]<-ifelse(data.set[,resp.thisrun]==0,0,1)
-  data.thisrun<-data.set[,resp.thisrun]
+  # Binomial models are only run for species that have 20 or more zeros in the diversity data:
+  if (bin.thisrun=="no"){
+    fits.binom[[i]]<-NULL
+    coef.binom[[i]]<-NULL
+    preds.binom[[i]]<-NULL
+    anova.binom[[i]]<-NULL
+  } # close no binomial
   
-  form.thisrun<-paste(resp.thisrun,"~Treatment+DATE+reserve+Treatment:DATE+Treatment:DATE:reserve+(1|PLOT_ID)", sep="")
-  
-  # some functional groups have 0, its not going to run those functional groups here on
-  if(sum(data.thisrun,na.rm=T)==0){
-    fits.shan[[i]]<-NULL
-    coef.shan[[i]]<-NULL
-    anova.shan[[i]]<-NULL
-    preds.shan[[i]]<-NULL
-    next
-  }
-  
-  # some functional groups have data present in every quad, 
-  if(length(which(data.thisrun==0))==0){
-    fits.shan[[i]]<-NULL
-    coef.shan[[i]]<-NULL
-    anova.shan[[i]]<-NULL
-    preds.shan[[i]]<-NULL
-    next
-  }
-  
-  m1<-glmer(formula = form.thisrun, family="binomial", data=data.set)
-  summary(m1)
-  anova(m1)
-  
-  # run model without three-way:
-  form.twoway<-paste(resp.thisrun,"~Treatment+DATE+reserve+Treatment:DATE+(1|PLOT_ID)", sep="")
-  mod_twoway<-glmer(formula = form.twoway, family="binomial", data=data.set)
-  
-  m1_coef<-coef.ext(m1)
-  m1_anova<-anova(mod_twoway, m1)
-  
-  p_anova<-m1_anova[2,8]
-  anova.shan[[i]]<-m1_anova
-  
-  # simplify model if the three way is not significant:
-  if(p_anova>0.05){
+  if (bin.thisrun=="yes"){
     
-    # remove three way term from formula:
-    form.thisrun<-paste(resp.thisrun,"~Treatment+DATE+reserve+Treatment:DATE+(1|PLOT_ID)", sep="")
+    data.set<-rich_sc
     
-    # re-run model without three way:
+    data.set[,resp.thisrun]<-ifelse(data.set[,resp.thisrun]==0,0,1)
+    data.thisrun<-data.set[,resp.thisrun]
+    rahead(data.set,6,6); dim(data.set)
+    
+    form.thisrun<-paste(resp.thisrun,"~Treatment+DATE+reserve+Treatment:DATE+Treatment:DATE:reserve+(1|PLOT_ID)", sep="")
+    
+    # some functional groups have 0, its not going to run those functional groups here on
+    if(sum(data.thisrun,na.rm=T)==0){
+      fits.shan[[i]]<-NULL
+      coef.shan[[i]]<-NULL
+      anova.shan[[i]]<-NULL
+      preds.shan[[i]]<-NULL
+      next
+    }
+    
     m1<-glmer(formula = form.thisrun, family="binomial", data=data.set)
     summary(m1)
+    anova(m1)
+    
+    # run model without three-way:
+    form.twoway<-paste(resp.thisrun,"~Treatment+DATE+reserve+Treatment:DATE+(1|PLOT_ID)", sep="")
+    mod_twoway<-glmer(formula = form.twoway, family="binomial", data=data.set)
     
     m1_coef<-coef.ext(m1)
+    m1_anova<-anova(mod_twoway, m1)
     
-    # run model without any interaction (to figure out if the two way interaction is significant):
-    form.noint<-paste(resp.thisrun,"~Treatment+DATE+reserve+(1|PLOT_ID)", sep="")
-    mod_noint<-glmer(formula = form.noint, family="binomial", data=data.set)
+    p_anova<-m1_anova[2,which(colnames(m1_anova)=="Pr(>Chisq)")]
+    gdf$bin_3wayP[i]<-p_anova
+    head(gdf,3); dim(gdf)
     
-    int_term_anova<-anova(mod_noint, m1)
-    anova.shan[[i]]<-int_term_anova
+    anova.binom[[i]]<-m1_anova
     
-  } # close if three way not signif
+    # simplify model if the three way is not significant:
+    if(p_anova>0.05){
+      
+      # remove three way term from formula:
+      form.thisrun<-paste(resp.thisrun,"~Treatment+DATE+reserve+Treatment:DATE+(1|PLOT_ID)", sep="")
+      
+      # re-run model without three way:
+      m1<-glmer(formula = form.thisrun, family="binomial", data=data.set)
+      summary(m1)
+      
+      # run model without any interaction (to figure out if the two way interaction is significant):
+      form.noint<-paste(resp.thisrun,"~Treatment+DATE+reserve+(1|PLOT_ID)", sep="")
+      mod_noint<-glmer(formula = form.noint, family="binomial", data=data.set)
+      
+      int_term_anova<-anova(mod_noint, m1)
+      int_term_p<-int_term_anova[2,which(colnames(m1_anova)=="Pr(>Chisq)")]
+      anova.binom[[i]]<-int_term_anova
+      
+      m1_coef<-coef.ext(m1)
+      
+      gdf$bin_2wayP[i]<-int_term_p
+      head(gdf,3); dim(gdf)
+      
+    } # close if three way not signif
+    
+    fits.binom[[i]]<-m1
+    coef.binom[[i]]<-m1_coef
+    
+    # generate model predictions:
+    
+    m1_pr<-predictSE(mod=m1,newdata=nd1,type="response", se.fit = T)
+    m1_pr<-data.frame(nd1,fit=m1_pr$fit,se=m1_pr$se.fit)
+    m1_pr$lci<-m1_pr$fit-(m1_pr$se*1.96)
+    m1_pr$uci<-m1_pr$fit+(m1_pr$se*1.96)
+    head(m1_pr)
+    
+    preds.binom[[i]]<-m1_pr
+    
+  } # close binomial model
   
-  fits.shan[[i]]<-m1
-  coef.shan[[i]]<-m1_coef
+} # close ANALYSIS loop
+
+anova.binom
+fits.binom
+coef.binom
+preds.binom
+
+head(gdf,3); dim(gdf)
+gdf[which(gdf$bin_3wayP<0.05),]
+gdf[which(gdf$bin_2wayP<0.05),]
+
+# 19 exotic leg herb two way
+# 18 native leg herb three way
+
+head(preds.binom[[19]])
+head(preds.binom[[18]])
+
+# Plot significant binomial models:
+
+dev.new(width=8,height=6,noRStudioGD = T,dpi=80, pointsize=12)
+par(mfrow=c(2,2), mar=c(2,4,4,1), oma=c(0,0,0,10), mgp=c(2.5,1,0))
+
+for(i in 18:19){
   
-  # generate model predictions:
+  resp.thisrun<-gdf$group[i]
+  pred.thisrun<-preds.binom[[i]]
+  anova.thisrun<-anova.binom[[i]]
+  coef.thisrun<-coef.binom[[i]]
+  ylab.thisrun<-gdf$ylab[i]
+  meta.thisrun<-gdf[i,]
+  xofs<-0.2
+  arrowlgth<-0.02
   
-  m1_pr<-predictSE(mod=m1,newdata=nd1, se.fit = T)
-  m1_pr<-data.frame(nd1,fit=m1_pr$fit,se=m1_pr$se.fit)
-  m1_pr$lci<-m1_pr$fit-(m1_pr$se*1.96)
-  m1_pr$uci<-m1_pr$fit+(m1_pr$se*1.96)
-  head(m1_pr)
+  head(pred.thisrun)
   
-  preds.shan[[i]]<-m1_pr
+  mul.preds<-pred.thisrun[which(pred.thisrun$reserve=="M"),]
+  jerra.preds<-pred.thisrun[which(pred.thisrun$reserve=="J"),]
   
-} # close model
+  # CIs for control in 2017 are all 1, and cannot draw the arrow. It's actually running, just sending out a warning that it doesn't plot the very small ones. 
+  
+  # MULANGARRI
+  
+  plot(mul.preds$DATE[mul.preds$Treatment=="C"]-xofs,mul.preds$fit[mul.preds$Treatment=="C"], pch=15, ylim=c(min(mul.preds$lci), max(mul.preds$uci)), xlim=c(-0.3,2.3), xaxt="n", xlab="", ylab=ylab.thisrun, las=1)
+  axis(side = 1, at=c(0,1,2), labels=c(2017,2018,2019))
+  
+  arrows(mul.preds$DATE[mul.preds$Treatment=="C"]-xofs,mul.preds$lci[mul.preds$Treatment=="C"],mul.preds$DATE[mul.preds$Treatment=="C"]-xofs,mul.preds$uci[mul.preds$Treatment=="C"], code=3, angle=90, length=arrowlgth)
+  
+  points(mul.preds$DATE[mul.preds$Treatment=="A"],mul.preds$fit[mul.preds$Treatment=="A"], pch=15, col="red")
+  arrows(mul.preds$DATE[mul.preds$Treatment=="A"],mul.preds$lci[mul.preds$Treatment=="A"],mul.preds$DATE[mul.preds$Treatment=="A"],mul.preds$uci[mul.preds$Treatment=="A"], code=3, angle=90, length=arrowlgth, col="red")
+  points(mul.preds$DATE[mul.preds$Treatment=="B"]+xofs,mul.preds$fit[mul.preds$Treatment=="B"], pch=15, col="blue")
+  arrows(mul.preds$DATE[mul.preds$Treatment=="B"]+xofs,mul.preds$lci[mul.preds$Treatment=="B"],mul.preds$DATE[mul.preds$Treatment=="B"]+xofs,mul.preds$uci[mul.preds$Treatment=="B"], code=3, angle=90, length=arrowlgth, col="blue")
+  mtext("Mulangarri", side=3, line=1.5, adj=0)
+  
+  # JERRA
+  
+  plot(jerra.preds$DATE[jerra.preds$Treatment=="C"]-xofs,jerra.preds$fit[jerra.preds$Treatment=="C"], pch=15, ylim=c(min(jerra.preds$lci), max(jerra.preds$uci)), xlim=c(-0.3,2.3), xaxt="n", xlab="", ylab=ylab.thisrun, las=1)
+  axis(side = 1, at=c(0,1,2), labels=c(2017,2018,2019))
+  arrows(jerra.preds$DATE[jerra.preds$Treatment=="C"]-xofs,jerra.preds$lci[jerra.preds$Treatment=="C"],jerra.preds$DATE[jerra.preds$Treatment=="C"]-xofs,jerra.preds$uci[jerra.preds$Treatment=="C"], code=3, angle=90, length=arrowlgth)
+  points(jerra.preds$DATE[jerra.preds$Treatment=="A"],jerra.preds$fit[jerra.preds$Treatment=="A"], pch=15, col="red")
+  arrows(jerra.preds$DATE[jerra.preds$Treatment=="A"],jerra.preds$lci[jerra.preds$Treatment=="A"],jerra.preds$DATE[jerra.preds$Treatment=="A"],jerra.preds$uci[jerra.preds$Treatment=="A"], code=3, angle=90, length=arrowlgth, col="red")
+  points(jerra.preds$DATE[jerra.preds$Treatment=="B"]+xofs,jerra.preds$fit[jerra.preds$Treatment=="B"], pch=15, col="blue")
+  arrows(jerra.preds$DATE[jerra.preds$Treatment=="B"]+xofs,jerra.preds$lci[jerra.preds$Treatment=="B"],jerra.preds$DATE[jerra.preds$Treatment=="B"]+xofs,jerra.preds$uci[jerra.preds$Treatment=="B"], code=3, angle=90, length=arrowlgth, col="blue")
+  
+  mtext("Jerrabomberra", side=3, line=1.5, adj=0)
+  
+  if (gdf$bin_3wayP[i]<0.05){
+    
+    p.trt_yr_int<-round(anova.thisrun[2,which(colnames(anova.thisrun)=="Pr(>Chisq)")],4)
+    title(main=paste("Three-way int, ","P=",p.trt_yr_int, sep=""), font.main=1, adj=0, cex=0.9, line=0.5)
+    
+  } # close if 3-way signif
+  
+  if(is.na(gdf$bin_2wayP[i])) next
+  
+  if (gdf$bin_2wayP[i]<0.05){
+    
+    p.trt_yr_int<-round(anova.thisrun[2,which(colnames(anova.thisrun)=="Pr(>Chisq)")],4)
+    title(main=paste("Two-way int, ","P=",p.trt_yr_int, sep=""), font.main=1, adj=0, cex=0.9, line=0.5)
+    
+  } # close if 2-way signif
+  
+} # close plot binomial
 
+par(xpd=NA)
+legend(3,1,legend=c("Control","Spot spray","Boom spray"), col=c("black","red","blue"), pch=15, bty="n", pt.cex = 3)
+par(xpd=F)
 
-
-
-
-
-# This is a different kind of anova table than for diversity because we are just using it to test the significance of the two-way date:treatment interaction in the final models. We can get the other p values from the coefficient table:
 
 
 
 ### OLD ANALYSIS
+
+# This is a different kind of anova table than for diversity because we are just using it to test the significance of the two-way date:treatment interaction in the final models. We can get the other p values from the coefficient table:
+
+
 # Notes on model selection to include in paper:
 
 # We fit an interaction between treatment and date in all models to describe the before-after, control-impact nature of our design. 
