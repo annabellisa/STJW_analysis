@@ -7,7 +7,7 @@
 ### Author: Annabel Smith & Raagini Muddaiah
 
 # Load functions:
-invisible(lapply(paste("01_Functions/",dir("01_Functions"),sep=""),function(x) source(x)))
+invisible(lapply(paste("01_Functions/",dir("01_Functions"),sep=""), function(x) source(x)))
 
 # Load libraries:
 library(lme4); library(vegan); library(AICcmodavg); library(lmerTest)
@@ -1112,17 +1112,15 @@ nd1<-data.frame(DATE=rep(c(0,1,2),rep(3,3)),Treatment=as.factor(c("C","A","B")),
 
 # RUN MODELLING LOOP:
 # **** DIVERSITY:
-<<<<<<< HEAD
-=======
+
 # **** BINOMIAL PART:
->>>>>>> 14dd01c2992400b365253786a26bb550caa8d875
+
 
 for (i in 1:nrow(gdf)){
   
   resp.thisrun<-gdf$group[i]
   data.set<-shan_sc
-<<<<<<< HEAD
-=======
+
   rahead(data.set,6,6); dim(data.set)
   data.set[,resp.thisrun]<-ifelse(data.set[,resp.thisrun]==0,0,1)
   data.thisrun<-data.set[,resp.thisrun]
@@ -1208,7 +1206,7 @@ for (i in 1:nrow(gdf)){
   
   resp.thisrun<-gdf$group[i]
   data.set<-shan_sc
->>>>>>> 14dd01c2992400b365253786a26bb550caa8d875
+
   data.thisrun<-shan_sc[,resp.thisrun]
   form.thisrun<-paste(resp.thisrun,"~Treatment+DATE+reserve+Treatment:DATE+Treatment:DATE:reserve+(1|PLOT_ID)", sep="")
   
@@ -1260,13 +1258,12 @@ for (i in 1:nrow(gdf)){
   
 } # close model
 
-<<<<<<< HEAD
+
 summary(fits.shan[[1]])
 coef.shan
 anova.shan[[19]] # 19 and 6 significant three-way
 preds.shan
-=======
->>>>>>> 14dd01c2992400b365253786a26bb550caa8d875
+
 
 rahead(shan_sc,3,5)
 
@@ -1309,8 +1306,6 @@ head(gdf.shan); dim(gdf.shan)
 # what's going on with native_legherb?
 nlh<-lmer(native_legherb~Treatment+DATE+reserve+Treatment:DATE+(1|PLOT_ID), data=shan_sc)
 summary(nlh)
-<<<<<<< HEAD
-=======
 anova(nlh)
 
 head(nd1,3)
@@ -1359,9 +1354,7 @@ rahead(shan_sc,6,6)
 range(shan_sc$native_legherb)
 range(rich_sc$native_legherb)
 range(shan_sc[2:nrow(shan_sc),5:ncol(shan_sc)])
-<<<<<<< HEAD
 range(rich_sc[2:nrow(rich_sc),5:ncol(rich_sc)])
-=======
 range(rich_sc[2:nrow(rich_sc),5:ncol(rich_sc)]).
 
 # what's going on with native_legherb?
@@ -1381,7 +1374,6 @@ summary(nlh.bin)
 anova(nlh.bin)
 anova(nlh.bin, nlh.null)
 
->>>>>>> 14dd01c2992400b365253786a26bb550caa8d875
 
 # what's going on with exann_herb?
 exanh_mod<-lmer(exann_herb~Treatment+DATE+reserve+Treatment:DATE+(1|PLOT_ID), data=shan_sc)
@@ -1389,9 +1381,6 @@ summary(exanh_mod)
 anova(exanh_mod)
 
 # close analysis ----
-
-<<<<<<< HEAD
-=======
 #  SIGNIFICANCE LEVELS (COMPONENT 1):    	# ----
 
 summary(fits.rich[[3]])
@@ -1411,7 +1400,6 @@ head(gdf.rich); dim(gdf.rich)
 
 # close significance ----
 
->>>>>>> 14dd01c2992400b365253786a26bb550caa8d875
 #  PLOT ESTIMATES (COMPONENT 1):    	# ----
 
 # Species Richness:
@@ -1762,12 +1750,38 @@ rahead(cv_ind,6,6)
 ind_po<-ct_ind
 rahead(ind_po,6,6); dim(ind_po)
 
+#Chr_api (tm=testmod)
 ind_po$Chr_api<-ifelse(ind_po$Chr_api>0,1,0)
 ind_po$DATE<-ind_po$DATE-min(ind_po$DATE)
 
-test_mod<-glmer(Chr_api~DATE*Treatment*reserve+(1|PLOT_ID), family="binomial", data=ind_po)
-summary(test_mod)
+tm_Chr_api<-glmer(Chr_api~DATE*Treatment*reserve+(1|PLOT_ID), family="binomial", data=ind_po)
+summary(tm_Chr_api)
 
+#Art_fim
+ind_po$Art_fim<-ifelse(ind_po$Art_fim>0,1,0)
+
+tm_Art_fim<-glmer(Art_fim~DATE*Treatment*reserve+(1|PLOT_ID), family="binomial", data=ind_po)
+summary(tm_Art_fim)
+
+#Des_var
+ind_po$Des_var<-ifelse(ind_po$Des_var>0,1,0)
+
+tm_Des_var<-glmer(Des_var~DATE*Treatment*reserve+(1|PLOT_ID), family="binomial", data=ind_po)
+summary(tm_Des_var)
+
+#Ery_ovi
+ind_po$Ery_ovi<-ifelse(ind_po$Ery_ovi>0,1,0)
+ind_po$DATE<-ind_po$DATE-min(ind_po$DATE)
+
+tm_Ery_ovi<-glmer(Ery_ovi~DATE*Treatment*reserve+(1|PLOT_ID), family="binomial", data=ind_po)
+summary(tm_Ery_ovi)
+
+#Gly_cla 
+ind_po$Gly_cla<-ifelse(ind_po$Gly_cla>0,1,0)
+ind_po$DATE<-ind_po$DATE-min(ind_po$DATE)
+
+tm_Gly_cla<-glmer(Gly_cla~DATE*Treatment*reserve+(1|PLOT_ID), family="binomial", data=ind_po)
+summary(tm_Gly_cla)
 
 # close indiv species ----
 
