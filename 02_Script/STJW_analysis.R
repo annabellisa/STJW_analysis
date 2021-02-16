@@ -937,6 +937,177 @@ save.image("03_Workspaces/stjw_analysis.RData")
 
 #  ANALYSIS (COMPONENT 1):    	# ----
 
+# add flag for groups with only one species:
+# the diversity score will be zero in all quads:
+gdf$singleton<-"no"
+gdf$singleton[which(apply(shan[,5:ncol(shan)],2,sum)==0)]<-"yes"
+
+gdf$no_rich0<-apply(rich[,5:ncol(rich)], 2, function(x) length(which(x==0)))
+gdf$no_shan0<-apply(shan[,5:ncol(rich)], 2, function(x) length(which(x==0)))
+
+gdf$prop0_rich<-apply(rich[,5:ncol(rich)], 2, function(x) round(length(which(x==0))/nrow(rich),3))
+gdf$prop0_shan<-apply(shan[,5:ncol(rich)], 2, function(x) round(length(which(x==0))/nrow(shan),3))
+
+# Non-matching columns:
+gdf[!(gdf$prop0_rich==0)==(gdf$prop0_shan==0),]
+# exotic_perengrass has complete zeros for shan, and some data for richness; this is because there is only one species in that category (Nas_tri) and diversity will always be zero when richness is one. 
+# natper_herb has complete zeros for rich and a small number for diversity; this group has richness data in all quads but a value of one in one of the quadrats, giving a single zero value for diversity 
+
+gdf[,c(1,(ncol(gdf)-3):ncol(gdf))]
+rich[,"exotic"]
+
+# dev.new(width=8,height=8,noRStudioGD = T,dpi=80, pointsize=12)
+# par(mfrow=c(2,2), mar=c(4,4,2,1), mgp=c(2.5,1,0))
+# hist(gdf$no_rich0)
+# hist(gdf$no_shan0)
+# hist(gdf$prop0_rich)
+# hist(gdf$prop0_shan)
+
+# CUT-OFF # 1: choose 20 quadrats with zeros as the cut-off for fitting a binomial model, but use the diversity zeros, because this will reflect plots with only single species recorded. 
+
+gdf$fit_bin<-ifelse(gdf$no_shan>=20, "yes", "no")
+head(gdf); dim(gdf)
+
+# CUT-OFF # 2: don't fit models for +ve data to groups where more than two-thirds of the data are zeros. For now, use richness to get an idea of results... Might update this later:
+gdf$fit_pos<-ifelse(gdf$no_rich0>=(nrow(rich)/3)*2, "no", "yes")
+
+# save workspace:
+# save.image("03_Workspaces/stjw_analysis.RData")
+
+# **** SCALE DATE:
+
+rich_sc<-rich
+rich_sc$DATE<-rich_sc$DATE-2017
+
+shan_sc<-shan
+shan_sc$DATE<-shan_sc$DATE-2017
+rahead(rich_sc,4,7); dim(rich_sc)
+rahead(shan_sc,4,7); dim(shan_sc)
+
+# new data for model estimates (same for models with a date:treatment interaction only and models with a three way interaction; you can also use the same newdata frame for richness and shannon's):
+nd1<-data.frame(DATE=rep(c(0,1,2),rep(3,3)),Treatment=as.factor(c("C","A","B")),reserve=c(rep("J",9),rep("M",9)))
+
+# lists for storing model fits, coefficients, anova tables and model estimates:
+fits.binom<-list()
+coef.binom<-list()
+preds.binom<-list()
+anova.binom<-list()
+
+fits.rich<-list()
+coef.rich<-list()
+preds.rich<-list()
+anova.rich<-list()
+
+fits.shan<-list()
+coef.shan<-list()
+preds.shan<-list()
+anova.shan<-list()
+
+# Add summary data to gdf:
+head(gdf,3); dim(gdf)
+gdf[,c(1,(ncol(gdf)-4):ncol(gdf))]
+
+gdf$bin_3wayP<-NA
+gdf$bin_2wayP<-NA
+
+gdf$rich_3wayP<-NA
+gdf$rich_2wayP<-NA
+
+gdf$shan_3wayP<-NA
+gdf$shan_2wayP<-NA
+
+library("glmmADMB")
+
+
+for (i in 1:nrow(gdf)){
+  
+  resp.thisrun<-gdf$group[i]
+  data.set<-shan_sc
+  
+  rahead(data.set,6,6); dim(data.set)
+  data.set[,resp.thisrun]<-ifelse(data.set[,resp.thisrun]==0,0,1)
+  data.thisrun<-data.set[,resp.thisrun]
+  
+  form.thisrun<-paste(resp.thisrun,"~Treatment+DATE+reserve+Treatment:DATE+Treatment:DATE:reserve+(1|PLOT_ID)", sep="")
+  
+  # some functional groups have 0, its not going to run those functional groups here on
+  if(sum(data.thisrun,na.rm=T)==0){
+    fits.shan[[i]]<-NULL
+    coef.shan[[i]]<-NULL
+    anova.shan[[i]]<-NULL
+    preds.shan[[i]]<-NULL
+    next
+  }
+  
+  # some functional groups have data present in every quad, 
+  if(length(which(data.thisrun==0))==0){
+    fits.shan[[i]]<-NULL
+    coef.shan[[i]]<-NULL
+    anova.shan[[i]]<-NULL
+    preds.shan[[i]]<-NULL
+    next
+  }
+  
+  m1<-glmer(formula = form.thisrun, family="binomial", data=data.set)
+  summary(m1)
+  anova(m1)
+  
+  # run model without three-way:
+  form.twoway<-paste(resp.thisrun,"~Treatment+DATE+reserve+Treatment:DATE+(1|PLOT_ID)", sep="")
+  mod_twoway<-glmer(formula = form.twoway, family="binomial", data=data.set)
+  
+  m1_coef<-coef.ext(m1)
+  m1_anova<-anova(mod_twoway, m1)
+  
+  p_anova<-m1_anova[2,8]
+  anova.shan[[i]]<-m1_anova
+  
+  # simplify model if the three way is not significant:
+  if(p_anova>0.05){
+    
+    # remove three way term from formula:
+    form.thisrun<-paste(resp.thisrun,"~Treatment+DATE+reserve+Treatment:DATE+(1|PLOT_ID)", sep="")
+    
+    # re-run model without three way:
+    m1<-glmer(formula = form.thisrun, family="binomial", data=data.set)
+    summary(m1)
+    
+    m1_coef<-coef.ext(m1)
+    
+    # run model without any interaction (to figure out if the two way interaction is significant):
+    form.noint<-paste(resp.thisrun,"~Treatment+DATE+reserve+(1|PLOT_ID)", sep="")
+    mod_noint<-glmer(formula = form.noint, family="binomial", data=data.set)
+    
+    int_term_anova<-anova(mod_noint, m1)
+    anova.shan[[i]]<-int_term_anova
+    
+  } # close if three way not signif
+  
+  fits.shan[[i]]<-m1
+  coef.shan[[i]]<-m1_coef
+  
+  # generate model predictions:
+  
+  m1_pr<-predictSE(mod=m1,newdata=nd1, se.fit = T)
+  m1_pr<-data.frame(nd1,fit=m1_pr$fit,se=m1_pr$se.fit)
+  m1_pr$lci<-m1_pr$fit-(m1_pr$se*1.96)
+  m1_pr$uci<-m1_pr$fit+(m1_pr$se*1.96)
+  head(m1_pr)
+  
+  preds.shan[[i]]<-m1_pr
+  
+} # close model
+
+
+
+
+
+
+# This is a different kind of anova table than for diversity because we are just using it to test the significance of the two-way date:treatment interaction in the final models. We can get the other p values from the coefficient table:
+
+
+
+### OLD ANALYSIS
 # Notes on model selection to include in paper:
 
 # We fit an interaction between treatment and date in all models to describe the before-after, control-impact nature of our design. 
@@ -945,34 +1116,6 @@ save.image("03_Workspaces/stjw_analysis.RData")
 
 # we did not expect the diversity differences to change over time, so we did not fit a year and reserve interaction
 
-# Dcide the cut-off for analysis. There must be more records (i.e. number of species recorded) than the number of quadrats (48)? I.e. exclude two responses (exotic_perengrass and sed_rus):
-
-gdf<-gdf[-which(gdf$rich_records<48),]
-gdf<-tidy.df(gdf)
-head(gdf); dim(gdf)
-rahead(rich,4,7); dim(rich)
-rahead(shan,4,7); dim(shan)
-
-# save workspace:
-# save.image("03_Workspaces/stjw_analysis.RData")
-
-# **** RICHNESS:
-
-# scale date only:
-rich_sc<-rich
-rich_sc$DATE<-rich_sc$DATE-2017
-rahead(rich_sc,4,7); dim(rich_sc)
-
-# lists for storing model fits, coefficients, anova tables and model estimates:
-fits.rich<-list()
-coef.rich<-list()
-preds.rich<-list()
-
-# This is a different kind of anova table than for diversity because we are just using it to test the significance of the two-way date:treatment interaction in the final models. We can get the other p values from the coefficient table:
-anova.rich<-list()
-
-# new data for model estimates (same for models with a date:treatment interaction only and models with a three way interaction; you can also use the same newdata frame for richness and shannon's):
-nd1<-data.frame(DATE=rep(c(0,1,2),rep(3,3)),Treatment=as.factor(c("C","A","B")),reserve=c(rep("J",9),rep("M",9)))
 
 # THE ACTUAL ANALYSIS CODE:
 # RUN MODELLING LOOP:
@@ -981,7 +1124,6 @@ nd1<-data.frame(DATE=rep(c(0,1,2),rep(3,3)),Treatment=as.factor(c("C","A","B")),
 
 # follow 'best bet' instructions for installation:
 # https://glmmadmb.r-forge.r-project.org/
-library("glmmADMB")
 
 for (i in 1:nrow(gdf)){
   
@@ -1096,11 +1238,6 @@ head(gdf.rich); dim(gdf.rich)
 
 # **** DIVERSITY:
 
-#scale date only
-shan_sc<-shan
-shan_sc$DATE<-shan_sc$DATE-2017
-rahead(shan_sc,4,7); dim(shan_sc)
-
 # lists for storing model fits, coefficients, anova tables and model estimates:
 fits.shan<-list()
 coef.shan<-list()
@@ -1112,9 +1249,13 @@ nd1<-data.frame(DATE=rep(c(0,1,2),rep(3,3)),Treatment=as.factor(c("C","A","B")),
 
 # RUN MODELLING LOOP:
 # **** DIVERSITY:
+<<<<<<< HEAD
 
 # **** BINOMIAL PART:
 
+=======
+# **** BINOMIAL PART:
+>>>>>>> a8bbe65ecc1599244dc00e7adbde606a220d11ee
 
 for (i in 1:nrow(gdf)){
   
@@ -1206,7 +1347,10 @@ for (i in 1:nrow(gdf)){
   
   resp.thisrun<-gdf$group[i]
   data.set<-shan_sc
+<<<<<<< HEAD
 
+=======
+>>>>>>> a8bbe65ecc1599244dc00e7adbde606a220d11ee
   data.thisrun<-shan_sc[,resp.thisrun]
   form.thisrun<-paste(resp.thisrun,"~Treatment+DATE+reserve+Treatment:DATE+Treatment:DATE:reserve+(1|PLOT_ID)", sep="")
   
@@ -1258,12 +1402,18 @@ for (i in 1:nrow(gdf)){
   
 } # close model
 
+<<<<<<< HEAD
 
+=======
+>>>>>>> a8bbe65ecc1599244dc00e7adbde606a220d11ee
 summary(fits.shan[[1]])
 coef.shan
 anova.shan[[19]] # 19 and 6 significant three-way
 preds.shan
+<<<<<<< HEAD
 
+=======
+>>>>>>> a8bbe65ecc1599244dc00e7adbde606a220d11ee
 
 rahead(shan_sc,3,5)
 
@@ -1306,6 +1456,10 @@ head(gdf.shan); dim(gdf.shan)
 # what's going on with native_legherb?
 nlh<-lmer(native_legherb~Treatment+DATE+reserve+Treatment:DATE+(1|PLOT_ID), data=shan_sc)
 summary(nlh)
+<<<<<<< HEAD
+=======
+
+>>>>>>> a8bbe65ecc1599244dc00e7adbde606a220d11ee
 anova(nlh)
 
 head(nd1,3)
