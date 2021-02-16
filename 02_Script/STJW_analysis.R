@@ -1124,6 +1124,8 @@ for (i in 1:nrow(gdf)){
   
 } # close ANALYSIS loop
 
+# save.image("03_Workspaces/stjw_analysis.RData")
+
 anova.binom
 fits.binom
 coef.binom
