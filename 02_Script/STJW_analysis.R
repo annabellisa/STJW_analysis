@@ -953,9 +953,6 @@ gdf[!(gdf$prop0_rich==0)==(gdf$prop0_shan==0),]
 # exotic_perengrass has complete zeros for shan, and some data for richness; this is because there is only one species in that category (Nas_tri) and diversity will always be zero when richness is one. 
 # natper_herb has complete zeros for rich and a small number for diversity; this group has richness data in all quads but a value of one in one of the quadrats, giving a single zero value for diversity 
 
-gdf[,c(1,(ncol(gdf)-3):ncol(gdf))]
-rich[,"exotic"]
-
 # dev.new(width=8,height=8,noRStudioGD = T,dpi=80, pointsize=12)
 # par(mfrow=c(2,2), mar=c(4,4,2,1), mgp=c(2.5,1,0))
 # hist(gdf$no_rich0)
@@ -963,12 +960,11 @@ rich[,"exotic"]
 # hist(gdf$prop0_rich)
 # hist(gdf$prop0_shan)
 
-# CUT-OFF # 1: choose 20 quadrats with zeros as the cut-off for fitting a binomial model, but use the diversity zeros, because this will reflect plots with only single species recorded. This is not right... need to update.
+# BINOMIAL CUT-OFF # 1: Fit binomial models to functional groups that have 20% or greater (i.e. 29 out of 144) zeros
 
-gdf$fit_bin<-ifelse(gdf$no_shan0>=20, "yes", "no")
+gdf[,c("group","no_rich0","no_shan0", "fit_bin")]
+gdf$fit_bin<-ifelse(gdf$no_rich0>=29, "yes", "no")
 head(gdf); dim(gdf)
-gdf[,c("group", "no_rich0", "no_shan0")]
-
 
 # CUT-OFF # 2: don't fit models for +ve data to groups where more than two-thirds of the data are zeros. For now, use richness to get an idea of results... Might update this later:
 gdf$fit_pos<-ifelse(gdf$no_rich0>=(nrow(rich)/3)*2, "no", "yes")
