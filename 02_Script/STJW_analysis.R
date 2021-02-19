@@ -15,6 +15,9 @@ library(lme4); library(vegan); library(AICcmodavg); library(lmerTest)
 # Load workspace
 load("03_Workspaces/stjw_analysis.RData")
 
+# The diversity workspace has only the diversity anaysis (not individual species):
+load("03_Workspaces/stjw_analysis_diversity.RData")
+
 #  IMPORT, clean & transform data:    	# ----
 
 data_dir<-"00_Data/Formatted_data/"
@@ -525,7 +528,11 @@ table(colnames(cv17)[4:ncol(cv17)] %in% colnames(cv18)[4:ncol(cv18)])
 table(colnames(cv17)[4:ncol(cv17)] %in% colnames(cv19)[4:ncol(cv19)])
 table(colnames(cv18)[4:ncol(cv18)] %in% colnames(cv19)[4:ncol(cv19)])
 
-# save.image("03_Workspaces/stjw_analysis.RData")
+rahead(ct17,6,6); dim(ct17)
+rahead(ct18,6,6); dim(ct18)
+rahead(ct19,6,6); dim(ct19)
+
+# save.image("03_Workspaces/stjw_analysis_diversity.RData")
 
 # close import data ----
 
@@ -757,6 +764,15 @@ cv17<-cv17[order(cv17$reserve,cv17$PLOT_ID,cv17$Treatment),]
 cv18<-cv18[order(cv18$reserve,cv18$PLOT_ID,cv18$Treatment),]
 cv19<-cv19[order(cv19$reserve,cv19$PLOT_ID,cv19$Treatment),]
 
+# TIDY:
+ct17<-tidy.df(ct17)
+ct18<-tidy.df(ct18)
+ct19<-tidy.df(ct19)
+
+cv17<-tidy.df(cv17)
+cv18<-tidy.df(cv18)
+cv19<-tidy.df(cv19)
+
 rahead(ct17,4,10); dim(ct17)
 rahead(ct18,4,10); dim(ct18)
 rahead(ct19,4,10); dim(ct19)
@@ -765,7 +781,7 @@ rahead(cv17,4,10); dim(cv17)
 rahead(cv18,4,10); dim(cv18)
 rahead(cv19,4,10); dim(cv19)
 
-# save.image("03_Workspaces/stjw_analysis.RData")
+# save.image("03_Workspaces/stjw_analysis_diversity.RData")
 
 # Combine count and cover data:
 
@@ -798,6 +814,7 @@ cv_dat<-rbind(cv17, cv18, cv19)
 rahead(cv_dat,3,7); dim(cv_dat)
 
 # save.image("03_Workspaces/stjw_analysis.RData")
+# save.image("03_Workspaces/stjw_analysis_diversity.RData")
 
 # close format data ----
 
@@ -879,7 +896,7 @@ sed_rus<-as.character(pinfo$Sp[which(pinfo$func_grp=="Sedge_Rush")])
 # Categories to analyse
 group_df<-data.frame(group=c("all","native","exotic","indic","sigA","sigB","sigC","sigXY","sigZ","native_herb","exotic_herb","exann_herb","exper_herb","natann_herb","natper_herb","native_nonlegherb","exotic_nonlegherb","native_legherb","exotic_legherb","native_grass","exotic_grass","exotic_anngrass","exotic_perengrass","c3_grass","native_c3","native_c4","exotic_c3","sed_rus"))
 
-# save.image("03_Workspaces/stjw_analysis.RData")
+# save.image("03_Workspaces/stjw_analysis_diversity.RData")
 
 # close diversity groups ----
 
@@ -900,16 +917,22 @@ ct17_site.data<-ct17[,1:which(colnames(ct17)=="Treatment")]
 div17<-calc.div(ct17, ct17_site.data)
 rich17<-div17$rich
 shan17<-div17$shan
+simp17<-div17$simp
+invsimp17<-div17$invsimp
 
 ct18_site.data<-ct18[,1:which(colnames(ct18)=="Treatment")]
 div18<-calc.div(ct18, ct18_site.data)
 rich18<-div18$rich
 shan18<-div18$shan
+simp18<-div18$simp
+invsimp18<-div18$invsimp
 
 ct19_site.data<-ct19[,1:which(colnames(ct19)=="Treatment")]
 div19<-calc.div(ct19, ct19_site.data)
 rich19<-div19$rich
 shan19<-div19$shan
+simp19<-div19$simp
+invsimp19<-div19$invsimp
 
 # Then combine:
 
@@ -923,7 +946,37 @@ rahead(rich,4,7); dim(rich)
 shan<-rbind(shan17, shan18, shan19)
 rahead(shan,4,7); dim(shan)
 
-# We need to decide the cut-off for analysis. We could say there must be more records (i.e. number of species recorded) than the number of quadrats (48)? Or the number of observations (within years?). Number of quadrats would cut out two responses (exotic_perengrass and sed_rus)
+simp<-rbind(simp17, simp18, simp19)
+rahead(simp,4,7); dim(simp)
+
+invsimp<-rbind(invsimp17, invsimp18, invsimp19)
+rahead(invsimp,4,7); dim(invsimp)
+
+rahead(rich,3,6); dim(rich)
+rahead(shan,3,6); dim(shan)
+rahead(simp,3,6); dim(simp)
+rahead(invsimp,3,6); dim(invsimp)
+
+# plot r.ships between diversity metrics
+dev.new(width=6, height=6, dpi=80, pointsize=16,noRStudioGD = T)
+par(mfrow=c(2,2),mar=c(4,4,1,1))
+plot(rich$exotic,shan$exotic, pch=20, xlab="richness", ylab="shannon", las=1)
+plot(rich$exotic,simp$exotic, pch=20, xlab="richness", ylab="simpsons", las=1)
+plot(rich$exotic,invsimp$exotic, pch=20, xlab="richness", ylab="invsimpsons", las=1)
+
+# Exotic, for example, has a total of 11 zeros and 21 ones in the count data. For shannon's the ones become zeros, making 32 zeros. So data sets with lots of ones have many zeros. This is the point of a diversity estimate. A plot with a single species has no diversity
+length(which(shan$exotic==0))-length(which(rich$exotic==0))
+length(which(simp$exotic==0))-length(which(rich$exotic==0))
+
+exotic_dat<-data.frame(rich=rich$exotic,shan=shan$exotic,simp=simp$exotic,invsimp=invsimp$exotic)
+# shan and simp both have zero when richness==1
+# invsimp has one when richness==1 (need to replace the Inf values with zeros for when richness is zero)
+
+zero_one<-data.frame(rich=rich$exotic[c(which(rich$exotic==0),which(rich$exotic==1))],shan=shan$exotic[c(which(rich$exotic==0),which(rich$exotic==1))],simp=simp$exotic[c(which(rich$exotic==0),which(rich$exotic==1))],invsimp=invsimp$exotic[c(which(rich$exotic==0),which(rich$exotic==1))])
+
+
+
+# Create group data frame and data to assist with deciding cut-offs for analysis. 
 group_df$rich_records<-colSums(rich[,5:length(rich)])
 gdf<-group_df 
 gdf<-tidy.df(gdf)
@@ -932,6 +985,7 @@ gdf
 gdf$ylab<-c("All","Native","Exotic","Indicator","Significance A","Significance B","Common/Increaser","Significance X/Y","Significance Z","Native forb", "Exotic forb","Exotic annual forb","Exotic perennial forb","Native annual forb","Native perennial forb","Native non-leg. forb","Exotic non-leg. forb","Native leg. forb","Exotic leg. forb","Native grass","Exotic grass","Exotic annual grass","Exotic perennial grass","C3 grass","Native C3 grass","Native C4 grass","Exotic C3 grass","Sedge/Rush")
 
 save.image("03_Workspaces/stjw_analysis.RData")
+
 
 # close diversity calculation ----
 
@@ -960,18 +1014,22 @@ gdf[!(gdf$prop0_rich==0)==(gdf$prop0_shan==0),]
 # hist(gdf$prop0_rich)
 # hist(gdf$prop0_shan)
 
-# BINOMIAL CUT-OFF # 1: Fit binomial models to functional groups that have 20% or greater (i.e. 29 out of 144) zeros
+# Figure out cut-off for models with binomial only (lots of zeros, little data), two part models (lots of data but zero inflated), and positive values only (lots of data, few zeros)
+
+dev.new(width=6, height=6, dpi=80, pointsize=16,noRStudioGD = T)
+par(mar=c(4,4,1,1))
+plot(gdf$rich_records,gdf$no_rich0, pch=20, xlab="total count", ylab="proportion zeros", las=1)
+arrows(0,round(nrow(rich_sc)*0.2,0),max(gdf$rich_records),round(nrow(rich_sc)*0.2,0), col="red",code=0)
+text(gdf$rich_records,gdf$no_rich0,labels=gdf$group, adj=0,cex=0.5, srt=20)
+
+# BINOMIAL CUT-OFF # 1: Groups with 20% or more zeros (i.e. 29 out of 144) will ONLY get a binomial model
 
 gdf[,c("group","no_rich0","no_shan0", "fit_bin")]
 gdf$fit_bin<-ifelse(gdf$no_rich0>=29, "yes", "no")
-head(gdf); dim(gdf)
+head(gdf,3); dim(gdf)
 
 # CUT-OFF # 2: don't fit models for +ve data to groups where more than two-thirds of the data are zeros. For now, use richness to get an idea of results... Might update this later:
 gdf$fit_pos<-ifelse(gdf$no_rich0>=(nrow(rich)/3)*2, "no", "yes")
-
-# CUT-OFF # 3: for now, don't fit models where there are less than ten zeros out of 144
-
-gdf$fit_bin[gdf$no_rich0<10]<-"no"
 
 # save workspace:
 # save.image("03_Workspaces/stjw_analysis.RData")
@@ -1026,8 +1084,8 @@ head(gdf,3); dim(gdf)
 rahead(rich_sc,4,7); dim(rich_sc)
 rahead(shan_sc,4,7); dim(shan_sc)
 
-# This is probability of occurrence based on richness, so that zeros are true zeros. 
-# Don't use shannon's diversity for modelling zeros because they can either be zero values or ones
+# This is probability of occurrence based on richness (i.e. counts); zeros are true zeros. 
+# Don't use shannon's diversity for modelling zeros; zeros can either be zero or one
 
 for (i in 1:nrow(gdf)){
   
