@@ -10,7 +10,7 @@
 invisible(lapply(paste("01_Functions/",dir("01_Functions"),sep=""), function(x) source(x)))
 
 # Load libraries:
-library(lme4); library(vegan); library(AICcmodavg); library(lmerTest)
+library(lme4); library(vegan); library(AICcmodavg); library(lmerTest); library(glmmADMB)
 
 # Load workspace
 load("03_Workspaces/stjw_analysis.RData")
@@ -949,7 +949,15 @@ rahead(shan,4,7); dim(shan)
 simp<-rbind(simp17, simp18, simp19)
 rahead(simp,4,7); dim(simp)
 
+# When richness is zero, shan==0, simp==1 and invsimp==Inf
+# When richness is one, shan==0, simp==0, and invsimp==1
+
+# Representing a single species as zero inflates the zeros in the data, so shan and simp are not ideal; simp also represents zero as one which is not ideal. 
+
+# But, if we replace the 'Inf' with zero in invsimp, then zero will be zero and one will be one. 
+
 invsimp<-rbind(invsimp17, invsimp18, invsimp19)
+invsimp<-cbind(invsimp[1:4],apply(invsimp[,5:ncol(invsimp)],2,function(x) ifelse(x=="Inf",0,x)))
 rahead(invsimp,4,7); dim(invsimp)
 
 rahead(rich,3,6); dim(rich)
@@ -959,22 +967,10 @@ rahead(invsimp,3,6); dim(invsimp)
 
 # plot r.ships between diversity metrics
 dev.new(width=6, height=6, dpi=80, pointsize=16,noRStudioGD = T)
-par(mfrow=c(2,2),mar=c(4,4,1,1))
+par(mfrow=c(2,2),mar=c(4,4,1,1), mgp=c(2.5,1,0))
 plot(rich$exotic,shan$exotic, pch=20, xlab="richness", ylab="shannon", las=1)
 plot(rich$exotic,simp$exotic, pch=20, xlab="richness", ylab="simpsons", las=1)
 plot(rich$exotic,invsimp$exotic, pch=20, xlab="richness", ylab="invsimpsons", las=1)
-
-# Exotic, for example, has a total of 11 zeros and 21 ones in the count data. For shannon's the ones become zeros, making 32 zeros. So data sets with lots of ones have many zeros. This is the point of a diversity estimate. A plot with a single species has no diversity
-length(which(shan$exotic==0))-length(which(rich$exotic==0))
-length(which(simp$exotic==0))-length(which(rich$exotic==0))
-
-exotic_dat<-data.frame(rich=rich$exotic,shan=shan$exotic,simp=simp$exotic,invsimp=invsimp$exotic)
-# shan and simp both have zero when richness==1
-# invsimp has one when richness==1 (need to replace the Inf values with zeros for when richness is zero)
-
-zero_one<-data.frame(rich=rich$exotic[c(which(rich$exotic==0),which(rich$exotic==1))],shan=shan$exotic[c(which(rich$exotic==0),which(rich$exotic==1))],simp=simp$exotic[c(which(rich$exotic==0),which(rich$exotic==1))],invsimp=invsimp$exotic[c(which(rich$exotic==0),which(rich$exotic==1))])
-
-
 
 # Create group data frame and data to assist with deciding cut-offs for analysis. 
 group_df$rich_records<-colSums(rich[,5:length(rich)])
@@ -984,55 +980,7 @@ gdf
 
 gdf$ylab<-c("All","Native","Exotic","Indicator","Significance A","Significance B","Common/Increaser","Significance X/Y","Significance Z","Native forb", "Exotic forb","Exotic annual forb","Exotic perennial forb","Native annual forb","Native perennial forb","Native non-leg. forb","Exotic non-leg. forb","Native leg. forb","Exotic leg. forb","Native grass","Exotic grass","Exotic annual grass","Exotic perennial grass","C3 grass","Native C3 grass","Native C4 grass","Exotic C3 grass","Sedge/Rush")
 
-save.image("03_Workspaces/stjw_analysis.RData")
-
-
-# close diversity calculation ----
-
-#  ANALYSIS (COMPONENT 1):    	# ----
-
-# add flag for groups with only one species:
-# the diversity score will be zero in all quads:
-gdf$singleton<-"no"
-gdf$singleton[which(apply(shan[,5:ncol(shan)],2,sum)==0)]<-"yes"
-
-gdf$no_rich0<-apply(rich[,5:ncol(rich)], 2, function(x) length(which(x==0)))
-gdf$no_shan0<-apply(shan[,5:ncol(rich)], 2, function(x) length(which(x==0)))
-
-gdf$prop0_rich<-apply(rich[,5:ncol(rich)], 2, function(x) round(length(which(x==0))/nrow(rich),3))
-gdf$prop0_shan<-apply(shan[,5:ncol(rich)], 2, function(x) round(length(which(x==0))/nrow(shan),3))
-
-# Non-matching columns:
-gdf[!(gdf$prop0_rich==0)==(gdf$prop0_shan==0),]
-# exotic_perengrass has complete zeros for shan, and some data for richness; this is because there is only one species in that category (Nas_tri) and diversity will always be zero when richness is one. 
-# natper_herb has complete zeros for rich and a small number for diversity; this group has richness data in all quads but a value of one in one of the quadrats, giving a single zero value for diversity 
-
-# dev.new(width=8,height=8,noRStudioGD = T,dpi=80, pointsize=12)
-# par(mfrow=c(2,2), mar=c(4,4,2,1), mgp=c(2.5,1,0))
-# hist(gdf$no_rich0)
-# hist(gdf$no_shan0)
-# hist(gdf$prop0_rich)
-# hist(gdf$prop0_shan)
-
-# Figure out cut-off for models with binomial only (lots of zeros, little data), two part models (lots of data but zero inflated), and positive values only (lots of data, few zeros)
-
-dev.new(width=6, height=6, dpi=80, pointsize=16,noRStudioGD = T)
-par(mar=c(4,4,1,1))
-plot(gdf$rich_records,gdf$no_rich0, pch=20, xlab="total count", ylab="proportion zeros", las=1)
-arrows(0,round(nrow(rich_sc)*0.2,0),max(gdf$rich_records),round(nrow(rich_sc)*0.2,0), col="red",code=0)
-text(gdf$rich_records,gdf$no_rich0,labels=gdf$group, adj=0,cex=0.5, srt=20)
-
-# BINOMIAL CUT-OFF # 1: Groups with 20% or more zeros (i.e. 29 out of 144) will ONLY get a binomial model
-
-gdf[,c("group","no_rich0","no_shan0", "fit_bin")]
-gdf$fit_bin<-ifelse(gdf$no_rich0>=29, "yes", "no")
-head(gdf,3); dim(gdf)
-
-# CUT-OFF # 2: don't fit models for +ve data to groups where more than two-thirds of the data are zeros. For now, use richness to get an idea of results... Might update this later:
-gdf$fit_pos<-ifelse(gdf$no_rich0>=(nrow(rich)/3)*2, "no", "yes")
-
-# save workspace:
-# save.image("03_Workspaces/stjw_analysis.RData")
+# save.image("03_Workspaces/stjw_analysis_diversity.RData")
 
 # **** SCALE DATE:
 
@@ -1041,8 +989,130 @@ rich_sc$DATE<-rich_sc$DATE-2017
 
 shan_sc<-shan
 shan_sc$DATE<-shan_sc$DATE-2017
+
+simp_sc<-simp
+simp_sc$DATE<-simp_sc$DATE-2017
+
+invsimp_sc<-invsimp
+invsimp_sc$DATE<-invsimp_sc$DATE-2017
+
 rahead(rich_sc,4,7); dim(rich_sc)
 rahead(shan_sc,4,7); dim(shan_sc)
+rahead(simp_sc,4,7); dim(simp_sc)
+rahead(invsimp_sc,4,7); dim(invsimp_sc)
+
+# Examine data distributions:
+
+# RICHNESS:
+rahead(rich_sc,6,6)
+
+dev.new(width=11.69,height=8.27,noRStudioGD = T,dpi=80, pointsize=12)
+par(mfrow=c(5,6), mar=c(2,4,4,1), mgp=c(2.5,1,0))
+
+data.update<-rich_sc[,5:ncol(rich_sc)]
+
+for (i in 1:ncol(data.update)){
+  sp.thisrun<-colnames(data.update)[i]
+  data.thisrun<-data.update[,sp.thisrun]
+  hist(data.thisrun, main=sp.thisrun)
+} # close
+
+# Shannon's (zero inflated)
+
+rahead(shan_sc,6,6)
+
+dev.new(width=11.69,height=8.27,noRStudioGD = T,dpi=80, pointsize=12)
+par(mfrow=c(5,6), mar=c(2,4,4,1), mgp=c(2.5,1,0))
+
+data.update<-shan_sc[,5:ncol(shan_sc)]
+
+for (i in 1:ncol(data.update)){
+  sp.thisrun<-colnames(data.update)[i]
+  data.thisrun<-data.update[,sp.thisrun]
+  hist(data.thisrun, main=sp.thisrun)
+} # close
+
+# Simpsons
+
+rahead(simp_sc,6,6)
+
+dev.new(width=11.69,height=8.27,noRStudioGD = T,dpi=80, pointsize=12)
+par(mfrow=c(5,6), mar=c(2,4,4,1), mgp=c(2.5,1,0))
+
+data.update<-simp_sc[,5:ncol(simp_sc)]
+
+for (i in 1:ncol(data.update)){
+  sp.thisrun<-colnames(data.update)[i]
+  data.thisrun<-data.update[,sp.thisrun]
+  hist(data.thisrun, main=sp.thisrun)
+} # close
+
+# Inverse Simpsons
+
+rahead(invsimp_sc,6,6)
+
+dev.new(width=11.69,height=8.27,noRStudioGD = T,dpi=80, pointsize=12)
+par(mfrow=c(5,6), mar=c(2,4,4,1), mgp=c(2.5,1,0))
+
+data.update<-invsimp_sc[,5:ncol(invsimp_sc)]
+
+for (i in 1:ncol(data.update)){
+  sp.thisrun<-colnames(data.update)[i]
+  data.thisrun<-data.update[,sp.thisrun]
+  hist(data.thisrun, main=sp.thisrun)
+} # close
+
+# save.image("03_Workspaces/stjw_analysis_diversity.RData")
+
+# close diversity calculation ----
+
+#  ANALYSIS (COMPONENT 1):    	# ----
+
+# MODELLING SUMMARY:
+
+# We used the inverse Simpson's Diversity Index as a measure of biodiversity because it avoided inflating the zeros in the data set; richness values of 1 were equal to one, unlike other metrics where richness values of one are equal to zero. 
+
+# Functional groups with a high proportion of zeros also had very little data overall (Proportion_ZERO.pdf), creating a risk of missing important results because of data limitations. For these groups, we therefore fit a binomial GLMM to the data, to model the probability of detecting any plant in that group. 
+
+# We then modelled each functional group using a negative binomial distribution for richness (count data) and a gamma distribution for diversity (continuous data, positive values only), to accommodate for heterogeneity in the data (i.e. overdispersion). We excluded exotic_perengrass and sed_rus from these analyses because they had fewer total records than the number of quadrats in the study (n=5 and n=27, respectively). Although zeros were not included in the diversity analysis, a binomial model was fitted for any group with a high proportion (> 20%) of zeros.  
+
+# https://www.umass.edu/landeco/teaching/ecodata/schedule/distributions.pdf
+# The Gamma is an excellent choice when only positive real numbers are possible (note the normal is not lower bounded like Gamma).
+# The Gamma is similarly used in phenomenological fashion with continuous, positive data having too much variance and a right skew; in other words, an overdispersed normal distribution with a right skew.
+# The Gamma distribution is the continuous counterpart of the negative binomial, which recall is used to describe overdispersed Poisson with heterogeneous data
+
+# Overdispersed count data:
+# The negative binomial distribution ... is more often used phenomenologically to describe a patchy or clustered distribution with no intrinsic upper limit that has more variance thanthe Poisson; i.e., an overdispersed Poisson distribution in which the variance is greater than themean
+
+rahead(invsimp_sc,3,6); dim(invsimp_sc)
+apply(invsimp_sc[,5:ncol(invsimp_sc)],2,range)
+head(gdf); dim(gdf)
+
+gdf$no_rich0<-apply(rich[,5:ncol(rich)], 2, function(x) length(which(x==0)))
+gdf$no_invsimp0<-apply(invsimp[,5:ncol(invsimp)], 2, function(x) length(which(x==0)))
+
+# The zeros all match (this should be zero):
+nrow(gdf[!(gdf$no_rich0==0)==(gdf$no_invsimp0==0),])
+
+# Plot cut-off for models with binomial only (lots of zeros, little data), two part models (enough data but zero inflated), and positive values only (lots of data, few zeros)
+
+dev.new(width=6, height=6, dpi=80, pointsize=16,noRStudioGD = T)
+par(mar=c(4,4,1,1))
+plot(gdf$rich_records,gdf$no_rich0, pch=20, xlab="total count", ylab="proportion zeros", las=1)
+arrows(0,round(nrow(rich_sc)*0.2,0),max(gdf$rich_records),round(nrow(rich_sc)*0.2,0), col="red",code=0)
+text(gdf$rich_records,gdf$no_rich0,labels=gdf$group, adj=0, pos=4, offset=0.5,cex=0.5, srt=0)
+
+# BINOMIAL CUT-OFF # 1: Groups with 20% or more zeros (i.e. 29 out of 144) will ONLY get a binomial model
+
+gdf[,c("group","no_rich0","no_shan0", "fit_bin")]
+gdf$fit_bin<-ifelse(gdf$no_rich0>=29, "yes", "no")
+head(gdf,3); dim(gdf)
+
+# POSITIVE CUT-OFF # 2: don't fit models for +ve data to groups where the total count is less than the number of quadrats. 
+rahead(rich,3,6)
+
+# This excludes exotic_perengrass and sed_rus which have almost no data:
+gdf$fit_pos<-ifelse(gdf$rich_records<=length(unique(paste(rich$PLOT_ID,rich$Treatment,sep=""))), "no", "yes")
 
 # new data for model estimates (same for models with a date:treatment interaction only and models with a three way interaction; you can also use the same newdata frame for richness and shannon's):
 nd1<-data.frame(DATE=rep(c(0,1,2),rep(3,3)),Treatment=as.factor(c("C","A","B")),reserve=c(rep("J",9),rep("M",9)))
@@ -1058,14 +1128,13 @@ coef.rich<-list()
 preds.rich<-list()
 anova.rich<-list()
 
-fits.shan<-list()
-coef.shan<-list()
-preds.shan<-list()
-anova.shan<-list()
+fits.invsimp<-list()
+coef.invsimp<-list()
+preds.invsimp<-list()
+anova.invsimp<-list()
 
 # Add summary data to gdf:
 head(gdf,3); dim(gdf)
-# gdf[,c(1,(ncol(gdf)-4):ncol(gdf))]
 
 gdf$bin_3wayP<-NA
 gdf$bin_2wayP<-NA
@@ -1073,31 +1142,40 @@ gdf$bin_2wayP<-NA
 gdf$rich_3wayP<-NA
 gdf$rich_2wayP<-NA
 
-gdf$shan_3wayP<-NA
-gdf$shan_2wayP<-NA
-
-
-library("glmmADMB")
+gdf$invsimp_3wayP<-NA
+gdf$invsimp_2wayP<-NA
 
 head(gdf,3); dim(gdf)
 
 rahead(rich_sc,4,7); dim(rich_sc)
-rahead(shan_sc,4,7); dim(shan_sc)
+rahead(invsimp_sc,4,7); dim(invsimp_sc)
 
-# This is probability of occurrence based on richness (i.e. counts); zeros are true zeros. 
-# Don't use shannon's diversity for modelling zeros; zeros can either be zero or one
+# save workspace:
+# save.image("03_Workspaces/stjw_analysis_diversity.RData")
+
+## RUN FULL ANALYSIS LOOP:
+
+## TAKES approx 15 min; i==27 might have errors
 
 for (i in 1:nrow(gdf)){
   
   resp.thisrun<-gdf$group[i]
   bin.thisrun<-gdf$fit_bin[i]
+  pos.thisrun<-gdf$fit_pos[i]
   
-  # Binomial models are only run for species that have 20 or more zeros in the diversity data:
-  if (bin.thisrun=="no"){
-    fits.binom[[i]]<-NULL
-    coef.binom[[i]]<-NULL
-    preds.binom[[i]]<-NULL
-    anova.binom[[i]]<-NULL
+  # Positive models are only run for species where the count is greater than the number of quadrats:
+  if (pos.thisrun=="no"){
+   
+    fits.rich[[i]]<-NULL
+    coef.rich[[i]]<-NULL
+    preds.rich[[i]]<-NULL
+    anova.rich[[i]]<-NULL
+    
+    fits.invsimp[[i]]<-NULL
+    coef.invsimp[[i]]<-NULL
+    preds.invsimp[[i]]<-NULL
+    anova.invsimp[[i]]<-NULL
+    
   } # close no binomial
   
   if (bin.thisrun=="yes"){
@@ -1176,24 +1254,187 @@ for (i in 1:nrow(gdf)){
     
   } # close binomial model
   
+  if (pos.thisrun=="yes"){
+    
+    rich.thisrun<-rich_sc[,resp.thisrun]
+    invsimp.thisrun<-invsimp_sc[,resp.thisrun]
+    
+    ## FIT three-way models:
+    
+    threeway.thisrun<-paste(resp.thisrun,"~Treatment+DATE+reserve+Treatment:DATE+Treatment:DATE:reserve+(1|PLOT_ID)", sep="")
+    
+    m3way_rich<-glmmadmb(as.formula(threeway.thisrun), family="nbinom", data=rich_sc)
+    summary(m3way_rich)
+    
+    m3way_invsimp<-glmmadmb(as.formula(threeway.thisrun), family="gamma", data=invsimp_sc[which(invsimp.thisrun>0),])
+    summary(m3way_invsimp)
+    
+    # STORE fits and coefficients from three-way
+    
+    fits.rich[[i]]<-m3way_rich
+    fits.invsimp[[i]]<-m3way_invsimp
+    
+    coef.rich[[i]]<-coef.ext(m3way_rich)
+    coef.invsimp[[i]]<-coef.ext(m3way_invsimp)
+    
+    ## FIT two-way models:
+    
+    twoway.thisrun<-paste(resp.thisrun,"~Treatment+DATE+reserve+Treatment:DATE+(1|PLOT_ID)", sep="")
+    
+    m2way_rich<-glmmadmb(as.formula(twoway.thisrun), family="nbinom", data=rich_sc)
+    summary(m2way_rich)
+    
+    m2way_invsimp<-glmmadmb(as.formula(twoway.thisrun), family="gamma", data=invsimp_sc[which(invsimp.thisrun>0),])
+    summary(m2way_invsimp)
+    
+    # Get p-value for three way:
+    
+    aov3way_rich<-anova(m2way_rich,m3way_rich)
+    aov3way_invsimp<-anova(m2way_invsimp,m3way_invsimp)
+    
+    head(gdf,3)
+    
+    anova.rich[[i]]<-aov3way_rich
+    anova.invsimp[[i]]<-aov3way_invsimp
+    
+    p3way_rich<-round(aov3way_rich[2,"Pr(>Chi)"],4)
+    p3way_invsimp<-round(aov3way_invsimp[2,"Pr(>Chi)"],4)
+    
+    gdf$rich_3wayP[i]<-p3way_rich
+    gdf$invsimp_3wayP[i]<-p3way_invsimp
+    
+    # Store current model:
+    m1_rich<-m3way_rich
+    m1_invsimp<-m3way_invsimp
+    
+    # simplify RICHNESS if the three way is not significant:
+    if(p3way_rich>0.05){
+      
+      # Overwrite fits and coefs:
+      fits.rich[[i]]<-m2way_rich
+      coef.rich[[i]]<-coef.ext(m2way_rich)
+
+      # run model without any interaction (to get p value for two-way interaction):
+      
+      form.noint<-paste(resp.thisrun,"~Treatment+DATE+reserve+(1|PLOT_ID)", sep="")
+      
+      rich_noint<-glmmadmb(as.formula(form.noint), family="nbinom", data=data.set)
+      
+      aov2way_rich<-anova(rich_noint,m2way_rich)
+      p2way_rich<-round(aov2way_rich[2,"Pr(>Chi)"],4)
+      gdf$rich_2wayP[i]<-p2way_rich      
+    
+      # Overwrite anova table:
+      anova.rich[[i]]<-aov2way_rich
+      
+      # Update current model:
+      m1_rich<-m2way_rich
+      
+      } # close if TWO-WAY richness
+    
+    # simplify INVSIMP if the three way is not significant:
+    if(p3way_invsimp>0.05){
+      
+      # Overwrite fits and coefs:
+      fits.invsimp[[i]]<-m2way_invsimp
+      coef.invsimp[[i]]<-coef.ext(m2way_invsimp)
+      
+      # run model without any interaction (to get p value for two-way interaction):
+      
+      form.noint<-paste(resp.thisrun,"~Treatment+DATE+reserve+(1|PLOT_ID)", sep="")
+      
+      invsimp_noint<-glmmadmb(as.formula(form.noint), family="gamma", data=invsimp_sc[which(invsimp.thisrun>0),])
+      
+      aov2way_invsimp<-anova(invsimp_noint,m2way_invsimp)
+      p2way_invsimp<-round(aov2way_invsimp[2,"Pr(>Chi)"],4)
+      gdf$invsimp_2wayP[i]<-p2way_invsimp   
+      
+      # Overwrite anova table:
+      anova.invsimp[[i]]<-aov2way_invsimp
+      
+      # Update current model:
+      m1_invsimp<-m2way_invsimp
+      
+    } # close if TWO-WAY invsimp
+    
+    # generate model predictions:
+    
+    rich_pr<-pred(model = m1_rich,new.data=nd1,se.fit=T)
+    invsimp_pr<-pred(model = m1_invsimp,new.data=nd1,se.fit=T)
+    
+    head(rich_pr,3)
+    head(invsimp_pr,3)
+    
+    preds.rich[[i]]<-rich_pr
+    preds.invsimp[[i]]<-invsimp_pr
+    
+  } # close positive models
+  
 } # close ANALYSIS loop
 
-# save.image("03_Workspaces/stjw_analysis.RData")
+# save workspace:
+# save.image("03_Workspaces/stjw_analysis_diversity.RData")
 
 anova.binom
 fits.binom
 coef.binom
 preds.binom
 
-head(gdf,3); dim(gdf)
+anova.rich
+fits.rich
+coef.rich
+preds.rich
+
+anova.invsimp
+fits.invsimp
+coef.invsimp
+preds.invsimp
+
+head(gdf,4); dim(gdf)
+
+# Binomial models:
+
+# 18 native leg herb three way
+# 19 exotic leg herb two way
+
 gdf[which(gdf$bin_3wayP<0.05),]
 gdf[which(gdf$bin_2wayP<0.05),]
 
-# 19 exotic leg herb two way
-# 18 native leg herb three way
-
 head(preds.binom[[19]])
 head(preds.binom[[18]])
+
+# Richness
+
+gdf[which(gdf$rich_3wayP<0.05),]
+gdf[which(gdf$rich_2wayP<0.05),]
+
+# 12 exotic annual herb THREE way
+# 3 exotic TWO way
+# 11 exotic herb TWO way
+
+# NO richness trends, the only one was exotic, which came up in the two way results
+
+gdf[which(gdf$rich_3wayP>0.05 & gdf$rich_3wayP<0.1),]
+gdf[which(gdf$rich_2wayP>0.05 & gdf$rich_2wayP<0.1),]
+
+# Inverse Simpsons
+
+gdf[which(gdf$invsimp_3wayP<0.05),]
+gdf[which(gdf$invsimp_2wayP<0.05),]
+
+# sig B THREE way
+# exotic annual herb THREE WAY
+# exotic leg herb TWO way
+
+# FIVE groups have TWO way TRENDS for inverse simpsons: native herb, exotic herb, native annual herb, c3 grass and native c3:
+gdf[which(gdf$invsimp_3wayP>0.05 & gdf$invsimp_3wayP<0.1),]
+gdf[which(gdf$invsimp_2wayP>0.05 & gdf$invsimp_2wayP<0.1),]
+
+
+
+# close analysis ----
+
+#  PLOT ESTIMATES (COMPONENT 1):    	# ----
 
 # Plot significant binomial models:
 
@@ -1266,445 +1507,6 @@ legend(3,1,legend=c("Control","Spot spray","Boom spray"), col=c("black","red","b
 par(xpd=F)
 
 
-
-
-### OLD ANALYSIS
-
-# This is a different kind of anova table than for diversity because we are just using it to test the significance of the two-way date:treatment interaction in the final models. We can get the other p values from the coefficient table:
-
-
-# Notes on model selection to include in paper:
-
-# We fit an interaction between treatment and date in all models to describe the before-after, control-impact nature of our design. 
-
-# Our full model included an interaction between date, treatment and reserve, but we removed this term if it was not significant (< 0.05)
-
-# we did not expect the diversity differences to change over time, so we did not fit a year and reserve interaction
-
-
-# THE ACTUAL ANALYSIS CODE:
-# RUN MODELLING LOOP:
-
-# **** RICHNESS:
-
-# follow 'best bet' instructions for installation:
-# https://glmmadmb.r-forge.r-project.org/
-
-for (i in 1:nrow(gdf)){
-  
-  resp.thisrun<-gdf$group[i]
-  data.set<-rich_sc
-  data.thisrun<-rich_sc[,resp.thisrun]
-  form.thisrun<-paste(resp.thisrun,"~Treatment+DATE+reserve+Treatment:DATE+Treatment:DATE:reserve+(1|PLOT_ID)", sep="")
-  
-  # some functional groups have 0, its not going to run those functional groups here on
-  if(sum(data.thisrun,na.rm=T)==0){
-    fits.rich[[i]]<-NULL
-    coef.rich[[i]]<-NULL
-    preds.rich[[i]]<-NULL
-    anova.rich[[i]]<-NULL
-    next
-  }
-  
-  m1<-glmmadmb(as.formula(form.thisrun), family="poisson", data=data.set)
-  
-  # run model without three-way:
-  form.twoway<-paste(resp.thisrun,"~Treatment+DATE+reserve+Treatment:DATE+(1|PLOT_ID)", sep="")
-  mod_twoway<-glmmadmb(as.formula(form.twoway), family="poisson", data=data.set)
-  
-  summary(m1)
-  
-  m1_coef<-coef.ext(m1)
-  m1_anova<-anova(mod_twoway, m1)
-  
-  p_anova<-m1_anova[2,5]
-  anova.rich[[i]]<-m1_anova
-  
-  # simplify model if the three way is not significant:
-  if(p_anova>0.05){
-    
-    # remove three way term from formula:
-    form.thisrun<-paste(resp.thisrun,"~Treatment+DATE+reserve+Treatment:DATE+(1|PLOT_ID)", sep="")
-    
-    # re-run model without three way:
-    m1<-glmmadmb(as.formula(form.thisrun), family="poisson", data=data.set)
-    summary(m1)
-    
-    m1_coef<-coef.ext(m1)
-    
-    # run model without any interaction (to figure out if the two way interaction is significant):
-    form.noint<-paste(resp.thisrun,"~Treatment+DATE+reserve+(1|PLOT_ID)", sep="")
-    mod_noint<-glmmadmb(as.formula(form.noint), family="poisson", data=data.set)
-    
-    int_term_anova<-anova(mod_noint, m1)
-    anova.rich[[i]]<-int_term_anova
-    
-  } # close if three way not signif
-  
-  fits.rich[[i]]<-m1
-  coef.rich[[i]]<-m1_coef
-  
-  # generate model predictions:
-  
-  m1_pr<-predict(object=m1,type="link",newdata=nd1, se.fit = T)
-  m1_pr<-data.frame(nd1,fit=m1_pr$fit,se=m1_pr$se.fit)
-  m1_pr$lci<-m1_pr$fit-(m1_pr$se*1.96)
-  m1_pr$uci<-m1_pr$fit+(m1_pr$se*1.96)
-  m1_pr$fit.resp<-round(exp(m1_pr$fit),4)
-  m1_pr$lci.resp<-round(exp(m1_pr$lci),4)
-  m1_pr$uci.resp<-round(exp(m1_pr$uci),4)
-  
-  head(m1_pr)
-  
-  preds.rich[[i]]<-m1_pr
-  
-} # close model
-
-# Only one three-way significant for richness (12, exotic annual forb):
-
-summary(fits.rich[[1]])
-coef.rich
-anova.rich[[12]]
-preds.rich
-
-# Summarise results (RICHNESS):
-
-gdf.rich<-gdf
-head(gdf.rich); dim(gdf.rich)
-
-# The anova table for richness (Poisson models) was a Likelihood Ratio Test comparing the full 3-way interacion model and the nested model without the 3-way. Where P was > 0.05 the 3-way was removed. When the 3-way was removed, we repeated the LRT test on the interaction model, compared with a nested model without any interactions. Thus, the anova table gives a P value for the 3 way interaction if it was kept, and a P value for the 2 way interaction for all other models:
-rich.anova.ps<-unlist(lapply(anova.rich,function(x)x[2,5]))
-
-# Was the three-way significant?
-
-# Three-way interactions have a coefficient table with 10 rows, while those without have only seven rows. Thus we can use the length of the coef table to designate whether the three way was significant:
-
-gdf.rich$sig.3way<-ifelse(unlist(lapply(coef.rich,nrow))==10,"yes","no")
-gdf.rich$P.3way<-NA
-gdf.rich$P.3way[which(gdf.rich$sig.3way=="yes")]<-rich.anova.ps[which(gdf.rich$sig.3way=="yes")]
-
-# For models without a three way, was the two-way significant?
-
-gdf.rich$P.2way<-rich.anova.ps
-gdf.rich$P.2way[which(gdf.rich$sig.3way=="yes")]<-NA
-gdf.rich$sig.2way<-ifelse(gdf.rich$P.2way<0.05,"yes","no")
-
-# For models without a three way, was the reserve main effect significant?
-
-# This can come directly from the coefficient table since there are only two levels in this factor:
-
-gdf.rich$P.res<-unlist(lapply(coef.rich,function(x)x[x$term=="reserveM",4]))
-gdf.rich$sig.res<-ifelse(gdf.rich$P.res<0.05,"yes","no")
-gdf.rich$P.res[which(gdf.rich$sig.3way=="yes")]<-NA
-gdf.rich$sig.res[which(gdf.rich$sig.3way=="yes")]<-NA
-head(gdf.rich); dim(gdf.rich)
-
-# save.image("03_Workspaces/stjw_analysis.RData")
-
-# **** DIVERSITY:
-
-# lists for storing model fits, coefficients, anova tables and model estimates:
-fits.shan<-list()
-coef.shan<-list()
-anova.shan<-list()
-preds.shan<-list()
-
-# new data for model estimates (same for models with a date:treatment interaction only and models with a three way interaction; you can also use the same newdata frame for richness and shannon's):
-nd1<-data.frame(DATE=rep(c(0,1,2),rep(3,3)),Treatment=as.factor(c("C","A","B")),reserve=c(rep("J",9),rep("M",9)))
-
-# RUN MODELLING LOOP:
-# **** DIVERSITY:
-
-
-# **** BINOMIAL PART:
-
-
-# **** BINOMIAL PART:
-
-
-for (i in 1:nrow(gdf)){
-  
-  resp.thisrun<-gdf$group[i]
-  data.set<-shan_sc
-
-  rahead(data.set,6,6); dim(data.set)
-  data.set[,resp.thisrun]<-ifelse(data.set[,resp.thisrun]==0,0,1)
-  data.thisrun<-data.set[,resp.thisrun]
-  
-  form.thisrun<-paste(resp.thisrun,"~Treatment+DATE+reserve+Treatment:DATE+Treatment:DATE:reserve+(1|PLOT_ID)", sep="")
-  
-  # some functional groups have 0, its not going to run those functional groups here on
-  if(sum(data.thisrun,na.rm=T)==0){
-    fits.shan[[i]]<-NULL
-    coef.shan[[i]]<-NULL
-    anova.shan[[i]]<-NULL
-    preds.shan[[i]]<-NULL
-    next
-  }
-  
-  # some functional groups have data present in every quad, 
-  if(length(which(data.thisrun==0))==0){
-    fits.shan[[i]]<-NULL
-    coef.shan[[i]]<-NULL
-    anova.shan[[i]]<-NULL
-    preds.shan[[i]]<-NULL
-    next
-  }
-  
-  m1<-glmer(formula = form.thisrun, family="binomial", data=data.set)
-  summary(m1)
-  anova(m1)
-  
-  # run model without three-way:
-  form.twoway<-paste(resp.thisrun,"~Treatment+DATE+reserve+Treatment:DATE+(1|PLOT_ID)", sep="")
-  mod_twoway<-glmer(formula = form.twoway, family="binomial", data=data.set)
-  
-  m1_coef<-coef.ext(m1)
-  m1_anova<-anova(mod_twoway, m1)
-  
-  p_anova<-m1_anova[2,8]
-  anova.shan[[i]]<-m1_anova
-  
-  # simplify model if the three way is not significant:
-  if(p_anova>0.05){
-    
-    # remove three way term from formula:
-    form.thisrun<-paste(resp.thisrun,"~Treatment+DATE+reserve+Treatment:DATE+(1|PLOT_ID)", sep="")
-    
-    # re-run model without three way:
-    m1<-glmer(formula = form.thisrun, family="binomial", data=data.set)
-    summary(m1)
-    
-    m1_coef<-coef.ext(m1)
-    
-    # run model without any interaction (to figure out if the two way interaction is significant):
-    form.noint<-paste(resp.thisrun,"~Treatment+DATE+reserve+(1|PLOT_ID)", sep="")
-    mod_noint<-glmer(formula = form.noint, family="binomial", data=data.set)
-    
-    int_term_anova<-anova(mod_noint, m1)
-    anova.shan[[i]]<-int_term_anova
-    
-  } # close if three way not signif
-  
-  fits.shan[[i]]<-m1
-  coef.shan[[i]]<-m1_coef
-
-  # generate model predictions:
-  
-  m1_pr<-predictSE(mod=m1,newdata=nd1, se.fit = T)
-  m1_pr<-data.frame(nd1,fit=m1_pr$fit,se=m1_pr$se.fit)
-  m1_pr$lci<-m1_pr$fit-(m1_pr$se*1.96)
-  m1_pr$uci<-m1_pr$fit+(m1_pr$se*1.96)
-  head(m1_pr)
-  
-  preds.shan[[i]]<-m1_pr
-  
-} # close model
-
-summary(fits.shan[[1]])
-coef.shan
-anova.shan[[19]] # 19 and 6 significant three-way
-preds.shan
-
-# **** GAMMA PART:
-# not updated
-for (i in 1:nrow(gdf)){
-  
-  resp.thisrun<-gdf$group[i]
-  data.set<-shan_sc
-
-  data.thisrun<-shan_sc[,resp.thisrun]
-  form.thisrun<-paste(resp.thisrun,"~Treatment+DATE+reserve+Treatment:DATE+Treatment:DATE:reserve+(1|PLOT_ID)", sep="")
-  
-  # some functional groups have 0, its not going to run those functional groups here on
-  if(sum(data.thisrun,na.rm=T)==0){
-    fits.shan[[i]]<-NULL
-    coef.shan[[i]]<-NULL
-    anova.shan[[i]]<-NULL
-    preds.shan[[i]]<-NULL
-    next
-  }
-  
-  m1<-lmer(formula = form.thisrun, data=data.set)
-  summary(m1)
-  anova(m1)
-  
-  m1_coef<-coef.ext(m1)
-  m1_anova<-anova.ext(m1)
-  
-  # simplify model if the three way is not significant:
-  if(m1_anova[which(m1_anova$term=="Treatment:DATE:reserve"),"p"]>0.05){
-    
-    # remove three way term from formula:
-    form.thisrun<-paste(resp.thisrun,"~Treatment+DATE+reserve+Treatment:DATE+(1|PLOT_ID)", sep="")
-    
-    # re-run model without three way:
-    m1<-lmer(formula = form.thisrun, data=data.set)
-    summary(m1)
-    anova(m1)
-    
-    m1_coef<-coef.ext(m1)
-    m1_anova<-anova.ext(m1)
-    
-  } # close if three way not signif
-  
-  fits.shan[[i]]<-m1
-  coef.shan[[i]]<-m1_coef
-  anova.shan[[i]]<-m1_anova
-  
-  # generate model predictions:
-  
-  m1_pr<-predictSE(mod=m1,newdata=nd1, se.fit = T)
-  m1_pr<-data.frame(nd1,fit=m1_pr$fit,se=m1_pr$se.fit)
-  m1_pr$lci<-m1_pr$fit-(m1_pr$se*1.96)
-  m1_pr$uci<-m1_pr$fit+(m1_pr$se*1.96)
-  head(m1_pr)
-  
-  preds.shan[[i]]<-m1_pr
-  
-} # close model
-
-summary(fits.shan[[1]])
-coef.shan
-anova.shan[[19]] # 19 and 6 significant three-way
-preds.shan
-
-rahead(shan_sc,3,5)
-
-# save.image("03_Workspaces/stjw_analysis.RData")
-
-# Summarise results (DIVERISTY):
-
-gdf.shan<-gdf
-head(gdf.shan); dim(gdf.shan)
-
-# The anova table for diversity (normal models) gives P values for all terms directly, rather than the LRT format of the Poisson models. 
-
-# Was the three-way significant?
-
-# Three-way interactions have a anova table with five rows, while those without have only four rows. Use the length of the anova table to designate whether the three way was significant:
-
-gdf.shan$sig.3way<-ifelse(unlist(lapply(anova.shan,nrow))==5,"yes","no")
-gdf.shan$P.3way<-NA
-gdf.shan$P.3way[which(gdf.shan$sig.3way=="yes")]<-unlist(lapply(anova.shan,function(x) x[which(x$term=="Treatment:DATE:reserve"),"p"]))
-head(gdf.shan); dim(gdf.shan)
-
-# For models without a three way, was the two-way significant?
-
-gdf.shan$P.2way<-unlist(lapply(anova.shan,function(x) x[which(x$term=="Treatment:DATE"),"p"]))
-gdf.shan$P.2way[which(gdf.shan$sig.3way=="yes")]<-NA
-gdf.shan$sig.2way<-ifelse(gdf.shan$P.2way<0.05,"yes","no")
-
-# For models without a three way, was the reserve main effect significant?
-
-# This can come directly from the coefficient table since there are only two levels in this factor:
-
-gdf.shan$P.res<-unlist(lapply(coef.shan,function(x)x[x$term=="reserveM",4]))
-gdf.shan$sig.res<-ifelse(gdf.shan$P.res<0.05,"yes","no")
-gdf.shan$P.res[which(gdf.shan$sig.3way=="yes")]<-NA
-gdf.shan$sig.res[which(gdf.shan$sig.3way=="yes")]<-NA
-head(gdf.shan); dim(gdf.shan)
-
-# save.image("03_Workspaces/stjw_analysis.RData")
-
-# what's going on with native_legherb?
-nlh<-lmer(native_legherb~Treatment+DATE+reserve+Treatment:DATE+(1|PLOT_ID), data=shan_sc)
-summary(nlh)
-
-anova(nlh)
-
-head(nd1,3)
-nlh.pr<-predictSE(nlh, newdata = nd1, se.fit = T)
-nlh.pr<-data.frame(nd1, fit=nlh.pr$fit, se=nlh.pr$se.fit)
-nlh.pr$lci<-nlh.pr$fit-(1.96*nlh.pr$se)
-nlh.pr$uci<-nlh.pr$fit+(1.96*nlh.pr$se)
-head(nlh.pr)
-
-nlh.pr<-nlh.pr[which(nlh.pr$reserve=="M"),]
-plot(nlh.pr$DATE[nlh.pr$Treatment=="C"]-xofs,nlh.pr$fit[nlh.pr$Treatment=="C"], pch=15, ylim=c(min(nlh.pr$lci), max(nlh.pr$uci)), xlim=c(-0.3,2.3), xaxt="n", xlab="", ylab=nlh, las=1)
-axis(side = 1, at=c(0,1,2), labels=c(2017,2018,2019))
-arrows(nlh.pr$DATE[nlh.pr$Treatment=="C"]-xofs,nlh.pr$lci[nlh.pr$Treatment=="C"],nlh.pr$DATE[nlh.pr$Treatment=="C"]-xofs,nlh.pr$uci[nlh.pr$Treatment=="C"], code=3, angle=90, length=arrowlgth)
-points(nlh.pr$DATE[nlh.pr$Treatment=="A"],nlh.pr$fit[nlh.pr$Treatment=="A"], pch=15, col="red")
-arrows(nlh.pr$DATE[nlh.pr$Treatment=="A"],nlh.pr$lci[nlh.pr$Treatment=="A"],nlh.pr$DATE[nlh.pr$Treatment=="A"],nlh.pr$uci[nlh.pr$Treatment=="A"], code=3, angle=90, length=arrowlgth, col="red")
-points(nlh.pr$DATE[nlh.pr$Treatment=="B"]+xofs,nlh.pr$fit[nlh.pr$Treatment=="B"], pch=15, col="blue")
-arrows(nlh.pr$DATE[nlh.pr$Treatment=="B"]+xofs,nlh.pr$lci[nlh.pr$Treatment=="B"],nlh.pr$DATE[nlh.pr$Treatment=="B"]+xofs,nlh.pr$uci[nlh.pr$Treatment=="B"], code=3, angle=90, length=arrowlgth, col="blue")
-
-# perhaps the problem is that this model is not appropriate for zero bound data. 
-hist(shan_sc$native_legherb)
-
-dev.new(width=11.69,height=8.27,noRStudioGD = T,dpi=80, pointsize=12)
-par(mfrow=c(5,6), mar=c(2,4,4,1), mgp=c(2.5,1,0))
-
-rahead(shan_sc,6,6)
-sp.toplot<-colnames(shan_sc[5:ncol(shan_sc)])
-for (i in 1:length(sp.toplot)){
-  sp.thisrun<-sp.toplot[i]
-  data.thisrun<-shan_sc[,sp.thisrun]
-  hist(data.thisrun, main=sp.thisrun)
-} # close
-
-rahead(rich_sc,6,6)
-sp.toplotRICH<-colnames(rich_sc[5:ncol(rich_sc)])
-sp.toplotRICH==sp.toplot
-for (i in 1:length(sp.toplot)){
-  sp.thisrun<-sp.toplot[i]
-  data.thisrun<-rich_sc[,sp.thisrun]
-  hist(data.thisrun, main=sp.thisrun)
-} # close
-
-# hist(shan_sc$native_legherb) # there's very little data in this group and there isvery high proportion of zeros
-gdf.shan
-rahead(shan_sc,6,6)
-range(shan_sc$native_legherb)
-range(rich_sc$native_legherb)
-range(shan_sc[2:nrow(shan_sc),5:ncol(shan_sc)])
-range(rich_sc[2:nrow(rich_sc),5:ncol(rich_sc)])
-range(rich_sc[2:nrow(rich_sc),5:ncol(rich_sc)]).
-
-# what's going on with native_legherb?
-
-nlh.g<-glmer(native_legherb~Treatment+DATE+reserve+Treatment:DATE+(1|PLOT_ID), family="Gamma", data=shan_sc[shan_sc$native_legherb>0,])
-summary(nlh.g)
-anova(nlh)
-
-nlh.dat<-shan_sc[,c(1:4, which(colnames(shan_sc)=="native_legherb"))]
-head(nlh.dat, 3); dim(nlh.dat)
-nlh.dat$nlh_bin<-ifelse(nlh.dat$native_legherb==0,0,1)
-
-nlh.bin<-glmer(nlh_bin~Treatment+DATE+reserve+Treatment:DATE+(1|PLOT_ID), family="binomial", data=nlh.dat)
-nlh.null<-glmer(nlh_bin~Treatment+DATE+reserve+(1|PLOT_ID), family="binomial", data=nlh.dat)
-
-summary(nlh.bin)
-anova(nlh.bin)
-anova(nlh.bin, nlh.null)
-
-
-# what's going on with exann_herb?
-exanh_mod<-lmer(exann_herb~Treatment+DATE+reserve+Treatment:DATE+(1|PLOT_ID), data=shan_sc)
-summary(exanh_mod)
-anova(exanh_mod)
-
-# close analysis ----
-#  SIGNIFICANCE LEVELS (COMPONENT 1):    	# ----
-
-summary(fits.rich[[3]])
-coef.rich[[3]]
-anova.rich[[3]]
-
-summary(fits.shan[[1]])
-coef.shan
-anova.shan[[19]] # 19 and 6 significant three-way
-
-head(gdf.shan); dim(gdf.shan)
-head(gdf.rich); dim(gdf.rich)
-
-
-
-
-
-# close significance ----
-
-#  PLOT ESTIMATES (COMPONENT 1):    	# ----
 
 # Species Richness:
 

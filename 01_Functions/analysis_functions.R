@@ -171,13 +171,22 @@ pred<-function(model,new.data,se.fit=T,type="response"){
     df1<-data.frame(new.data,fit=pr1$fit,se=pr1$se.fit, lci=pr1$fit-(1.96*pr1$se.fit), uci=pr1$fit+(1.96*pr1$se.fit))
   } # close lme4 models
   
-  # defined for logit models only
   if(class(model)=="glmmadmb"){
-    pr1<-predict(model,new.data,se.fit=se.fit, type="link")
+    pr1<-suppressWarnings(predict(model,new.data,se.fit=se.fit, type="link"))
     df1<-data.frame(new.data,fit.link=pr1$fit,se.link=pr1$se.fit, lci.link=pr1$fit-(1.96*pr1$se.fit), uci.link=pr1$fit+(1.96*pr1$se.fit))	
-    df1$fit.resp<-round(invlogit(df1$fit.link),4)
-    df1$lci.resp<-round(invlogit(df1$lci.link),4)
-    df1$uci.resp<-round(invlogit(df1$uci.link),4)
+    
+    if(summary(model)$link=="log"){
+      df1$fit.resp<-round(exp(df1$fit.link),4)
+      df1$lci.resp<-round(exp(df1$lci.link),4)
+      df1$uci.resp<-round(exp(df1$uci.link),4)
+    } # close log
+    
+    if(summary(model)$link=="logit"){
+      df1$fit.resp<-round(invlogit(df1$fit.link),6)
+      df1$lci.resp<-round(invlogit(df1$lci.link),6)
+      df1$uci.resp<-round(invlogit(df1$uci.link),6)
+    } # close logit 
+    
   } # close admb models
   
   return(df1)
