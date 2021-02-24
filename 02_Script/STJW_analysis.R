@@ -1646,74 +1646,6 @@ head(pinfo,3); dim(pinfo)
 
 ind.sp<-data.frame(ind_species=c("Eryngium ovinum", "Chrysocephalum apiculatum", "Arthropodium fimbriatum", "Wurmbea dioica", "Desmodium varians", "Plantago varia", "Tricoryne elatior", "Triptilodiscus pygmaeus","Lomandra filiformis coriacea", "Lomandra bracteata", "Lomandra filiformis","Lomandra multiflora","Glycine clandestina","Glycine tabacina"))
 
-#Add proportion of zeros column
-ind.sp$prop0<-NA
-ind.sp$prop0[which(ind.sp$Sp=="Chr_api")]<-table(ind_po$Chr_api)[1]/sum(table(ind_po$Chr_api))
-
-ind.sp$prop0[which(ind.sp$Sp=="Gly_cla")]<-table(ind_po$Gly_cla)[1]/sum(table(ind_po$Gly_cla))
-                      
-ind.sp$prop0[which(ind.sp$Sp=="Art_fim")]<-table(ind_po$Art_fim)[1]/sum(table(ind_po$Art_fim))
-
-ind.sp$prop0[which(ind.sp$Sp=="Des_var")]<-table(ind_po$Des_var)[1]/sum(table(ind_po$Des_var))
-
-ind.sp$prop0[which(ind.sp$Sp=="Ery_ovi")]<-table(ind_po$Ery_ovi)[1]/sum(table(ind_po$Ery_ovi))
-
-ind.sp$prop0[which(ind.sp$Sp=="Gly_tab")]<-table(ind_po$Gly_tab)[1]/sum(table(ind_po$Gly_tab))
-
-ind.sp$prop0[which(ind.sp$Sp=="Lom_bra")]<-table(ind_po$Lom_bra)[1]/sum(table(ind_po$Lom_bra))
-
-ind.sp$prop0[which(ind.sp$Sp=="Lom_fil")]<-table(ind_po$Lom_fil)[1]/sum(table(ind_po$Lom_fil))
-
-ind.sp$prop0[which(ind.sp$Sp=="Lom_cor")]<-table(ind_po$Lom_cor)[1]/sum(table(ind_po$Lom_cor))
-                                              
-ind.sp$prop0[which(ind.sp$Sp=="Lom_mul")]<-table(ind_po$Lom_mul)[1]/sum(table(ind_po$Lom_mul))
-
-ind.sp$prop0[which(ind.sp$Sp=="Pla_var")]<-table(ind_po$Pla_var)[1]/sum(table(ind_po$Pla_var))
-
-ind.sp$prop0[which(ind.sp$Sp=="Tri_ela")]<-table(ind_po$Tri_ela)[1]/sum(table(ind_po$Tri_ela))
-                                                    
-ind.sp$prop0[which(ind.sp$Sp=="Tri_pyg")]<-table(ind_po$Tri_pyg)[1]/sum(table(ind_po$Tri_pyg))
-
-ind.sp$prop0[which(ind.sp$Sp=="Wur_dio")]<-table(ind_po$Wur_dio)[1]/sum(table(ind_po$Wur_dio))
-
-#Add count column
-
-ind.sp$count<-NA
-ind.sp$count[which(ind.sp$Sp=="Chr_api")]<-sum(ct_ind$Chr_api)
-
-ind.sp$count[which(ind.sp$Sp=="Wur_dio")]<-sum(ct_ind$Wur_dio)
-
-ind.sp$count[which(ind.sp$Sp=="Art_fim")]<-sum(ct_ind$Art_fim)
-
-ind.sp$count[which(ind.sp$Sp=="Des_var")]<-sum(ct_ind$Des_var)
-
-ind.sp$count[which(ind.sp$Sp=="Ery_ovi")]<-sum(ct_ind$Ery_ovi)
-
-ind.sp$count[which(ind.sp$Sp=="Gly_cla")]<-sum(ct_ind$Gly_cla) 
-
-ind.sp$count[which(ind.sp$Sp=="Gly_tab")]<-sum(ct_ind$Gly_tab)
-
-ind.sp$count[which(ind.sp$Sp=="Lom_bra")]<-sum(ct_ind$Lom_bra)
-
-ind.sp$count[which(ind.sp$Sp=="Lom_fil")]<-sum(ct_ind$Lom_fil)
-
-ind.sp$count[which(ind.sp$Sp=="Lom_cor")]<-sum(ct_ind$Lom_cor)
-
-ind.sp$count[which(ind.sp$Sp=="Lom_mul")]<-sum(ct_ind$Lom_mul)
-
-ind.sp$count[which(ind.sp$Sp=="Pla_var")]<-sum(ct_ind$Pla_var)
-
-ind.sp$count[which(ind.sp$Sp=="Tri_ela")]<-sum(ct_ind$Tri_ela)
-
-ind.sp$count[which(ind.sp$Sp=="Tri_pyg")]<-sum(ct_ind$Tri_pyg)
-
-
-
-
-
-
-
-
 
 
 # These should all be TRUE:
@@ -1930,6 +1862,75 @@ noint_Wur_dio<-glmer(Wur_dio~DATE+Treatment+reserve+(1|PLOT_ID), family="binomia
 summary(two_way_Wur_dio) 
 anova(three_way_Wur_dio,two_way_Wur_dio) 
 anova(two_way_Wur_dio, noint_Wur_dio) #high p values
+
+#add pvalue column
+ind.sp$pvalue<-NA
+summary(anova(two_way_Wur_dio, noint_Wur_dio))
+
+table(anova(two_way_Wur_dio, noint_Wur_dio))
+
+ind.sp$pvalue[which(ind.sp$Sp=="Wur_dio")]<-0.00848
+
+#Add proportion of zeros column
+ind.sp$prop0<-NA
+ind.sp$prop0[which(ind.sp$Sp=="Chr_api")]<-table(ind_po$Chr_api)[1]/sum(table(ind_po$Chr_api))
+
+ind.sp$prop0[which(ind.sp$Sp=="Gly_cla")]<-table(ind_po$Gly_cla)[1]/sum(table(ind_po$Gly_cla))
+
+ind.sp$prop0[which(ind.sp$Sp=="Art_fim")]<-table(ind_po$Art_fim)[1]/sum(table(ind_po$Art_fim))
+
+ind.sp$prop0[which(ind.sp$Sp=="Des_var")]<-table(ind_po$Des_var)[1]/sum(table(ind_po$Des_var))
+
+ind.sp$prop0[which(ind.sp$Sp=="Ery_ovi")]<-table(ind_po$Ery_ovi)[1]/sum(table(ind_po$Ery_ovi))
+
+ind.sp$prop0[which(ind.sp$Sp=="Gly_tab")]<-table(ind_po$Gly_tab)[1]/sum(table(ind_po$Gly_tab))
+
+ind.sp$prop0[which(ind.sp$Sp=="Lom_bra")]<-table(ind_po$Lom_bra)[1]/sum(table(ind_po$Lom_bra))
+
+ind.sp$prop0[which(ind.sp$Sp=="Lom_fil")]<-table(ind_po$Lom_fil)[1]/sum(table(ind_po$Lom_fil))
+
+ind.sp$prop0[which(ind.sp$Sp=="Lom_cor")]<-table(ind_po$Lom_cor)[1]/sum(table(ind_po$Lom_cor))
+
+ind.sp$prop0[which(ind.sp$Sp=="Lom_mul")]<-table(ind_po$Lom_mul)[1]/sum(table(ind_po$Lom_mul))
+
+ind.sp$prop0[which(ind.sp$Sp=="Pla_var")]<-table(ind_po$Pla_var)[1]/sum(table(ind_po$Pla_var))
+
+ind.sp$prop0[which(ind.sp$Sp=="Tri_ela")]<-table(ind_po$Tri_ela)[1]/sum(table(ind_po$Tri_ela))
+
+ind.sp$prop0[which(ind.sp$Sp=="Tri_pyg")]<-table(ind_po$Tri_pyg)[1]/sum(table(ind_po$Tri_pyg))
+
+ind.sp$prop0[which(ind.sp$Sp=="Wur_dio")]<-table(ind_po$Wur_dio)[1]/sum(table(ind_po$Wur_dio))
+
+#Add count column
+
+ind.sp$count<-NA
+ind.sp$count[which(ind.sp$Sp=="Chr_api")]<-sum(ct_ind$Chr_api)
+
+ind.sp$count[which(ind.sp$Sp=="Wur_dio")]<-sum(ct_ind$Wur_dio)
+
+ind.sp$count[which(ind.sp$Sp=="Art_fim")]<-sum(ct_ind$Art_fim)
+
+ind.sp$count[which(ind.sp$Sp=="Des_var")]<-sum(ct_ind$Des_var)
+
+ind.sp$count[which(ind.sp$Sp=="Ery_ovi")]<-sum(ct_ind$Ery_ovi)
+
+ind.sp$count[which(ind.sp$Sp=="Gly_cla")]<-sum(ct_ind$Gly_cla) 
+
+ind.sp$count[which(ind.sp$Sp=="Gly_tab")]<-sum(ct_ind$Gly_tab)
+
+ind.sp$count[which(ind.sp$Sp=="Lom_bra")]<-sum(ct_ind$Lom_bra)
+
+ind.sp$count[which(ind.sp$Sp=="Lom_fil")]<-sum(ct_ind$Lom_fil)
+
+ind.sp$count[which(ind.sp$Sp=="Lom_cor")]<-sum(ct_ind$Lom_cor)
+
+ind.sp$count[which(ind.sp$Sp=="Lom_mul")]<-sum(ct_ind$Lom_mul)
+
+ind.sp$count[which(ind.sp$Sp=="Pla_var")]<-sum(ct_ind$Pla_var)
+
+ind.sp$count[which(ind.sp$Sp=="Tri_ela")]<-sum(ct_ind$Tri_ela)
+
+ind.sp$count[which(ind.sp$Sp=="Tri_pyg")]<-sum(ct_ind$Tri_pyg)
 
 
 
