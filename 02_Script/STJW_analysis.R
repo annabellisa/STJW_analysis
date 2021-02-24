@@ -1422,16 +1422,52 @@ gdf[which(gdf$rich_2wayP>0.05 & gdf$rich_2wayP<0.1),]
 
 gdf[which(gdf$invsimp_3wayP<0.05),]
 gdf[which(gdf$invsimp_2wayP<0.05),]
+summary(fits.invsimp[[6]])
+anova.invsimp[[6]]
 
-# sig B THREE way
-# exotic annual herb THREE WAY
-# exotic leg herb TWO way
+# 6 sig B THREE way
+# 12 exotic annual herb THREE WAY
+# 19 exotic leg herb TWO way
 
-# FIVE groups have TWO way TRENDS for inverse simpsons: native herb, exotic herb, native annual herb, c3 grass and native c3:
+# FIVE groups have TWO way TRENDS for inverse simpsons: native herb, exotic herb, native annual herb, c3 grass and native c3 (10, 11, 14, 24, 25):
 gdf[which(gdf$invsimp_3wayP>0.05 & gdf$invsimp_3wayP<0.1),]
 gdf[which(gdf$invsimp_2wayP>0.05 & gdf$invsimp_2wayP<0.1),]
 
+# Summarise reserve effects:
 
+# P values and coefficient for binomial models
+# The coefficient for M is shown for reserve effects; if it's positive there is a higher probability of detecting that group at Mulanggari
+
+gdf$bin_resP<-NA
+gdf$bin_resM_coef<-NA
+
+gdf$bin_resP<-ifelse(gdf$fit_bin=="yes",round(unlist(lapply(coef.binom,FUN=function(x) x[which(x$term=="reserveM"),"P"])),4),gdf$bin_resP)
+gdf$bin_resM_coef<-ifelse(gdf$fit_bin=="yes",round(unlist(lapply(coef.binom,FUN=function(x) x[which(x$term=="reserveM"),"est"])),4),gdf$bin_resP)
+
+gdf[which(gdf$fit_bin=="yes"),]
+
+# P values and coefficient for richness models (two-way models only)
+# The P value and coefficient are not shown for models with three way interactions, because the reserve effect is captured in the three way term
+
+gdf$rich2w_resP<-NA
+gdf$rich2w_resM_coef<-NA
+
+head(gdf,5)
+gdf$rich2w_resP<-ifelse(gdf$rich_3wayP>0.05,round(unlist(lapply(coef.rich,FUN=function(x) x[which(x$term=="reserveM"),"P"])),4),gdf$rich2w_resP)
+gdf$rich2w_resM_coef<-ifelse(gdf$rich_3wayP>0.05,round(unlist(lapply(coef.rich,FUN=function(x) x[which(x$term=="reserveM"),"est"])),4),gdf$rich2w_resP)
+
+# P values and coefficient for diversity models (two-way models only)
+# The P value and coefficient are not shown for models with three way interactions, because the reserve effect is captured in the three way term
+
+gdf$invsimp2w_resP<-NA
+gdf$invsimp2w_resM_coef<-NA
+
+gdf$invsimp2w_resP<-ifelse(gdf$invsimp_3wayP>0.05,round(unlist(lapply(coef.invsimp,FUN=function(x) x[which(x$term=="reserveM"),"P"])),4),gdf$invsimp2w_resP)
+gdf$invsimp2w_resM_coef<-ifelse(gdf$invsimp_3wayP>0.05,round(unlist(lapply(coef.invsimp,FUN=function(x) x[which(x$term=="reserveM"),"est"])),4),gdf$invsimp2w_resP)
+
+# write.table(gdf, "div_sum.txt", sep="\t", quote=F, row.names = F)
+
+# save.image("03_Workspaces/stjw_analysis_diversity.RData")
 
 # close analysis ----
 
@@ -1439,7 +1475,9 @@ gdf[which(gdf$invsimp_2wayP>0.05 & gdf$invsimp_2wayP<0.1),]
 
 # Plot significant binomial models:
 
-dev.new(width=7,height=6,noRStudioGD = T,dpi=80, pointsize=14)
+panel.size<-2
+
+dev.new(width=panel.size*3.5,height=panel.size*3,noRStudioGD = T,dpi=80, pointsize=(panel.size*3.5)*2)
 par(mfrow=c(2,2), mar=c(4,4,3,2), oma=c(0,0,0,6), mgp=c(2.5,1,0))
 
 for(i in 18:19){
@@ -1504,12 +1542,12 @@ for(i in 18:19){
 } # close plot binomial
 
 par(xpd=NA)
-legend(2.6,1,legend=c("Control","Spot spray","Boom spray"), col=c("black","red","blue"), pch=15, bty="n", pt.cex = 3)
+legend(2.6,0.6,legend=c("Control","Spot spray","Boom spray"), col=c("black","red","blue"), pch=15, bty="n", pt.cex = 3)
 par(xpd=F)
 
 # Plot significant richness models:
 
-dev.new(width=7,height=9,noRStudioGD = T,dpi=80, pointsize=14)
+dev.new(width=panel.size*3.5,height=panel.size*4,noRStudioGD = T,dpi=80, pointsize=(panel.size*4)*2)
 par(mfrow=c(3,2), mar=c(4,4,3,2), oma=c(0,0,0,6), mgp=c(2.5,1,0))
 
 for(i in c(3,11,12)){
@@ -1575,10 +1613,141 @@ par(xpd=NA)
 legend(2.6,3,legend=c("Control","Spot spray","Boom spray"), col=c("black","red","blue"), pch=15, bty="n", pt.cex = 3)
 par(xpd=F)
 
+# Plot significant invsimp models:
 
+dev.new(width=panel.size*3.5,height=panel.size*4,noRStudioGD = T,dpi=80, pointsize=(panel.size*4)*2)
+par(mfrow=c(3,2), mar=c(4,4,3,2), oma=c(0,0,0,6), mgp=c(2.5,1,0))
 
+for(i in c(6,12,19)){
+  
+  resp.thisrun<-gdf$group[i]
+  pred.thisrun<-preds.invsimp[[i]]
+  anova.thisrun<-anova.invsimp[[i]]
+  coef.thisrun<-coef.invsimp[[i]]
+  ylab.thisrun<-gdf$ylab[i]
+  meta.thisrun<-gdf[i,]
+  xofs<-0.2
+  arrowlgth<-0.02
+  
+  head(pred.thisrun)
+  
+  mul.preds<-pred.thisrun[which(pred.thisrun$reserve=="M"),]
+  jerra.preds<-pred.thisrun[which(pred.thisrun$reserve=="J"),]
+  
+  # MULANGARRI
+  
+  plot(mul.preds$DATE[mul.preds$Treatment=="C"]-xofs,mul.preds$fit.resp[mul.preds$Treatment=="C"], pch=15, ylim=c(min(mul.preds$lci.resp), max(mul.preds$uci.resp)), xlim=c(-0.3,2.3), xaxt="n", xlab="Year", ylab=ylab.thisrun, las=1)
+  axis(side = 1, at=c(0,1,2), labels=c(2017,2018,2019))
+  
+  arrows(mul.preds$DATE[mul.preds$Treatment=="C"]-xofs,mul.preds$lci.resp[mul.preds$Treatment=="C"],mul.preds$DATE[mul.preds$Treatment=="C"]-xofs,mul.preds$uci.resp[mul.preds$Treatment=="C"], code=3, angle=90, length=arrowlgth)
+  
+  points(mul.preds$DATE[mul.preds$Treatment=="A"],mul.preds$fit.resp[mul.preds$Treatment=="A"], pch=15, col="red")
+  arrows(mul.preds$DATE[mul.preds$Treatment=="A"],mul.preds$lci.resp[mul.preds$Treatment=="A"],mul.preds$DATE[mul.preds$Treatment=="A"],mul.preds$uci.resp[mul.preds$Treatment=="A"], code=3, angle=90, length=arrowlgth, col="red")
+  points(mul.preds$DATE[mul.preds$Treatment=="B"]+xofs,mul.preds$fit.resp[mul.preds$Treatment=="B"], pch=15, col="blue")
+  arrows(mul.preds$DATE[mul.preds$Treatment=="B"]+xofs,mul.preds$lci.resp[mul.preds$Treatment=="B"],mul.preds$DATE[mul.preds$Treatment=="B"]+xofs,mul.preds$uci.resp[mul.preds$Treatment=="B"], code=3, angle=90, length=arrowlgth, col="blue")
+  mtext("Mulangarri", side=3, line=1.5, adj=0, cex=0.9)
+  
+  # JERRA
+  
+  plot(jerra.preds$DATE[jerra.preds$Treatment=="C"]-xofs,jerra.preds$fit.resp[jerra.preds$Treatment=="C"], pch=15, ylim=c(min(jerra.preds$lci.resp), max(jerra.preds$uci.resp)), xlim=c(-0.3,2.3), xaxt="n", xlab="Year", ylab=ylab.thisrun, las=1)
+  axis(side = 1, at=c(0,1,2), labels=c(2017,2018,2019))
+  arrows(jerra.preds$DATE[jerra.preds$Treatment=="C"]-xofs,jerra.preds$lci.resp[jerra.preds$Treatment=="C"],jerra.preds$DATE[jerra.preds$Treatment=="C"]-xofs,jerra.preds$uci.resp[jerra.preds$Treatment=="C"], code=3, angle=90, length=arrowlgth)
+  points(jerra.preds$DATE[jerra.preds$Treatment=="A"],jerra.preds$fit.resp[jerra.preds$Treatment=="A"], pch=15, col="red")
+  arrows(jerra.preds$DATE[jerra.preds$Treatment=="A"],jerra.preds$lci.resp[jerra.preds$Treatment=="A"],jerra.preds$DATE[jerra.preds$Treatment=="A"],jerra.preds$uci.resp[jerra.preds$Treatment=="A"], code=3, angle=90, length=arrowlgth, col="red")
+  points(jerra.preds$DATE[jerra.preds$Treatment=="B"]+xofs,jerra.preds$fit.resp[jerra.preds$Treatment=="B"], pch=15, col="blue")
+  arrows(jerra.preds$DATE[jerra.preds$Treatment=="B"]+xofs,jerra.preds$lci.resp[jerra.preds$Treatment=="B"],jerra.preds$DATE[jerra.preds$Treatment=="B"]+xofs,jerra.preds$uci.resp[jerra.preds$Treatment=="B"], code=3, angle=90, length=arrowlgth, col="blue")
+  
+  mtext("Jerrabomberra", side=3, line=1.5, adj=0, cex=0.9)
+  
+  if (gdf$invsimp_3wayP[i]<0.05){
+    
+    p.trt_yr_int<-round(anova.thisrun[2,which(colnames(anova.thisrun)=="Pr(>Chi)")],3)
+    title(main=paste("Three-way int, ","P=",p.trt_yr_int, sep=""), font.main=1, adj=0, cex.main=1, line=0.5)
+    
+  } # close if 3-way signif
+  
+  if(is.na(gdf$invsimp_2wayP[i])) next
+  
+  if (gdf$invsimp_2wayP[i]<0.05){
+    
+    p.trt_yr_int<-round(anova.thisrun[2,which(colnames(anova.thisrun)=="Pr(>Chi)")],3)
+    if (p.trt_yr_int<0.001) title(main=paste("Two-way int, ","P < 0.001", sep=""), font.main=1, adj=0, cex.main=1, line=0.5) else title(main=paste("Two-way int, ","P=",p.trt_yr_int, sep=""), font.main=1, adj=0, cex.main=1, line=0.5)
+    
+  } # close if 2-way signif
+  
+} # close plot invsimp
 
+par(xpd=NA)
+legend(2.6,1.5,legend=c("Control","Spot spray","Boom spray"), col=c("black","red","blue"), pch=15, bty="n", pt.cex = 3)
+par(xpd=F)
 
+# Plot trends in invsimp models:
+
+dev.new(width=8,height=6,noRStudioGD = T,dpi=80, pointsize=12)
+par(mfrow=c(3,4), mar=c(4,4,3,2), oma=c(0,0,0,6), mgp=c(2.5,1,0))
+
+for(i in c(10, 11, 14, 24, 25)){
+  
+  resp.thisrun<-gdf$group[i]
+  pred.thisrun<-preds.invsimp[[i]]
+  anova.thisrun<-anova.invsimp[[i]]
+  coef.thisrun<-coef.invsimp[[i]]
+  ylab.thisrun<-gdf$ylab[i]
+  meta.thisrun<-gdf[i,]
+  xofs<-0.2
+  arrowlgth<-0.02
+  
+  head(pred.thisrun)
+  
+  mul.preds<-pred.thisrun[which(pred.thisrun$reserve=="M"),]
+  jerra.preds<-pred.thisrun[which(pred.thisrun$reserve=="J"),]
+  
+  # MULANGARRI
+  
+  plot(mul.preds$DATE[mul.preds$Treatment=="C"]-xofs,mul.preds$fit.resp[mul.preds$Treatment=="C"], pch=15, ylim=c(min(mul.preds$lci.resp), max(mul.preds$uci.resp)), xlim=c(-0.3,2.3), xaxt="n", xlab="Year", ylab=ylab.thisrun, las=1)
+  axis(side = 1, at=c(0,1,2), labels=c(2017,2018,2019))
+  
+  arrows(mul.preds$DATE[mul.preds$Treatment=="C"]-xofs,mul.preds$lci.resp[mul.preds$Treatment=="C"],mul.preds$DATE[mul.preds$Treatment=="C"]-xofs,mul.preds$uci.resp[mul.preds$Treatment=="C"], code=3, angle=90, length=arrowlgth)
+  
+  points(mul.preds$DATE[mul.preds$Treatment=="A"],mul.preds$fit.resp[mul.preds$Treatment=="A"], pch=15, col="red")
+  arrows(mul.preds$DATE[mul.preds$Treatment=="A"],mul.preds$lci.resp[mul.preds$Treatment=="A"],mul.preds$DATE[mul.preds$Treatment=="A"],mul.preds$uci.resp[mul.preds$Treatment=="A"], code=3, angle=90, length=arrowlgth, col="red")
+  points(mul.preds$DATE[mul.preds$Treatment=="B"]+xofs,mul.preds$fit.resp[mul.preds$Treatment=="B"], pch=15, col="blue")
+  arrows(mul.preds$DATE[mul.preds$Treatment=="B"]+xofs,mul.preds$lci.resp[mul.preds$Treatment=="B"],mul.preds$DATE[mul.preds$Treatment=="B"]+xofs,mul.preds$uci.resp[mul.preds$Treatment=="B"], code=3, angle=90, length=arrowlgth, col="blue")
+  mtext("Mulangarri", side=3, line=1.5, adj=0, cex=0.9)
+  
+  # JERRA
+  
+  plot(jerra.preds$DATE[jerra.preds$Treatment=="C"]-xofs,jerra.preds$fit.resp[jerra.preds$Treatment=="C"], pch=15, ylim=c(min(jerra.preds$lci.resp), max(jerra.preds$uci.resp)), xlim=c(-0.3,2.3), xaxt="n", xlab="Year", ylab=ylab.thisrun, las=1)
+  axis(side = 1, at=c(0,1,2), labels=c(2017,2018,2019))
+  arrows(jerra.preds$DATE[jerra.preds$Treatment=="C"]-xofs,jerra.preds$lci.resp[jerra.preds$Treatment=="C"],jerra.preds$DATE[jerra.preds$Treatment=="C"]-xofs,jerra.preds$uci.resp[jerra.preds$Treatment=="C"], code=3, angle=90, length=arrowlgth)
+  points(jerra.preds$DATE[jerra.preds$Treatment=="A"],jerra.preds$fit.resp[jerra.preds$Treatment=="A"], pch=15, col="red")
+  arrows(jerra.preds$DATE[jerra.preds$Treatment=="A"],jerra.preds$lci.resp[jerra.preds$Treatment=="A"],jerra.preds$DATE[jerra.preds$Treatment=="A"],jerra.preds$uci.resp[jerra.preds$Treatment=="A"], code=3, angle=90, length=arrowlgth, col="red")
+  points(jerra.preds$DATE[jerra.preds$Treatment=="B"]+xofs,jerra.preds$fit.resp[jerra.preds$Treatment=="B"], pch=15, col="blue")
+  arrows(jerra.preds$DATE[jerra.preds$Treatment=="B"]+xofs,jerra.preds$lci.resp[jerra.preds$Treatment=="B"],jerra.preds$DATE[jerra.preds$Treatment=="B"]+xofs,jerra.preds$uci.resp[jerra.preds$Treatment=="B"], code=3, angle=90, length=arrowlgth, col="blue")
+  
+  mtext("Jerrabomberra", side=3, line=1.5, adj=0, cex=0.9)
+  
+  if (gdf$invsimp_3wayP[i]<0.05){
+    
+    p.trt_yr_int<-round(anova.thisrun[2,which(colnames(anova.thisrun)=="Pr(>Chi)")],3)
+    title(main=paste("Three-way int, ","P=",p.trt_yr_int, sep=""), font.main=1, adj=0, cex.main=1, line=0.5)
+    
+  } # close if 3-way signif
+  
+  if(is.na(gdf$invsimp_2wayP[i])) next
+  
+  if (gdf$invsimp_2wayP[i]<0.1){
+    
+    p.trt_yr_int<-round(anova.thisrun[2,which(colnames(anova.thisrun)=="Pr(>Chi)")],3)
+    if (p.trt_yr_int<0.001) title(main=paste("Two-way int, ","P < 0.001", sep=""), font.main=1, adj=0, cex.main=1, line=0.5) else title(main=paste("Two-way int, ","P=",p.trt_yr_int, sep=""), font.main=1, adj=0, cex.main=1, line=0.5)
+    
+  } # close if 2-way signif
+  
+} # close plot invsimp trend
+
+par(xpd=NA)
+legend(2.6,2.5,legend=c("Control","Spot spray","Boom spray"), col=c("black","red","blue"), pch=15, bty="n", pt.cex = 3)
+par(xpd=F)
 
 # close plot component 1 ----
 
