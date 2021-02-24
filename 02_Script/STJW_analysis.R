@@ -534,6 +534,7 @@ rahead(ct19,6,6); dim(ct19)
 
 # save.image("03_Workspaces/stjw_analysis_diversity.RData")
 
+# save.image("03_Workspaces/stjw_analysis.RData")
 # close import data ----
 
 #  FORMAT data:    	# ----
@@ -1671,207 +1672,259 @@ rahead(ind_po,6,6); dim(ind_po)
 #Chr_api 
 ind_po$Chr_api<-ifelse(ind_po$Chr_api>0,1,0)
 ind_po$DATE<-ind_po$DATE-min(ind_po$DATE)
-three_way_Chr_api<-glmer(Chr_api~DATE*Treatment*reserve+(1|PLOT_ID), family="binomial", data=ind_po)
+three_way_Chr_api<-glmer(Chr_api~DATE+Treatment+reserve+DATE:Treatment+DATE:Treatment:reserve+(1|PLOT_ID), family="binomial", data=ind_po)
 summary(three_way_Chr_api)
 
-two_way_Chr_api<-glmer(Chr_api~DATE*Treatment+reserve+(1|PLOT_ID), family="binomial", data=ind_po)
+two_way_Chr_api<-glmer(Chr_api~DATE+Treatment+reserve+DATE:Treatment+(1|PLOT_ID), family="binomial", data=ind_po)
 noint_Chr_api<-glmer(Chr_api~DATE+Treatment+reserve+(1|PLOT_ID), family="binomial", data=ind_po)
 
 summary(two_way_Chr_api) #final model
-anova(three_way_Chr_api,two_way_Chr_api) #p value for 3way int,not significant
-anova(two_way_Chr_api, noint_Chr_api) #p value for 2way, no effect of spraying
+Chr_api3way<-anova(three_way_Chr_api,two_way_Chr_api) #p value for 3way int,not significant
+Chr_api2way<-anova(two_way_Chr_api, noint_Chr_api) #p value for 2way, no effect of spraying
 
 
 #Art_fim
 ind_po$Art_fim<-ifelse(ind_po$Art_fim>0,1,0)
 ind_po$DATE<-ind_po$DATE-min(ind_po$DATE)
-three_way_Art_fim<-glmer(Art_fim~DATE*Treatment*reserve+(1|PLOT_ID), family="binomial", data=ind_po)
+three_way_Art_fim<-glmer(Art_fim~DATE+Treatment+reserve+DATE:Treatment+DATE:Treatment:reserve+(1|PLOT_ID), family="binomial", data=ind_po)
 summary(three_way_Art_fim)
 
-two_way_Art_fim<-glmer(Art_fim~DATE*Treatment+reserve+(1|PLOT_ID), family="binomial", data=ind_po)
+two_way_Art_fim<-glmer(Art_fim~DATE+Treatment+reserve+DATE:Treatment+(1|PLOT_ID), family="binomial", data=ind_po)
 noint_Art_fim<-glmer(Art_fim~DATE+Treatment+reserve+(1|PLOT_ID), family="binomial", data=ind_po)
-
 summary(two_way_Art_fim) #final model
 anova(three_way_Art_fim,two_way_Art_fim) 
 anova(two_way_Art_fim, noint_Art_fim) 
 
+Art_fim3way<-anova(three_way_Art_fim,two_way_Art_fim) 
+Art_fim2way<-anova(two_way_Art_fim, noint_Art_fim)
 
 #Des_var - three and two way
 ind_po$Des_var<-ifelse(ind_po$Des_var>0,1,0)
 ind_po$DATE<-ind_po$DATE-min(ind_po$DATE)
-three_way_Des_var<-glmer(Des_var~DATE*Treatment*reserve+(1|PLOT_ID), family="binomial", data=ind_po)
+three_way_Des_var<-glmer(Des_var~DATE+Treatment+reserve+DATE:Treatment+DATE:Treatment:reserve+(1|PLOT_ID), family="binomial", data=ind_po)
 summary(three_way_Des_var)
 
-two_way_Des_var<-glmer(Des_var~DATE*Treatment+reserve+(1|PLOT_ID), family="binomial", data=ind_po)
+two_way_Des_var<-glmer(Des_var~DATE+Treatment+reserve+DATE:Treatment+(1|PLOT_ID), family="binomial", data=ind_po)
 noint_Des_var<-glmer(Des_var~DATE+Treatment+reserve+(1|PLOT_ID), family="binomial", data=ind_po)
+summary(two_way_Des_var) #final model
+anova(three_way_Des_var,two_way_Des_var)
+anova(two_way_Des_var, noint_Des_var) 
 
-summary(two_way_Des_var)
-anova(three_way_Des_var,two_way_Des_var) #significant three-way
-anova(two_way_Des_var, noint_Des_var) #significant two-way
-
+Des_var3way<-anova(three_way_Des_var,two_way_Des_var)
+Des_var2way<-anova(two_way_Des_var, noint_Des_var) 
 
 #Ery_ovi 
 ind_po$Ery_ovi<-ifelse(ind_po$Ery_ovi>0,1,0)
 ind_po$DATE<-ind_po$DATE-min(ind_po$DATE)
-three_way_Ery_ovi<-glmer(Ery_ovi~DATE*Treatment*reserve+(1|PLOT_ID), family="binomial", data=ind_po)
+three_way_Ery_ovi<-glmer(Ery_ovi~DATE+Treatment+reserve+DATE:Treatment+DATE:Treatment:reserve+(1|PLOT_ID), family="binomial", data=ind_po)
 summary(three_way_Ery_ovi)
 
-two_way_Ery_ovi<-glmer(Ery_ovi~DATE*Treatment+reserve+(1|PLOT_ID), family="binomial", data=ind_po)
+two_way_Ery_ovi<-glmer(Ery_ovi~DATE+Treatment+reserve+DATE:Treatment+(1|PLOT_ID), family="binomial", data=ind_po)
 noint_Ery_ovi<-glmer(Ery_ovi~DATE+Treatment+reserve+(1|PLOT_ID), family="binomial", data=ind_po)
-
 summary(two_way_Ery_ovi) #final model
 anova(three_way_Ery_ovi,two_way_Ery_ovi) 
 anova(two_way_Ery_ovi, noint_Ery_ovi) 
 
+Ery_ovi3way<-anova(three_way_Ery_ovi,two_way_Ery_ovi) 
+Ery_ovi2way<-anova(two_way_Ery_ovi, noint_Ery_ovi) 
+  
 #Gly_cla 
 ind_po$Gly_cla<-ifelse(ind_po$Gly_cla>0,1,0)
 ind_po$DATE<-ind_po$DATE-min(ind_po$DATE)
-three_way_Gly_cla<-glmer(Gly_cla ~DATE*Treatment*reserve+(1|PLOT_ID), family="binomial", data=ind_po)
+three_way_Gly_cla<-glmer(Gly_cla~DATE+Treatment+reserve+DATE:Treatment+DATE:Treatment:reserve+(1|PLOT_ID), family="binomial", data=ind_po)
 summary(three_way_Gly_cla)
 
-two_way_Gly_cla <-glmer(Gly_cla~DATE*Treatment+reserve+(1|PLOT_ID), family="binomial", data=ind_po)
+two_way_Gly_cla<-glmer(Gly_cla~DATE+Treatment+reserve+DATE:Treatment+(1|PLOT_ID), family="binomial", data=ind_po)
 noint_Gly_cla<-glmer(Gly_cla~DATE+Treatment+reserve+(1|PLOT_ID), family="binomial", data=ind_po)
-
 summary(two_way_Gly_cla)#final model
 anova(three_way_Gly_cla,two_way_Gly_cla)
 anova(two_way_Gly_cla, noint_Gly_cla) 
 
+Gly_cla3way<-anova(three_way_Gly_cla,two_way_Gly_cla)
+Gly_cla2way<-anova(two_way_Gly_cla, noint_Gly_cla)
 
 #Gly_tab
 ind_po$Gly_tab<-ifelse(ind_po$Gly_tab>0,1,0)
 ind_po$DATE<-ind_po$DATE-min(ind_po$DATE)
-three_way_Gly_tab<-glmer(Gly_tab~DATE*Treatment*reserve+(1|PLOT_ID), family="binomial", data=ind_po)
+three_way_Gly_tab<-glmer(Gly_tab~DATE+Treatment+reserve+DATE:Treatment+DATE:Treatment:reserve+(1|PLOT_ID), family="binomial", data=ind_po)
 summary(three_way_Gly_tab)
 
-two_way_Gly_tab<-glmer(Gly_tab~DATE*Treatment+reserve+(1|PLOT_ID), family="binomial", data=ind_po)
+two_way_Gly_tab<-glmer(Gly_tab~DATE+Treatment+reserve+DATE:Treatment+(1|PLOT_ID), family="binomial", data=ind_po)
 noint_Gly_tab<-glmer(Gly_tab~DATE+Treatment+reserve+(1|PLOT_ID), family="binomial", data=ind_po)
-
 summary(two_way_Gly_tab) #final model
 anova(three_way_Gly_tab,two_way_Gly_tab)
 anova(two_way_Gly_tab, noint_Gly_tab) 
 
-#Lom_bra
+Gly_tab3way<-anova(three_way_Gly_tab,two_way_Gly_tab)
+Gly_tab2way<-anova(two_way_Gly_tab, noint_Gly_tab) 
 
+#Lom_bra
 ind_po$Lom_bra<-ifelse(ind_po$Lom_bra>0,1,0)
 ind_po$DATE<-ind_po$DATE-min(ind_po$DATE)
-three_way_Lom_bra<-glmer(Lom_bra~DATE*Treatment*reserve+(1|PLOT_ID), family="binomial", data=ind_po)
+three_way_Lom_bra<-glmer(Lom_bra~DATE+Treatment+reserve+DATE:Treatment+DATE:Treatment:reserve+(1|PLOT_ID), family="binomial", data=ind_po)
 summary(three_way_Lom_bra)
 
-two_way_Lom_bra<-glmer(Lom_bra~DATE*Treatment+reserve+(1|PLOT_ID), family="binomial", data=ind_po)
+two_way_Lom_bra<-glmer(Lom_bra~DATE+Treatment+reserve+DATE:Treatment+(1|PLOT_ID), family="binomial", data=ind_po)
 noint_Lom_bra<-glmer(Lom_bra~DATE+Treatment+reserve+(1|PLOT_ID), family="binomial", data=ind_po)
-
 summary(two_way_Lom_bra) #final model
 anova(three_way_Lom_bra,two_way_Lom_bra)
 anova(two_way_Lom_bra, noint_Lom_bra)
 
+Lom_bra3way<-anova(three_way_Lom_bra,two_way_Lom_bra)
+Lom_bra2way<-anova(two_way_Lom_bra, noint_Lom_bra)
+
 #Lom_fil
 ind_po$Lom_fil<-ifelse(ind_po$Lom_fil>0,1,0)
 ind_po$DATE<-ind_po$DATE-min(ind_po$DATE)
-three_way_Lom_fil<-glmer(Lom_fil~DATE*Treatment*reserve+(1|PLOT_ID), family="binomial", data=ind_po)
+three_way_Lom_fil<-glmer(Lom_fil~DATE+Treatment+reserve+DATE:Treatment+DATE:Treatment:reserve+(1|PLOT_ID), family="binomial", data=ind_po)
 summary(three_way_Lom_fil)
 
-two_way_Lom_fil<-glmer(Lom_fil~DATE*Treatment+reserve+(1|PLOT_ID), family="binomial", data=ind_po)
+two_way_Lom_fil<-glmer(Lom_fil~DATE+Treatment+reserve+DATE:Treatment+(1|PLOT_ID), family="binomial", data=ind_po)
 noint_Lom_fil<-glmer(Lom_fil~DATE+Treatment+reserve+(1|PLOT_ID), family="binomial", data=ind_po)
-
 summary(two_way_Lom_fil) #final model
 anova(three_way_Lom_fil,two_way_Lom_fil) 
 anova(two_way_Lom_fil, noint_Lom_fil) 
 
+Lom_fil3way<-anova(three_way_Lom_fil,two_way_Lom_fil)
+Lom_fil2way<-anova(two_way_Lom_fil, noint_Lom_fil) 
+
 #Lom_cor 
 ind_po$Lom_cor<-ifelse(ind_po$Lom_cor>0,1,0)
 ind_po$DATE<-ind_po$DATE-min(ind_po$DATE)
-three_way_Lom_cor<-glmer(Lom_cor~DATE*Treatment*reserve+(1|PLOT_ID), family="binomial", data=ind_po)
+three_way_Lom_cor<-glmer(Lom_cor~DATE+Treatment+reserve+DATE:Treatment+DATE:Treatment:reserve+(1|PLOT_ID), family="binomial", data=ind_po)
 summary(three_way_Lom_cor) 
 
-two_way_Lom_cor<-glmer(Lom_cor~DATE*Treatment+reserve+(1|PLOT_ID), family="binomial", data=ind_po)
+two_way_Lom_cor<-glmer(Lom_cor~DATE+Treatment+reserve+DATE:Treatment+(1|PLOT_ID), family="binomial", data=ind_po)
 noint_Lom_cor<-glmer(Lom_cor~DATE+Treatment+reserve+(1|PLOT_ID), family="binomial", data=ind_po)
-
 summary(two_way_Lom_cor) #final model
 anova(three_way_Lom_cor,two_way_Lom_cor) 
 anova(two_way_Lom_cor, noint_Lom_cor) 
 
+Lom_cor3way<-anova(three_way_Lom_cor,two_way_Lom_cor)
+Lom_cor2way<-anova(two_way_Lom_cor, noint_Lom_cor) 
 
-#Lom_mul - not working try again
+#Lom_mul - not working 
 ind_po$Lom_mul<-ifelse(ind_po$Lom_mul>0,1,0)
 ind_po$DATE<-ind_po$DATE-min(ind_po$DATE)
-three_way_Lom_mul<-glmer(Lom_mul~DATE*Treatment*reserve+(1|PLOT_ID), family="binomial", data=ind_po)
-summary(three_way_Lom_mul) 
+three_way_Lom_mul<-glmer(Lom_mul~DATE+Treatment+reserve+DATE:Treatment+DATE:Treatment:reserve+(1|PLOT_ID), family="binomial", data=ind_po)
 
-two_way_Lom_mul<-glmer(Lom_mul~DATE*Treatment+reserve+(1|PLOT_ID), family="binomial", data=ind_po)
+two_way_Lom_mul<-glmer(Lom_mul~DATE+Treatment+reserve+DATE:Treatment+(1|PLOT_ID), family="binomial", data=ind_po)
 noint_Lom_mul<-glmer(Lom_mul~DATE+Treatment+reserve+(1|PLOT_ID), family="binomial", data=ind_po)
-
-summary(two_way_Lom_mul) #final model
+summary(two_way_Lom_mul)
 anova(three_way_Lom_mul,two_way_Lom_mul) 
 anova(two_way_Lom_mul, noint_Lom_mul) 
 
-
+Lom_mul3way<-anova(three_way_Lom_mul,two_way_Lom_mul) 
+Lom_mul2way<-anova(two_way_Lom_mul, noint_Lom_mul)
 
 #Pla_var
 ind_po$Pla_var<-ifelse(ind_po$Pla_var>0,1,0)
 ind_po$DATE<-ind_po$DATE-min(ind_po$DATE)
-three_way_Pla_var<-glmer(Pla_var~DATE*Treatment*reserve+(1|PLOT_ID), family="binomial", data=ind_po)
+three_way_Pla_var<-glmer(Pla_var~DATE+Treatment+reserve+DATE:Treatment+DATE:Treatment:reserve+(1|PLOT_ID), family="binomial", data=ind_po)
 summary(three_way_Pla_var)
 
-two_way_Pla_var<-glmer(Pla_var~DATE*Treatment+reserve+(1|PLOT_ID), family="binomial", data=ind_po)
+two_way_Pla_var<-glmer(Pla_var~DATE+Treatment+reserve+DATE:Treatment+(1|PLOT_ID), family="binomial", data=ind_po)
 noint_Pla_var<-glmer(Pla_var~DATE+Treatment+reserve+(1|PLOT_ID), family="binomial", data=ind_po)
-
 summary(two_way_Pla_var) #final model
 anova(three_way_Pla_var,two_way_Pla_var) 
 anova(two_way_Pla_var, noint_Pla_var) 
 
+Pla_var3way<-anova(three_way_Pla_var,two_way_Pla_var) 
+Pla_var2way<-anova(two_way_Pla_var, noint_Pla_var) 
 
 #Tri_ela
 ind_po$Tri_ela<-ifelse(ind_po$Tri_ela>0,1,0)
 ind_po$DATE<-ind_po$DATE-min(ind_po$DATE)
-three_way_Tri_ela<-glmer(Tri_ela~DATE*Treatment*reserve+(1|PLOT_ID), family="binomial", data=ind_po)
+three_way_Tri_ela<-glmer(Tri_ela~DATE+Treatment+reserve+DATE:Treatment+DATE:Treatment:reserve+(1|PLOT_ID), family="binomial", data=ind_po)
 summary(three_way_Tri_ela)
 
-two_way_Tri_ela<-glmer(Tri_ela~DATE*Treatment+reserve+(1|PLOT_ID), family="binomial", data=ind_po)
+two_way_Tri_ela<-glmer(Tri_ela~DATE+Treatment+reserve+DATE:Treatment+(1|PLOT_ID), family="binomial", data=ind_po)
 noint_Tri_ela<-glmer(Tri_ela~DATE+Treatment+reserve+(1|PLOT_ID), family="binomial", data=ind_po)
-
 summary(two_way_Tri_ela) #final model
 anova(three_way_Tri_ela,two_way_Tri_ela) 
 anova(two_way_Tri_ela, noint_Tri_ela) 
 
-
+Tri_ela3way<-anova(three_way_Tri_ela,two_way_Tri_ela) 
+Tri_ela2way<-anova(two_way_Tri_ela, noint_Tri_ela)
 
 #Tri_pyg
 ind_po$Tri_pyg<-ifelse(ind_po$Tri_pyg>0,1,0)
 ind_po$DATE<-ind_po$DATE-min(ind_po$DATE)
-three_way_Tri_pyg<-glmer(Tri_pyg~DATE*Treatment*reserve+(1|PLOT_ID), family="binomial", data=ind_po)
+three_way_Tri_pyg<-glmer(Tri_pyg~DATE+Treatment+reserve+DATE:Treatment+DATE:Treatment:reserve+(1|PLOT_ID), family="binomial", data=ind_po)
 summary(three_way_Tri_pyg)
 
-two_way_Tri_pyg<-glmer(Tri_pyg~DATE*Treatment+reserve+(1|PLOT_ID), family="binomial", data=ind_po)
+two_way_Tri_pyg<-glmer(Tri_pyg~DATE+Treatment+reserve+DATE:Treatment+(1|PLOT_ID), family="binomial", data=ind_po)
 noint_Tri_pyg<-glmer(Tri_pyg~DATE+Treatment+reserve+(1|PLOT_ID), family="binomial", data=ind_po)
-
 summary(two_way_Tri_pyg) #final model
 anova(three_way_Tri_pyg,two_way_Tri_pyg) 
 anova(two_way_Tri_pyg, noint_Tri_pyg) 
 
+Tri_pyg3way<-anova(three_way_Tri_pyg,two_way_Tri_pyg) 
+Tri_pyg2way<-anova(two_way_Tri_pyg, noint_Tri_pyg) 
 
 #Wur_dio - # WARNING-Model is nearly unidentifiable: large eigenvalue ratio
 #recommendations are to rescale and center variables, check for singularity, double-check gradient calculations, add more iterations by restarting from previous fit, and try different optimizers. 
 ind_po$Wur_dio<-ifelse(ind_po$Wur_dio>0,1,0)
 ind_po$DATE<-ind_po$DATE-min(ind_po$DATE)
-three_way_Wur_dio<-glmer(Wur_dio~DATE*Treatment+reserve+(1|PLOT_ID), family="binomial", data=ind_po)
-summary(three_way_Tri_pyg)
+three_way_Wur_dio<-glmer(Wur_dio~DATE+Treatment+reserve+DATE:Treatment+DATE:Treatment:reserve+(1|PLOT_ID), family="binomial", data=ind_po)
+summary(three_way_Wur_dio)
 
-two_way_Wur_dio<-glmer(Wur_dio~DATE*Treatment+reserve+(1|PLOT_ID), family="binomial", data=ind_po)
+two_way_Wur_dio<-glmer(Wur_dio~DATE+Treatment+reserve+DATE:Treatment+(1|PLOT_ID), family="binomial", data=ind_po)
 noint_Wur_dio<-glmer(Wur_dio~DATE+Treatment+reserve+(1|PLOT_ID), family="binomial", data=ind_po)
-
 summary(two_way_Wur_dio) 
 anova(three_way_Wur_dio,two_way_Wur_dio) 
 anova(two_way_Wur_dio, noint_Wur_dio) #high p values
 
-#add pvalue column
-ind.sp$pvalue<-NA
-summary(anova(two_way_Wur_dio, noint_Wur_dio))
+Wur_dio3way<-anova(three_way_Wur_dio,two_way_Wur_dio)
+Wur_dio2way<-anova(two_way_Wur_dio, noint_Wur_dio)
+  
+#add pvalue columns
+ind.sp$threewaypvalue<-NA
+ind.sp$twowaypvalue<-NA
 
-table(anova(two_way_Wur_dio, noint_Wur_dio))
+ind.sp$threewaypvalue[which(ind.sp$Sp=="Chr_api")]<-Chr_api3way[2,which(colnames(Chr_api3way)=="Pr(>Chisq)")]
+ind.sp$twowaypvalue[which(ind.sp$Sp=="Chr_api")]<-Chr_api2way[2,which(colnames(Chr_api2way)=="Pr(>Chisq)")]
 
-ind.sp$pvalue[which(ind.sp$Sp=="Wur_dio")]<-0.00848
+ind.sp$threewaypvalue[which(ind.sp$Sp=="Art_fim")]<-Art_fim3way[2,which(colnames(Art_fim3way)=="Pr(>Chisq)")]
+ind.sp$twowaypvalue[which(ind.sp$Sp=="Art_fim")]<-Art_fim2way[2,which(colnames(Art_fim2way)=="Pr(>Chisq)")]
 
+ind.sp$threewaypvalue[which(ind.sp$Sp=="Des_var")]<-Des_var3way[2,which(colnames(Des_var3way)=="Pr(>Chisq)")]
+ind.sp$twowaypvalue[which(ind.sp$Sp=="Des_var")]<-Des_var2way[2,8]
+
+ind.sp$threewaypvalue[which(ind.sp$Sp=="Ery_ovi")]<-Ery_ovi3way[2,8]
+ind.sp$twowaypvalue[which(ind.sp$Sp=="Ery_ovi")]<-Ery_ovi2way[2,8]
+
+ind.sp$threewaypvalue[which(ind.sp$Sp=="Gly_cla")]<-Gly_cla3way[2,8]
+ind.sp$twowaypvalue[which(ind.sp$Sp=="Gly_cla")]<-Gly_cla2way[2,8]
+
+ind.sp$twowaypvalue[which(ind.sp$Sp=="Gly_tab")]<-Gly_tab3way[2,which(colnames(Gly_tab3way)=="Pr(>Chisq)")]
+ind.sp$threewaypvalue[which(ind.sp$Sp=="Gly_tab")]<-Gly_tab2way[2,which(colnames(Gly_tab2way)=="Pr(>Chisq)")]
+
+ind.sp$threewaypvalue[which(ind.sp$Sp=="Lom_bra")]<-Lom_bra3way[2,8]
+ind.sp$twowaypvalue[which(ind.sp$Sp=="Lom_bra")]<-Lom_bra2way[2,8]
+
+ind.sp$threewaypvalue[which(ind.sp$Sp=="Lom_fil")]<-Lom_fil3way[2,8]
+ind.sp$twowaypvalue[which(ind.sp$Sp=="Lom_fil")]<-Lom_fil2way[2,8]
+
+ind.sp$threewaypvalue[which(ind.sp$Sp=="Lom_cor")]<-Lom_cor3way[2,8]
+ind.sp$twowaypvalue[which(ind.sp$Sp=="Lom_cor")]<-Lom_cor2way[2,8]
+
+        #Lom_mul error (will be removed anyway because counts         oo low)
+
+ind.sp$threewaypvalue[which(ind.sp$Sp=="Pla_var")]<-Pla_var3way[2,8]
+ind.sp$twowaypvalue[which(ind.sp$Sp=="Pla_var")]<-Pla_var2way[2,8]
+
+ind.sp$threewaypvalue[which(ind.sp$Sp=="Tri_ela")]<-Tri_ela3way[2,8]
+ind.sp$twowaypvalue[which(ind.sp$Sp=="Tri_ela")]<-Tri_ela2way[2,8]
+
+ind.sp$threewaypvalue[which(ind.sp$Sp=="Tri_pyg")]<-Tri_pyg3way[2,8]
+ind.sp$twowaypvalue[which(ind.sp$Sp=="Tri_pyg")]<-Tri_pyg2way[2,8]
+
+ind.sp$threewaypvalue[which(ind.sp$Sp=="Wur_dio")]<-Wur_dio3way[2,8]
+ind.sp$twowaypvalue[which(ind.sp$Sp=="Wur_dio")]<-Wur_dio2way[2,8]
+                          
 #Add proportion of zeros column
+#exclude species that have more than 95% zeros
 ind.sp$prop0<-NA
 ind.sp$prop0[which(ind.sp$Sp=="Chr_api")]<-table(ind_po$Chr_api)[1]/sum(table(ind_po$Chr_api))
 
@@ -1902,7 +1955,7 @@ ind.sp$prop0[which(ind.sp$Sp=="Tri_pyg")]<-table(ind_po$Tri_pyg)[1]/sum(table(in
 ind.sp$prop0[which(ind.sp$Sp=="Wur_dio")]<-table(ind_po$Wur_dio)[1]/sum(table(ind_po$Wur_dio))
 
 #Add count column
-
+#exclude species that have less than 10 counts
 ind.sp$count<-NA
 ind.sp$count[which(ind.sp$Sp=="Chr_api")]<-sum(ct_ind$Chr_api)
 
@@ -1932,6 +1985,17 @@ ind.sp$count[which(ind.sp$Sp=="Tri_ela")]<-sum(ct_ind$Tri_ela)
 
 ind.sp$count[which(ind.sp$Sp=="Tri_pyg")]<-sum(ct_ind$Tri_pyg)
 
+#preds 
+nd1<-data.frame(DATE=rep(c(0,1,2),rep(3,3)),Treatment=as.factor(c("C","A","B")),reserve=c(rep("J",9),rep("M",9)))
+
+anova(three_way_Wur_dio,two_way_Wur_dio) 
+anova(two_way_Wur_dio, noint_Wur_dio) 
+summary(two_way_Wur_dio)
+
+Wur_dio_pr<-pred(model = two_way_Wur_dio,new.data=nd1,se.fit=T,type="response")
+
+
+#save.image("03_Workspaces/stjw_analysis.RData")
 
 
 # close indiv species ----
