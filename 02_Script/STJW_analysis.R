@@ -2162,6 +2162,9 @@ anova(two_way_Wur_dio, noint_Wur_dio)
 summary(two_way_Wur_dio)
 
 Wur_dio_pr<-pred(model = two_way_Wur_dio,new.data=nd1,se.fit=T,type="response")
+Chr_api_pr<-pred(model=two_way_Wur_dio,new.data=nd1,se.fit=T,type="response")
+
+
 
 
 #save.image("03_Workspaces/stjw_analysis.RData")
