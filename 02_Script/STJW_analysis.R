@@ -2031,8 +2031,7 @@ anova(two_way_Tri_pyg, noint_Tri_pyg)
 Tri_pyg3way<-anova(three_way_Tri_pyg,two_way_Tri_pyg) 
 Tri_pyg2way<-anova(two_way_Tri_pyg, noint_Tri_pyg) 
 
-#Wur_dio - # WARNING-Model is nearly unidentifiable: large eigenvalue ratio
-#recommendations are to rescale and center variables, check for singularity, double-check gradient calculations, add more iterations by restarting from previous fit, and try different optimizers. 
+#Wur_dio - 
 ind_po$Wur_dio<-ifelse(ind_po$Wur_dio>0,1,0)
 ind_po$DATE<-ind_po$DATE-min(ind_po$DATE)
 three_way_Wur_dio<-glmer(Wur_dio~DATE+Treatment+reserve+DATE:Treatment+DATE:Treatment:reserve+(1|PLOT_ID), family="binomial", data=ind_po)
@@ -2154,17 +2153,29 @@ ind.sp$count[which(ind.sp$Sp=="Tri_ela")]<-sum(ct_ind$Tri_ela)
 
 ind.sp$count[which(ind.sp$Sp=="Tri_pyg")]<-sum(ct_ind$Tri_pyg)
 
-#preds 
+#exclude sp. that have more than 95% zeros or less than a total count of 10 individuals - Gly_cla; Lom_bra; Lom_fil; Lom_mul
+
+ind.sp<-ind.sp[-c(5,7,8,10),]
+
+#save.image("03_Workspaces/stjw_analysis.RData")
+
+#predictions  
 nd1<-data.frame(DATE=rep(c(0,1,2),rep(3,3)),Treatment=as.factor(c("C","A","B")),reserve=c(rep("J",9),rep("M",9)))
 
 anova(three_way_Wur_dio,two_way_Wur_dio) 
 anova(two_way_Wur_dio, noint_Wur_dio) 
 summary(two_way_Wur_dio)
 
-Wur_dio_pr<-pred(model = two_way_Wur_dio,new.data=nd1,se.fit=T,type="response")
+Art_fim_pr<-pred(model=two_way_Art_fim, new.data = nd1,se.fit = T,type="response")
 Chr_api_pr<-pred(model=two_way_Wur_dio,new.data=nd1,se.fit=T,type="response")
-
-
+Des_var_pr<-pred(model=two_way_Des_var, new.data=nd1, se.fit=T, type="response")
+Ery_ovi_pr<-pred(model=two_way_Ery_ovi, new.data=nd1, se.fit=T, type="response") #check again
+Gly_tab_pr<-pred(model=two_way_Gly_tab, new.data=nd1, se.fit=T, type="response")
+Lom_cor_pr<-pred(model=two_way_Lom_cor, new.data=nd1, se.fit=T,type="response")
+Pla_var_pr<-pred(model=two_way_Pla_var, new.data=nd1, se.fit=T,type="response")
+Tri_ela_pr<-pred(model=two_way_Tri_ela, new.data=nd1, se.fit=T,type="response")
+Tri_pyg_pr<-pred(model=two_way_Tri_pyg, new.data=nd1, se.fit=T,type="response")
+Wur_dio_pr<-pred(model = two_way_Wur_dio,new.data=nd1,se.fit=T,type="response")
 
 
 #save.image("03_Workspaces/stjw_analysis.RData")
