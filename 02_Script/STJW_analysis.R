@@ -9,6 +9,11 @@
 # Load functions:
 invisible(lapply(paste("01_Functions/",dir("01_Functions"),sep=""), function(x) source(x)))
 
+#install glmmADMB
+install.packages("devtools")
+install.packages("R2admb")
+devtools::install_github("bbolker/glmmadmb")
+
 # Load libraries:
 library(lme4); library(vegan); library(AICcmodavg); library(lmerTest); library(glmmADMB)
 
@@ -1277,7 +1282,7 @@ for (i in 1:nrow(gdf)){
     
     coef.rich[[i]]<-coef.ext(m3way_rich)
     coef.invsimp[[i]]<-coef.ext(m3way_invsimp)
-    
+  
     ## FIT two-way models:
     
     twoway.thisrun<-paste(resp.thisrun,"~Treatment+DATE+reserve+Treatment:DATE+(1|PLOT_ID)", sep="")
@@ -1978,6 +1983,7 @@ ind_po$DATE<-ind_po$DATE-min(ind_po$DATE)
 three_way_Lom_mul<-glmer(Lom_mul~DATE+Treatment+reserve+DATE:Treatment+DATE:Treatment:reserve+(1|PLOT_ID), family="binomial", data=ind_po)
 
 two_way_Lom_mul<-glmer(Lom_mul~DATE+Treatment+reserve+DATE:Treatment+(1|PLOT_ID), family="binomial", data=ind_po)
+
 noint_Lom_mul<-glmer(Lom_mul~DATE+Treatment+reserve+(1|PLOT_ID), family="binomial", data=ind_po)
 summary(two_way_Lom_mul)
 anova(three_way_Lom_mul,two_way_Lom_mul) 
@@ -2162,10 +2168,6 @@ ind.sp<-ind.sp[-c(5,7,8,10),]
 #predictions  
 nd1<-data.frame(DATE=rep(c(0,1,2),rep(3,3)),Treatment=as.factor(c("C","A","B")),reserve=c(rep("J",9),rep("M",9)))
 
-anova(three_way_Wur_dio,two_way_Wur_dio) 
-anova(two_way_Wur_dio, noint_Wur_dio) 
-summary(two_way_Wur_dio)
-
 Art_fim_pr<-pred(model=two_way_Art_fim, new.data = nd1,se.fit = T,type="response")
 Chr_api_pr<-pred(model=two_way_Wur_dio,new.data=nd1,se.fit=T,type="response")
 Des_var_pr<-pred(model=two_way_Des_var, new.data=nd1, se.fit=T, type="response")
@@ -2177,8 +2179,16 @@ Tri_ela_pr<-pred(model=two_way_Tri_ela, new.data=nd1, se.fit=T,type="response")
 Tri_pyg_pr<-pred(model=two_way_Tri_pyg, new.data=nd1, se.fit=T,type="response")
 Wur_dio_pr<-pred(model = two_way_Wur_dio,new.data=nd1,se.fit=T,type="response")
 
-
 #save.image("03_Workspaces/stjw_analysis.RData")
+
+#Plots:
+
+dev.new(width=6, height=6, dpi=80, pointsize=16,noRStudioGD = T)
+
+Chr_api_plot<-plot(Chr_api_pr$DATE[Chr_api_pr$Treatment=="C"]-xofs,Chr_api_pr$fit[Chr_api_pr$Treatment=="C"], pch=15, ylim=c(min(Chr_api_pr$lci), max(Chr_api_pr$uci)), xlim=c(-0.3,2.3), xaxt="n", xlab="Year", ylab=ind.sp$Chr_api, las=1)
+
+par(mfrow=c(2,2),mar=c(4,4,1,1), mgp=c(2.5,1,0))
+axis(side = 1, at=c(0,1,2), labels=c(2017,2018,2019))
 
 
 # close indiv species ----
