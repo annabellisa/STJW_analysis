@@ -1821,8 +1821,6 @@ head(pinfo,3); dim(pinfo)
 
 ind.sp<-data.frame(ind_species=c("Eryngium ovinum", "Chrysocephalum apiculatum", "Arthropodium fimbriatum", "Wurmbea dioica", "Desmodium varians", "Plantago varia", "Tricoryne elatior", "Triptilodiscus pygmaeus","Lomandra filiformis coriacea", "Lomandra bracteata", "Lomandra filiformis","Lomandra multiflora","Glycine clandestina","Glycine tabacina"))
 
-
-
 # These should all be TRUE:
 table(ind.sp$ind_species %in% pinfo$Species)
 
@@ -2083,7 +2081,7 @@ ind.sp$twowaypvalue[which(ind.sp$Sp=="Lom_fil")]<-Lom_fil2way[2,8]
 ind.sp$threewaypvalue[which(ind.sp$Sp=="Lom_cor")]<-Lom_cor3way[2,8]
 ind.sp$twowaypvalue[which(ind.sp$Sp=="Lom_cor")]<-Lom_cor2way[2,8]
 
-        #Lom_mul error (will be removed anyway because counts         oo low)
+#Lom_mul error (will be removed anyway because counts         oo low)
 
 ind.sp$threewaypvalue[which(ind.sp$Sp=="Pla_var")]<-Pla_var3way[2,8]
 ind.sp$twowaypvalue[which(ind.sp$Sp=="Pla_var")]<-Pla_var2way[2,8]
@@ -2179,16 +2177,55 @@ Tri_ela_pr<-pred(model=two_way_Tri_ela, new.data=nd1, se.fit=T,type="response")
 Tri_pyg_pr<-pred(model=two_way_Tri_pyg, new.data=nd1, se.fit=T,type="response")
 Wur_dio_pr<-pred(model = two_way_Wur_dio,new.data=nd1,se.fit=T,type="response")
 
-#save.image("03_Workspaces/stjw_analysis.RData")
+# save.image("03_Workspaces/stjw_analysis.RData")
 
-#Plots:
+# Plots:
 
-dev.new(width=6, height=6, dpi=80, pointsize=16,noRStudioGD = T)
+# Plot species with significant interaction:
+# Plot effects for Mulangarri only. There was no significant three-way, so the effect is the same for both locations. There is significantly more Wur_dio at Mulanggari, but there is no reserve effect for Des_var
+ind.sp[which(ind.sp$threewaypvalue<0.05),]
+ind.sp[which(ind.sp$twowaypvalue<0.05),]
+summary(two_way_Des_var) #final model
+summary(two_way_Wur_dio) #final model
+head(Des_var_pr,3)
+head(Wur_dio_pr,3)
 
-Chr_api_plot<-plot(Chr_api_pr$DATE[Chr_api_pr$Treatment=="C"]-xofs,Chr_api_pr$fit[Chr_api_pr$Treatment=="C"], pch=15, ylim=c(min(Chr_api_pr$lci), max(Chr_api_pr$uci)), xlim=c(-0.3,2.3), xaxt="n", xlab="Year", ylab=ind.sp$Chr_api, las=1)
+dev.new(width=10, height=4, dpi=100, pointsize=16,noRStudioGD = T)
+par(mfrow=c(1,2),mar=c(4,4,1,1), oma=c(0,0,0,6), mgp=c(2.5,1,0))
 
-par(mfrow=c(2,2),mar=c(4,4,1,1), mgp=c(2.5,1,0))
+xofs<-0.2
+arrowlgth<-0.02
+
+Des_var_pr_M<-Des_var_pr[which(Des_var_pr$reserve=="M"),]
+Wur_dio_pr_M<-Wur_dio_pr[which(Wur_dio_pr$reserve=="M"),]
+
+## Des_var
+
+plot(Des_var_pr_M$DATE[Des_var_pr_M$Treatment=="C" ]-xofs,Des_var_pr_M$fit[Des_var_pr_M$Treatment=="C"], pch=15, ylim=c(min(Des_var_pr_M$lci), max(Des_var_pr_M$uci)), xlim=c(-0.3,2.3), xaxt="n", xlab="Year", ylab="Desmodium varians occurrence", las=1)
 axis(side = 1, at=c(0,1,2), labels=c(2017,2018,2019))
+
+arrows(Des_var_pr_M$DATE[Des_var_pr_M$Treatment=="C"]-xofs,Des_var_pr_M$lci[Des_var_pr_M$Treatment=="C"],Des_var_pr_M$DATE[Des_var_pr_M$Treatment=="C"]-xofs,Des_var_pr_M$uci[Des_var_pr_M$Treatment=="C"], code=3, angle=90, length=arrowlgth)
+
+points(Des_var_pr_M$DATE[Des_var_pr_M$Treatment=="A"],Des_var_pr_M$fit[Des_var_pr_M$Treatment=="A"], pch=15, col="red")
+arrows(Des_var_pr_M$DATE[Des_var_pr_M$Treatment=="A"],Des_var_pr_M$lci[Des_var_pr_M$Treatment=="A"],Des_var_pr_M$DATE[Des_var_pr_M$Treatment=="A"],Des_var_pr_M$uci[Des_var_pr_M$Treatment=="A"], code=3, angle=90, length=arrowlgth, col="red")
+points(Des_var_pr_M$DATE[Des_var_pr_M$Treatment=="B"]+xofs,Des_var_pr_M$fit[Des_var_pr_M$Treatment=="B"], pch=15, col="blue")
+arrows(Des_var_pr_M$DATE[Des_var_pr_M$Treatment=="B"]+xofs,Des_var_pr_M$lci[Des_var_pr_M$Treatment=="B"],Des_var_pr_M$DATE[Des_var_pr_M$Treatment=="B"]+xofs,Des_var_pr_M$uci[Des_var_pr_M$Treatment=="B"], code=3, angle=90, length=arrowlgth, col="blue")
+
+## Wur_dio
+
+plot(Wur_dio_pr_M$DATE[Wur_dio_pr_M$Treatment=="C" ]-xofs,Wur_dio_pr_M$fit[Wur_dio_pr_M$Treatment=="C"], pch=15, ylim=c(min(Wur_dio_pr_M$lci), max(Wur_dio_pr_M$uci)), xlim=c(-0.3,2.3), xaxt="n", xlab="Year", ylab="Wurmbea dioica occurrence", las=1)
+axis(side = 1, at=c(0,1,2), labels=c(2017,2018,2019))
+
+arrows(Wur_dio_pr_M$DATE[Wur_dio_pr_M$Treatment=="C"]-xofs,Wur_dio_pr_M$lci[Wur_dio_pr_M$Treatment=="C"],Wur_dio_pr_M$DATE[Wur_dio_pr_M$Treatment=="C"]-xofs,Wur_dio_pr_M$uci[Wur_dio_pr_M$Treatment=="C"], code=3, angle=90, length=arrowlgth)
+
+points(Wur_dio_pr_M$DATE[Wur_dio_pr_M$Treatment=="A"],Wur_dio_pr_M$fit[Wur_dio_pr_M$Treatment=="A"], pch=15, col="red")
+arrows(Wur_dio_pr_M$DATE[Wur_dio_pr_M$Treatment=="A"],Wur_dio_pr_M$lci[Wur_dio_pr_M$Treatment=="A"],Wur_dio_pr_M$DATE[Wur_dio_pr_M$Treatment=="A"],Wur_dio_pr_M$uci[Wur_dio_pr_M$Treatment=="A"], code=3, angle=90, length=arrowlgth, col="red")
+points(Wur_dio_pr_M$DATE[Wur_dio_pr_M$Treatment=="B"]+xofs,Wur_dio_pr_M$fit[Wur_dio_pr_M$Treatment=="B"], pch=15, col="blue")
+arrows(Wur_dio_pr_M$DATE[Wur_dio_pr_M$Treatment=="B"]+xofs,Wur_dio_pr_M$lci[Wur_dio_pr_M$Treatment=="B"],Wur_dio_pr_M$DATE[Wur_dio_pr_M$Treatment=="B"]+xofs,Wur_dio_pr_M$uci[Wur_dio_pr_M$Treatment=="B"], code=3, angle=90, length=arrowlgth, col="blue")
+
+par(xpd=NA)
+legend(2.6,0.6,legend=c("Control","Spot spray","Boom spray"), col=c("black","red","blue"), pch=15, bty="n", pt.cex = 3)
+par(xpd=F)
 
 
 # close indiv species ----
