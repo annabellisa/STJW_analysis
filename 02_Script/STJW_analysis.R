@@ -20,6 +20,7 @@ library(lme4); library(vegan); library(AICcmodavg); library(lmerTest); library(g
 # Load workspace
 load("03_Workspaces/stjw_analysis.RData")
 
+
 # The diversity workspace has only the diversity anaysis (not individual species):
 load("03_Workspaces/stjw_analysis_diversity.RData")
 
@@ -1837,6 +1838,7 @@ table(colnames(ct_ind)==colnames(cv_ind))
 # Model individual species using these data sets:
 rahead(ct_ind,6,6)
 rahead(cv_ind,6,6)
+dim(ct_ind)
 
 ind_po<-ct_ind
 rahead(ind_po,6,6); dim(ind_po)
@@ -2191,7 +2193,7 @@ head(Des_var_pr,3)
 head(Wur_dio_pr,3)
 
 dev.new(width=10, height=4, dpi=100, pointsize=16,noRStudioGD = T)
-par(mfrow=c(1,2),mar=c(4,4,1,1), oma=c(0,0,0,6), mgp=c(2.5,1,0))
+par(mfrow=c(1,2),mar=c(4,4,2,1), oma=c(0,0,0,6), mgp=c(2.5,1,0))
 
 xofs<-0.2
 arrowlgth<-0.02
@@ -2227,8 +2229,82 @@ par(xpd=NA)
 legend(2.6,0.6,legend=c("Control","Spot spray","Boom spray"), col=c("black","red","blue"), pch=15, bty="n", pt.cex = 3)
 par(xpd=F)
 
+#
+ind.sp<-tidy.df(ind.sp)
+rahead(ct_ind,6,6)
+rahead(cv_ind,6,6)
+dim(ct_ind)
+ind.sp2[,c("Sp","count","prop0")]
+ind.sp2<-ind.sp[-which(ind.sp$Sp=="Wur_dio"),]
+ind.sp2<-tidy.df(ind.sp2)
+sp.tomodel<-ind.sp2$Sp
+ct_ind2<-ct_ind[,c(1:4,which(colnames(ct_ind)%in% sp.tomodel))]
+rahead(ct_ind2,6,6);dim(ct_ind2)
+
+
+cv_ind2<-cv_ind[,c(1:4,which(colnames(cv_ind)%in% sp.tomodel))]
+rahead(cv_ind2,6,6);dim(cv_ind2)
+
+
+dev.new(width=8, height=8, dpi=80, pointsize=16,noRStudioGD = T)
+par(mfrow=c(3,3),mar=c(4,4,2,1), oma=c(0,0,0,0), mgp=c(2.5,1,0))
+
+for (i in 1:length(sp.tomodel)){
+  sp.thisrun<-sp.tomodel[i]
+  data.thisrun<-ct_ind2[,sp.thisrun]
+  hist(data.thisrun[which(data.thisrun>0)], xlab="", ylab="", main=sp.thisrun, font.main=1)
+  
+} # close for
+
+# for the count data with zeroes removed, use truncated negative binomial model - in glmmADMB package
+
+ind.sp2
+ind.sp2[,c("Sp","count","prop0")]
+rahead(ct_ind2,6,6)
+
+
+three_way_af_nb<-glmmadmb(Art_fim~DATE+Treatment+reserve+DATE:Treatment+DATE:Treatment:reserve+(1|PLOT_ID), family="truncnbinom", data=ct_ind2[ct_ind2$Art_fim>0,])
+
+two_way_af_nb<-glmmadmb(Art_fim~DATE+Treatment+DATE:Treatment+(1|PLOT_ID), family="truncnbinom", data=ct_ind2[ct_ind2$Art_fim>0,])
+summary(two_way_af_nb) #only data from 1 plot
+
+#anova, add p values to summary table for neg binomial models - tnb.2p/ tnb.3p
+#run preds again - truncated neg binom, select model that has log link function; same new data frame. 
+
+
+#Chr_api
+three_way_ca_nb<-glmmadmb(Chr_api~DATE+Treatment+reserve+DATE:Treatment+DATE:Treatment:reserve+(1|PLOT_ID), family="truncnbinom", data=ct_ind2[ct_ind2$Chr_api>0,])
+summary(three_way_ca_nb) #significant 
+
+
+
+
+
+#PLots
+
+dev.new(width=8, height=8, dpi=80, pointsize=16,noRStudioGD = T)
+par(mfrow=c(3,3),mar=c(4,4,2,1), oma=c(0,0,0,0), mgp=c(2.5,1,0))
+
+for (i in 1:length(sp.tomodel)){
+  sp.thisrun<-sp.tomodel[i]
+  data.thisrun<-cv_ind2[,sp.thisrun]
+  hist(data.thisrun, xlab="", ylab="", main=sp.thisrun, font.main=1)
+  
+} # close for
+
+
+rahead(cv_ind2,6,6);dim(cv_ind2)
+apply(cv_ind2[,5:ncol(cv_ind2)],2,range)
+
 
 # close indiv species ----
+
+
+
+
+
+
+
 
 #  COMPONENT 4 seed viability:    	# ----
 
