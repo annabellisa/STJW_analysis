@@ -2159,9 +2159,10 @@ ind.sp$count[which(ind.sp$Sp=="Tri_ela")]<-sum(ct_ind$Tri_ela)
 
 ind.sp$count[which(ind.sp$Sp=="Tri_pyg")]<-sum(ct_ind$Tri_pyg)
 
-#exclude sp. that have more than 95% zeros or less than a total count of 10 individuals - Gly_cla; Lom_bra; Lom_fil; Lom_mul
+#exclude sp. that have more than 95% zeros or less than 10 counts- Gly_cla; Lom_bra; Lom_fil; Lom_mul
 
 ind.sp<-ind.sp[-c(5,7,8,10),]
+ind.sp<-tidy.df(ind.sp)
 
 #save.image("03_Workspaces/stjw_analysis.RData")
 
@@ -2229,23 +2230,19 @@ par(xpd=NA)
 legend(2.6,0.6,legend=c("Control","Spot spray","Boom spray"), col=c("black","red","blue"), pch=15, bty="n", pt.cex = 3)
 par(xpd=F)
 
-#
-ind.sp<-tidy.df(ind.sp)
-rahead(ct_ind,6,6)
-rahead(cv_ind,6,6)
-dim(ct_ind)
-ind.sp2[,c("Sp","count","prop0")]
+#Individual species modeling:
+#remove Wur_dio since it has only 31 counts, which is less than 48 (we have 48 quadrats)
 ind.sp2<-ind.sp[-which(ind.sp$Sp=="Wur_dio"),]
 ind.sp2<-tidy.df(ind.sp2)
+ind.sp2[,c("Sp","count","prop0")]
 sp.tomodel<-ind.sp2$Sp
+
 ct_ind2<-ct_ind[,c(1:4,which(colnames(ct_ind)%in% sp.tomodel))]
 rahead(ct_ind2,6,6);dim(ct_ind2)
-
-
 cv_ind2<-cv_ind[,c(1:4,which(colnames(cv_ind)%in% sp.tomodel))]
 rahead(cv_ind2,6,6);dim(cv_ind2)
 
-
+#histograms of data
 dev.new(width=8, height=8, dpi=80, pointsize=16,noRStudioGD = T)
 par(mfrow=c(3,3),mar=c(4,4,2,1), oma=c(0,0,0,0), mgp=c(2.5,1,0))
 
@@ -2253,7 +2250,6 @@ for (i in 1:length(sp.tomodel)){
   sp.thisrun<-sp.tomodel[i]
   data.thisrun<-ct_ind2[,sp.thisrun]
   hist(data.thisrun[which(data.thisrun>0)], xlab="", ylab="", main=sp.thisrun, font.main=1)
-  
 } # close for
 
 # for the count data with zeroes removed, use truncated negative binomial model - in glmmADMB package
@@ -2262,19 +2258,62 @@ ind.sp2
 ind.sp2[,c("Sp","count","prop0")]
 rahead(ct_ind2,6,6)
 
-
+#Art_fim
 three_way_af_nb<-glmmadmb(Art_fim~DATE+Treatment+reserve+DATE:Treatment+DATE:Treatment:reserve+(1|PLOT_ID), family="truncnbinom", data=ct_ind2[ct_ind2$Art_fim>0,])
-
 two_way_af_nb<-glmmadmb(Art_fim~DATE+Treatment+DATE:Treatment+(1|PLOT_ID), family="truncnbinom", data=ct_ind2[ct_ind2$Art_fim>0,])
-summary(two_way_af_nb) #only data from 1 plot
-
-#anova, add p values to summary table for neg binomial models - tnb.2p/ tnb.3p
-#run preds again - truncated neg binom, select model that has log link function; same new data frame. 
-
+summary(two_way_af_nb) #only data from one plot (M1)
 
 #Chr_api
-three_way_ca_nb<-glmmadmb(Chr_api~DATE+Treatment+reserve+DATE:Treatment+DATE:Treatment:reserve+(1|PLOT_ID), family="truncnbinom", data=ct_ind2[ct_ind2$Chr_api>0,])
+three_way_ca_nb<-glmmadmb(Chr_api~DATE+Treatment+reserve+DATE:Treatment+DATE:Treatment:reserve+(1|PLOT_ID),family="truncnbinom", data=ct_ind2[ct_ind2$Chr_api>0,])
 summary(three_way_ca_nb) #significant 
+two_way_ca_nb<-glmmadmb(Chr_api~DATE+Treatment+DATE:Treatment+(1|PLOT_ID), family="truncnbinom", data=ct_ind2[ct_ind2$Chr_api>0,])
+summary(two_way_ca_nb) #not significant
+
+#Des_var - curvature at MLE was zero or negative
+three_way_dv_nb<-glmmadmb(Des_var~DATE+Treatment+reserve+DATE:Treatment+DATE:Treatment:reserve+(1|PLOT_ID),family="truncnbinom", data=ct_ind2[ct_ind2$Des_var>0,])
+summary(three_way_dv_nb)
+two_way_dv_nb<-glmmadmb(Des_var~DATE+Treatment+DATE:Treatment+(1|PLOT_ID), family="truncnbinom", data=ct_ind2[ct_ind2$Des_var>0,])
+summary(two_way_dv_nb)
+
+#Ery_ovi - 2 WAY curvature at MLE was zero or negative
+three_way_ev_nb<-glmmadmb(Ery_ovi~DATE+Treatment+reserve+DATE:Treatment+DATE:Treatment:reserve+(1|PLOT_ID),family="truncnbinom",data=ct_ind2[ct_ind2$Ery_ovi>0,])
+summary(three_way_ev_nb) #not significant
+two_way_ev_nb<-glmmadmb(Ery_ovi~DATE+Treatment+DATE:Treatment+(1|PLOT_ID),family="truncnbinom",data=ct_ind2[ct_ind2$Ery_ovi>0,])
+summary(two_way_ev_nb)
+
+#Gly_tab - curvature at MLE was zero or negative
+three_way_gt_nb<-glmmadmb(Gly_tab~DATE+Treatment+reserve+DATE:Treatment+DATE:Treatment:reserve+(1|PLOT_ID),family="truncnbinom", data=ct_ind2[ct_ind2$Gly_tab>0,])
+summary(three_way_gt_nb)
+two_way_gt_nb<-glmmadmb(Gly_tab~DATE+Treatment+DATE:Treatment+(1|PLOT_ID),family="truncnbinom",data=ct_ind2[ct_ind2$Gly_tab>0,])
+summary(two_way_gt_nb)
+
+#Lom_cor
+three_way_lc_nb<-glmmadmb(Lom_cor~DATE+Treatment+reserve+DATE:Treatment+DATE:Treatment:reserve+(1|PLOT_ID),family="truncnbinom", data=ct_ind2[ct_ind2$Lom_cor>0,])
+summary(three_way_lc_nb)#not significant
+two_way_lc_nb<-glmmadmb(Lom_cor~DATE+Treatment+DATE:Treatment+(1|PLOT_ID),family="truncnbinom",data=ct_ind2[ct_ind2$Lom_cor>0,])
+summary(two_way_lc_nb) #not significant
+
+#Pla_var 3way RANK DEFICIENCY; 2way curvature at MLE was zero or negative
+three_way_pv_nb<-glmmadmb(Pla_var~DATE+Treatment+reserve+DATE:Treatment+DATE:Treatment:reserve+(1|PLOT_ID), family="truncnbinom", data=ct_ind2[ct_ind2$Pla_var>0,])
+summary(three_way_pv_nb)
+two_way_pv_nb<-glmmadmb(Pla_var~DATE+Treatment+DATE:Treatment+(1|PLOT_ID),family="truncnbinom",data=ct_ind2[ct_ind2$Pla_var>0,])
+summary(two_way_pv_nb)
+
+#Tri_ela - curvature at MLE was zero or negative
+three_way_te_nb<-glmmadmb(Tri_ela~DATE+Treatment+reserve+DATE:Treatment+DATE:Treatment:reserve+(1|PLOT_ID), family="truncnbinom", data=ct_ind2[ct_ind2$Tri_ela>0,])
+summary(three_way_te_nb)
+two_way_te_nb<-glmmadmb(Tri_ela~DATE+Treatment+DATE:Treatment+(1|PLOT_ID),family="truncnbinom",data=ct_ind2[ct_ind2$Tri_ela>0,])
+summary(two_way_te_nb)
+
+#Tri_pyg - 2 WAY curvature at MLE was zero or negative
+three_way_tp_nb<-glmmadmb(Tri_pyg~DATE+Treatment+reserve+DATE:Treatment+DATE:Treatment:reserve+(1|PLOT_ID), family="truncnbinom", data=ct_ind2[ct_ind2$Tri_pyg>0,])
+summary(three_way_tp_nb)#not significant
+two_way_tp_nb<-glmmadmb(Tri_pyg~DATE+Treatment+DATE:Treatment+(1|PLOT_ID), family="truncnbinom",data=ct_ind2[ct_ind2$Tri_pyg>0,])
+summary(two_way_tp_nb)
+
+#add columns to ind.sp2 table
+ind.sp2$tnb.2p<-NA
+ind.sp2$tnb.3p<-NA
 
 
 
