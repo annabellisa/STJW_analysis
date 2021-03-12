@@ -2254,20 +2254,33 @@ for (i in 1:length(sp.tomodel)){
 
 # for the count data with zeroes removed, use truncated negative binomial model - in glmmADMB package
 
+# How many data points do we have for the truncated nbin models?
+ind.sp2$data_points<-apply(ct_ind2[,5:ncol(ct_ind2)], 2, function(x) length(which(x>0)))
+
 ind.sp2
-ind.sp2[,c("Sp","count","prop0")]
-rahead(ct_ind2,6,6)
+ind.sp2[,c("Sp","count","prop0", "data_points")]
+rahead(ct_ind2,6,6); dim(ct_ind)
+
+# Let's only fit models where we have more data points than sites (. Anything less is not enough data because we have such a complicated model structure. So remove Art_fim, Pla_var (which was rank deficient anyway - not enough data) and Tri_pyg
+
+# This will leave six species to investigate
+
+# use anova to determine the significance of the three way (anova(3way, 2way)) and the significance of the two way (anova(2way, null_model))
+
+
 
 #Art_fim
-three_way_af_nb<-glmmadmb(Art_fim~DATE+Treatment+reserve+DATE:Treatment+DATE:Treatment:reserve+(1|PLOT_ID), family="truncnbinom", data=ct_ind2[ct_ind2$Art_fim>0,])
-two_way_af_nb<-glmmadmb(Art_fim~DATE+Treatment+DATE:Treatment+(1|PLOT_ID), family="truncnbinom", data=ct_ind2[ct_ind2$Art_fim>0,])
+three_way_af_nb<-glmmadmb(Art_fim~DATE+Treatment+reserve+DATE:Treatment+DATE:Treatment:reserve+(1|PLOT_ID), family="truncnbinom1", data=ct_ind2[ct_ind2$Art_fim>0,])
+two_way_af_nb<-glmmadmb(Art_fim~DATE+Treatment+DATE:Treatment+(1|PLOT_ID), family="truncnbinom1", data=ct_ind2[ct_ind2$Art_fim>0,])
 summary(two_way_af_nb) #only data from one plot (M1)
 
 #Chr_api
-three_way_ca_nb<-glmmadmb(Chr_api~DATE+Treatment+reserve+DATE:Treatment+DATE:Treatment:reserve+(1|PLOT_ID),family="truncnbinom", data=ct_ind2[ct_ind2$Chr_api>0,])
+three_way_ca_nb<-glmmadmb(Chr_api~DATE+Treatment+reserve+DATE:Treatment+DATE:Treatment:reserve+(1|PLOT_ID),family="truncnbinom1", data=ct_ind2[ct_ind2$Chr_api>0,])
 summary(three_way_ca_nb) #significant 
-two_way_ca_nb<-glmmadmb(Chr_api~DATE+Treatment+DATE:Treatment+(1|PLOT_ID), family="truncnbinom", data=ct_ind2[ct_ind2$Chr_api>0,])
+two_way_ca_nb<-glmmadmb(Chr_api~DATE+Treatment+DATE:Treatment+(1|PLOT_ID), family="truncnbinom1", data=ct_ind2[ct_ind2$Chr_api>0,])
 summary(two_way_ca_nb) #not significant
+anova(three_way_ca_nb,two_way_ca_nb) # three way significant
+AIC(three_way_ca_nb); AIC(two_way_ca_nb)
 
 #Des_var - curvature at MLE was zero or negative
 three_way_dv_nb<-glmmadmb(Des_var~DATE+Treatment+reserve+DATE:Treatment+DATE:Treatment:reserve+(1|PLOT_ID),family="truncnbinom", data=ct_ind2[ct_ind2$Des_var>0,])
@@ -2306,9 +2319,10 @@ two_way_te_nb<-glmmadmb(Tri_ela~DATE+Treatment+DATE:Treatment+(1|PLOT_ID),family
 summary(two_way_te_nb)
 
 #Tri_pyg - 2 WAY curvature at MLE was zero or negative
-three_way_tp_nb<-glmmadmb(Tri_pyg~DATE+Treatment+reserve+DATE:Treatment+DATE:Treatment:reserve+(1|PLOT_ID), family="truncnbinom", data=ct_ind2[ct_ind2$Tri_pyg>0,])
+three_way_tp_nb<-glmmadmb(Tri_pyg~DATE+Treatment+reserve+DATE:Treatment+DATE:Treatment:reserve+(1|PLOT_ID), family="truncnbinom1", data=ct_ind2[ct_ind2$Tri_pyg>0,])
 summary(three_way_tp_nb)#not significant
-two_way_tp_nb<-glmmadmb(Tri_pyg~DATE+Treatment+DATE:Treatment+(1|PLOT_ID), family="truncnbinom",data=ct_ind2[ct_ind2$Tri_pyg>0,])
+two_way_tp_nb<-glmmadmb(Tri_pyg~DATE+Treatment+DATE:Treatment+(1|PLOT_ID), family="truncnbinom1",data=ct_ind2[ct_ind2$Tri_pyg>0,])
+anova(three_way_tp_nb,two_way_tp_nb) # three way not significant
 summary(two_way_tp_nb)
 
 #add columns to ind.sp2 table
