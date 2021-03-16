@@ -2047,7 +2047,7 @@ two_way_Wur_dio<-glmer(Wur_dio~DATE+Treatment+reserve+DATE:Treatment+(1|PLOT_ID)
 noint_Wur_dio<-glmer(Wur_dio~DATE+Treatment+reserve+(1|PLOT_ID), family="binomial", data=ind_po)
 summary(two_way_Wur_dio) 
 anova(three_way_Wur_dio,two_way_Wur_dio) 
-anova(two_way_Wur_dio, noint_Wur_dio) #high p values
+anova(two_way_Wur_dio, noint_Wur_dio) 
 
 Wur_dio3way<-anova(three_way_Wur_dio,two_way_Wur_dio)
 Wur_dio2way<-anova(two_way_Wur_dio, noint_Wur_dio)
@@ -2168,6 +2168,8 @@ ind.sp<-tidy.df(ind.sp)
 
 #predictions  
 nd1<-data.frame(DATE=rep(c(0,1,2),rep(3,3)),Treatment=as.factor(c("C","A","B")),reserve=c(rep("J",9),rep("M",9)))
+?glmer
+?glmmADMB
 
 Art_fim_pr<-pred(model=two_way_Art_fim, new.data = nd1,se.fit = T,type="response")
 Chr_api_pr<-pred(model=two_way_Wur_dio,new.data=nd1,se.fit=T,type="response")
@@ -2264,70 +2266,123 @@ rahead(ct_ind2,6,6); dim(ct_ind)
 # Let's only fit models where we have more data points than sites (. Anything less is not enough data because we have such a complicated model structure. So remove Art_fim, Pla_var (which was rank deficient anyway - not enough data) and Tri_pyg
 
 # This will leave six species to investigate
+ind.sp2<-ind.sp2[-which(ind.sp2$Sp=="Art_fim"),]
+ind.sp2<-ind.sp2[-which(ind.sp2$Sp=="Pla_var"),]
+ind.sp2<-ind.sp2[-which(ind.sp2$Sp=="Tri_pyg"),]
+ind.sp2<-tidy.df(ind.sp2)
+
+# save.image("03_Workspaces/stjw_analysis.RData")
 
 # use anova to determine the significance of the three way (anova(3way, 2way)) and the significance of the two way (anova(2way, null_model))
-
-
-
-#Art_fim
-three_way_af_nb<-glmmadmb(Art_fim~DATE+Treatment+reserve+DATE:Treatment+DATE:Treatment:reserve+(1|PLOT_ID), family="truncnbinom1", data=ct_ind2[ct_ind2$Art_fim>0,])
-two_way_af_nb<-glmmadmb(Art_fim~DATE+Treatment+DATE:Treatment+(1|PLOT_ID), family="truncnbinom1", data=ct_ind2[ct_ind2$Art_fim>0,])
-summary(two_way_af_nb) #only data from one plot (M1)
 
 #Chr_api
 three_way_ca_nb<-glmmadmb(Chr_api~DATE+Treatment+reserve+DATE:Treatment+DATE:Treatment:reserve+(1|PLOT_ID),family="truncnbinom1", data=ct_ind2[ct_ind2$Chr_api>0,])
 summary(three_way_ca_nb) #significant 
 two_way_ca_nb<-glmmadmb(Chr_api~DATE+Treatment+DATE:Treatment+(1|PLOT_ID), family="truncnbinom1", data=ct_ind2[ct_ind2$Chr_api>0,])
 summary(two_way_ca_nb) #not significant
-anova(three_way_ca_nb,two_way_ca_nb) # three way significant
+noint_ca_nb<-glmmadmb(Chr_api~DATE+Treatment+reserve+(1|PLOT_ID), family="truncnbinom1", data=ct_ind2[ct_ind2$Chr_api>0,])
+anova(three_way_ca_nb,two_way_ca_nb) #significant 3 way 
+anova(two_way_ca_nb,noint_ca_nb) #significant 2 way
 AIC(three_way_ca_nb); AIC(two_way_ca_nb)
 
-#Des_var - curvature at MLE was zero or negative
-three_way_dv_nb<-glmmadmb(Des_var~DATE+Treatment+reserve+DATE:Treatment+DATE:Treatment:reserve+(1|PLOT_ID),family="truncnbinom", data=ct_ind2[ct_ind2$Des_var>0,])
-summary(three_way_dv_nb)
-two_way_dv_nb<-glmmadmb(Des_var~DATE+Treatment+DATE:Treatment+(1|PLOT_ID), family="truncnbinom", data=ct_ind2[ct_ind2$Des_var>0,])
-summary(two_way_dv_nb)
+Chrapi_3waynb<-anova(three_way_ca_nb,two_way_ca_nb)
+Chrapi_2waynb<-anova(two_way_ca_nb,noint_ca_nb)
 
-#Ery_ovi - 2 WAY curvature at MLE was zero or negative
-three_way_ev_nb<-glmmadmb(Ery_ovi~DATE+Treatment+reserve+DATE:Treatment+DATE:Treatment:reserve+(1|PLOT_ID),family="truncnbinom",data=ct_ind2[ct_ind2$Ery_ovi>0,])
-summary(three_way_ev_nb) #not significant
-two_way_ev_nb<-glmmadmb(Ery_ovi~DATE+Treatment+DATE:Treatment+(1|PLOT_ID),family="truncnbinom",data=ct_ind2[ct_ind2$Ery_ovi>0,])
-summary(two_way_ev_nb)
+#Des_var 
+three_way_dv_nb<-glmmadmb(Des_var~DATE+Treatment+reserve+DATE:Treatment+DATE:Treatment:reserve+(1|PLOT_ID),family="truncnbinom1", data=ct_ind2[ct_ind2$Des_var>0,])
+summary(three_way_dv_nb) #not significant
+two_way_dv_nb<-glmmadmb(Des_var~DATE+Treatment+DATE:Treatment+(1|PLOT_ID), family="truncnbinom1", data=ct_ind2[ct_ind2$Des_var>0,])
+summary(two_way_dv_nb) #not significant
+noint_dv_nb<-glmmadmb(Des_var~DATE+Treatment+reserve+(1|PLOT_ID), family="truncnbinom1", data=ct_ind2[ct_ind2$Des_var>0,])
+anova(three_way_dv_nb,two_way_dv_nb) #not signigicant 
+anova(two_way_dv_nb, noint_dv_nb) #significant 2 way
+AIC(three_way_dv_nb); AIC(two_way_dv_nb)
 
-#Gly_tab - curvature at MLE was zero or negative
-three_way_gt_nb<-glmmadmb(Gly_tab~DATE+Treatment+reserve+DATE:Treatment+DATE:Treatment:reserve+(1|PLOT_ID),family="truncnbinom", data=ct_ind2[ct_ind2$Gly_tab>0,])
-summary(three_way_gt_nb)
-two_way_gt_nb<-glmmadmb(Gly_tab~DATE+Treatment+DATE:Treatment+(1|PLOT_ID),family="truncnbinom",data=ct_ind2[ct_ind2$Gly_tab>0,])
-summary(two_way_gt_nb)
+Desvar_3waynb<-anova(three_way_dv_nb,two_way_dv_nb)
+Desvar_2waynb<-anova(two_way_dv_nb, noint_dv_nb)
+
+#Ery_ovi 
+three_way_eo_nb<-glmmadmb(Ery_ovi~DATE+Treatment+reserve+DATE:Treatment+DATE:Treatment:reserve+(1|PLOT_ID),family="truncnbinom1",data=ct_ind2[ct_ind2$Ery_ovi>0,])
+summary(three_way_eo_nb) #not significant
+two_way_eo_nb<-glmmadmb(Ery_ovi~DATE+Treatment+DATE:Treatment+(1|PLOT_ID),family="truncnbinom1",data=ct_ind2[ct_ind2$Ery_ovi>0,])
+summary(two_way_eo_nb) #not significant
+noint_eo_nb<-glmmadmb(Ery_ovi~DATE+Treatment+reserve+(1|PLOT_ID), family="truncnbinom1", data=ct_ind2[ct_ind2$Ery_ovi>0,])
+anova(three_way_eo_nb,two_way_eo_nb) #significant 3way
+anova(two_way_eo_nb, noint_eo_nb) #not significant
+AIC(three_way_eo_nb); AIC(two_way_eo_nb)
+
+Eryovi_3waynb<-anova(three_way_eo_nb,two_way_eo_nb)
+Eryovi_2waynb<-anova(two_way_eo_nb, noint_eo_nb)
+
+#Gly_tab - NOT WORKING
+three_way_gt_nb<-glmmadmb(Gly_tab~DATE+Treatment+reserve+DATE:Treatment+DATE:Treatment:reserve+(1|PLOT_ID),family="truncnbinom1", data=ct_ind2[ct_ind2$Gly_tab>0,])
+summary(three_way_gt_nb) # curvature at MLE was zero or negative
+two_way_gt_nb<-glmmadmb(Gly_tab~DATE+Treatment+DATE:Treatment+(1|PLOT_ID),family="truncnbinom1",data=ct_ind2[ct_ind2$Gly_tab>0,])
+summary(two_way_gt_nb) #not significant
+noint_gt_nb<-glmmadmb(Gly_tab~DATE+Treatment+reserve+(1|PLOT_ID), family="truncnbinom1", data=ct_ind2[ct_ind2$Gly_tab>0,]) #curvature at MLE was zero or negative
+anova(three_way_gt_nb,two_way_gt_nb) 
+anova(two_way_gt_nb, noint_gt_nb) 
+AIC(three_way_gt_nb); AIC(two_way_gt_nb)
+
 
 #Lom_cor
-three_way_lc_nb<-glmmadmb(Lom_cor~DATE+Treatment+reserve+DATE:Treatment+DATE:Treatment:reserve+(1|PLOT_ID),family="truncnbinom", data=ct_ind2[ct_ind2$Lom_cor>0,])
+three_way_lc_nb<-glmmadmb(Lom_cor~DATE+Treatment+reserve+DATE:Treatment+DATE:Treatment:reserve+(1|PLOT_ID),family="truncnbinom1", data=ct_ind2[ct_ind2$Lom_cor>0,])
 summary(three_way_lc_nb)#not significant
-two_way_lc_nb<-glmmadmb(Lom_cor~DATE+Treatment+DATE:Treatment+(1|PLOT_ID),family="truncnbinom",data=ct_ind2[ct_ind2$Lom_cor>0,])
+two_way_lc_nb<-glmmadmb(Lom_cor~DATE+Treatment+DATE:Treatment+(1|PLOT_ID),family="truncnbinom1",data=ct_ind2[ct_ind2$Lom_cor>0,])
 summary(two_way_lc_nb) #not significant
+noint_lc_nb<-glmmadmb(Lom_cor~DATE+Treatment+reserve+(1|PLOT_ID), family="truncnbinom1", data=ct_ind2[ct_ind2$Lom_cor>0,]) 
+anova(three_way_lc_nb,two_way_lc_nb) #significant 3way
+anova(two_way_lc_nb, noint_lc_nb) #not significant
+AIC(three_way_lc_nb); AIC(two_way_lc_nb)
 
-#Pla_var 3way RANK DEFICIENCY; 2way curvature at MLE was zero or negative
-three_way_pv_nb<-glmmadmb(Pla_var~DATE+Treatment+reserve+DATE:Treatment+DATE:Treatment:reserve+(1|PLOT_ID), family="truncnbinom", data=ct_ind2[ct_ind2$Pla_var>0,])
-summary(three_way_pv_nb)
-two_way_pv_nb<-glmmadmb(Pla_var~DATE+Treatment+DATE:Treatment+(1|PLOT_ID),family="truncnbinom",data=ct_ind2[ct_ind2$Pla_var>0,])
-summary(two_way_pv_nb)
+Lomcor_3waynb<-anova(three_way_lc_nb,two_way_lc_nb)
+Lomcor_2waynb<-anova(two_way_lc_nb, noint_lc_nb)
 
-#Tri_ela - curvature at MLE was zero or negative
-three_way_te_nb<-glmmadmb(Tri_ela~DATE+Treatment+reserve+DATE:Treatment+DATE:Treatment:reserve+(1|PLOT_ID), family="truncnbinom", data=ct_ind2[ct_ind2$Tri_ela>0,])
-summary(three_way_te_nb)
-two_way_te_nb<-glmmadmb(Tri_ela~DATE+Treatment+DATE:Treatment+(1|PLOT_ID),family="truncnbinom",data=ct_ind2[ct_ind2$Tri_ela>0,])
-summary(two_way_te_nb)
+#Tri_ela 
+three_way_te_nb<-glmmadmb(Tri_ela~DATE+Treatment+reserve+DATE:Treatment+DATE:Treatment:reserve+(1|PLOT_ID), family="truncnbinom1", data=ct_ind2[ct_ind2$Tri_ela>0,])
+summary(three_way_te_nb) #not significant
+two_way_te_nb<-glmmadmb(Tri_ela~DATE+Treatment+DATE:Treatment+(1|PLOT_ID),family="truncnbinom1",data=ct_ind2[ct_ind2$Tri_ela>0,])
+summary(two_way_te_nb) #not significant
+noint_te_nb<-glmmadmb(Tri_ela~DATE+Treatment+reserve+(1|PLOT_ID), family="truncnbinom1", data=ct_ind2[ct_ind2$Tri_ela>0,]) 
+anova(three_way_te_nb,two_way_te_nb) #not significant
+anova(two_way_te_nb, noint_te_nb) #not significant
+AIC(three_way_te_nb); AIC(two_way_te_nb)
 
-#Tri_pyg - 2 WAY curvature at MLE was zero or negative
-three_way_tp_nb<-glmmadmb(Tri_pyg~DATE+Treatment+reserve+DATE:Treatment+DATE:Treatment:reserve+(1|PLOT_ID), family="truncnbinom1", data=ct_ind2[ct_ind2$Tri_pyg>0,])
-summary(three_way_tp_nb)#not significant
-two_way_tp_nb<-glmmadmb(Tri_pyg~DATE+Treatment+DATE:Treatment+(1|PLOT_ID), family="truncnbinom1",data=ct_ind2[ct_ind2$Tri_pyg>0,])
-anova(three_way_tp_nb,two_way_tp_nb) # three way not significant
-summary(two_way_tp_nb)
+Triela_3waynb<-anova(three_way_te_nb,two_way_te_nb)
+Triela_2waynb<-anova(two_way_te_nb, noint_te_nb)
+
 
 #add columns to ind.sp2 table
-ind.sp2$tnb.2p<-NA
 ind.sp2$tnb.3p<-NA
+ind.sp2$tnb.2p<-NA
+
+ind.sp2$tnb.2p[which(ind.sp2$Sp=="Chr_api")]<-Chrapi_2waynb[2,5]
+ind.sp2$tnb.3p[which(ind.sp2$Sp=="Chr_api")]<-Chrapi_3waynb[2,5]
+
+ind.sp2$tnb.2p[which(ind.sp2$Sp=="Des_var")]<-Desvar_2waynb[2,5]
+ind.sp2$tnb.3p[which(ind.sp2$Sp=="Des_var")]<-Desvar_3waynb[2,5]
+
+ind.sp2$tnb.2p[which(ind.sp2$Sp=="Ery_ovi")]<-Eryovi_2waynb[2,5]
+ind.sp2$tnb.3p[which(ind.sp2$Sp=="Ery_ovi")]<-Eryovi_3waynb[2,5]
+
+ind.sp2$tnb.2p[which(ind.sp2$Sp=="Gly_tab")]<-Glytab_2waynb[2,5]
+ind.sp2$tnb.3p[which(ind.sp2$Sp=="Gly_tab")]<-Glytab_3waynb[2,5] #NOT WORKING
+
+ind.sp2$tnb.2p[which(ind.sp2$Sp=="Lom_cor")]<-Lomcor_2waynb[2,5]
+ind.sp2$tnb.3p[which(ind.sp2$Sp=="Lom_cor")]<-Lomcor_3waynb[2,5]
+
+ind.sp2$tnb.2p[which(ind.sp2$Sp=="Tri_ela")]<-Triela_2waynb[2,5]
+ind.sp2$tnb.3p[which(ind.sp2$Sp=="Tri_ela")]<-Triela_3waynb[2,5]
+
+# save.image("03_Workspaces/stjw_analysis.RData")
+
+#Preds
+
+#predictions  
+nd1<-data.frame(DATE=rep(c(0,1,2),rep(3,3)),Treatment=as.factor(c("C","A","B")),reserve=c(rep("J",9),rep("M",9)))
+
+Chr_api_nbpr<-pred(model=Chrapi_3waynb, new.data = nd1,se.fit = T,type="response") 
+
 
 
 
