@@ -2168,8 +2168,6 @@ ind.sp<-tidy.df(ind.sp)
 
 #predictions  
 nd1<-data.frame(DATE=rep(c(0,1,2),rep(3,3)),Treatment=as.factor(c("C","A","B")),reserve=c(rep("J",9),rep("M",9)))
-?glmer
-?glmmADMB
 
 Art_fim_pr<-pred(model=two_way_Art_fim, new.data = nd1,se.fit = T,type="response")
 Chr_api_pr<-pred(model=two_way_Wur_dio,new.data=nd1,se.fit=T,type="response")
@@ -2234,6 +2232,8 @@ par(xpd=F)
 
 #Individual species modeling:
 #remove Wur_dio since it has only 31 counts, which is less than 48 (we have 48 quadrats)
+
+
 ind.sp2<-ind.sp[-which(ind.sp$Sp=="Wur_dio"),]
 ind.sp2<-tidy.df(ind.sp2)
 ind.sp2[,c("Sp","count","prop0")]
@@ -2374,31 +2374,78 @@ ind.sp2$tnb.3p[which(ind.sp2$Sp=="Lom_cor")]<-Lomcor_3waynb[2,5]
 ind.sp2$tnb.2p[which(ind.sp2$Sp=="Tri_ela")]<-Triela_2waynb[2,5]
 ind.sp2$tnb.3p[which(ind.sp2$Sp=="Tri_ela")]<-Triela_3waynb[2,5]
 
-# save.image("03_Workspaces/stjw_analysis.RData")
-
-#Preds
 
 #predictions  
 nd1<-data.frame(DATE=rep(c(0,1,2),rep(3,3)),Treatment=as.factor(c("C","A","B")),reserve=c(rep("J",9),rep("M",9)))
 
-Chr_api_nbpr<-pred(model=Chrapi_3waynb, new.data = nd1,se.fit = T,type="response") 
+Chr_api_nbpr<-pred(model=three_way_ca_nb, new.data = nd1,se.fit = T,type="response") 
 
+Ery_ovi_nbpr<-pred(model=three_way_af_nb,new.data = nd1, se.fit=T, type="response")
 
+Lom_cor_nbpr<-pred(model=three_way_lc_nb, new.data=nd1, se.fit=T,type="response")
+  
+Des_var_nbpr<-pred(model=two_way_dv_nb,new.data=nd1,type="response",se.fit=T)
 
+Gly_tab_ndpr<-pred(model=two_way_gt_nb, new.data=nd1, type="response", se.fit=T)
 
+Tri_ela_ndpr<-pred(model=two_way_te_nb, new.data=nd1, type="response", se.fit=T)
+
+#save.image("03_Workspaces/stjw_analysis.RData")
 
 
 #PLots
 
-dev.new(width=8, height=8, dpi=80, pointsize=16,noRStudioGD = T)
-par(mfrow=c(3,3),mar=c(4,4,2,1), oma=c(0,0,0,0), mgp=c(2.5,1,0))
+ind.sp2[which(ind.sp2$tnb.3p<0.05),]
+ind.sp2[which(ind.sp2$tnb.2p<0.05),]
 
-for (i in 1:length(sp.tomodel)){
-  sp.thisrun<-sp.tomodel[i]
-  data.thisrun<-cv_ind2[,sp.thisrun]
-  hist(data.thisrun, xlab="", ylab="", main=sp.thisrun, font.main=1)
-  
-} # close for
+#plot species that are significant:
+summary(three_way_ca_nb) #final model
+summary(three_way_eo_nb) #final model
+summary(three_way_lc_nb)#final model
+summary(two_way_dv_nb) #final model
+
+
+head(Chr_api_nbpr,3)
+head(Ery_ovi_nbpr,3)
+head(Lom_cor_nbpr,3)
+head(Des_var_nbpr,3)
+
+sp.tomodel<-ind.sp2$Sp
+
+dev.new(width=10, height=4, dpi=100, pointsize=16,noRStudioGD = T)
+par(mfrow=c(1,2),mar=c(4,4,2,1), oma=c(0,0,0,6), mgp=c(2.5,1,0))
+
+xofs<-0.2
+arrowlgth<-0.02
+
+ca_nbpr_M<-Chr_api_nbpr[which(Chr_api_nbpr$reserve=="M"),]
+eo_nbpr_M<-Ery_ovi_nbpr[which(Ery_ovi_nbpr$reserve=="M"),]
+lc_nbpr_M<-Lom_cor_nbpr[which(Lom_cor_nbpr$reserve=="M"),]
+dv_nbpr_M<-Des_var_nbpr[which(Des_var_nbpr$reserve=="M"),]
+
+## Chr_api - ylim values "Inf"
+plot(ca_nbpr_M$DATE[ca_nbpr_M$Treatment=="C" ]-xofs,ca_nbpr_M$fit[ca_nbpr_M$Treatment=="C"], pch=15, ylim=c(min(ca_nbpr_M$lci), max(ca_nbpr_M$uci)), xlim=c(-0.3,2.3), xaxt="n", xlab="Year", ylab="Chrysocephalum apiculatum occurrence", las=1)
+axis(side = 1, at=c(0,1,2), labels=c(2017,2018,2019))
+
+arrows(ca_nbpr_M$DATE[ca_nbpr_M$Treatment=="C"]-xofs,ca_nbpr_M$lci[ca_nbpr_M$Treatment=="C"],ca_nbpr_M$DATE[ca_nbpr_M$Treatment=="C"]-xofs,ca_nbpr_M$uci[ca_nbpr_M$Treatment=="C"], code=3, angle=90, length=arrowlgth)
+
+points(ca_nbpr_M$DATE[ca_nbpr_M$Treatment=="A"],ca_nbpr_M$fit[ca_nbpr_M$Treatment=="A"], pch=15, col="red")
+arrows(ca_nbpr_M$DATE[ca_nbpr_M$Treatment=="A"],ca_nbpr_M$lci[ca_nbpr_M$Treatment=="A"],ca_nbpr_M$DATE[ca_nbpr_M$Treatment=="A"],ca_nbpr_M$uci[ca_nbpr_M$Treatment=="A"], code=3, angle=90, length=arrowlgth, col="red")
+points(ca_nbpr_M$DATE[ca_nbpr_M$Treatment=="B"]+xofs,ca_nbpr_M$fit[ca_nbpr_M$Treatment=="B"], pch=15, col="blue")
+arrows(ca_nbpr_M$DATE[ca_nbpr_M$Treatment=="B"]+xofs,ca_nbpr_M$lci[ca_nbpr_M$Treatment=="B"],ca_nbpr_M$DATE[ca_nbpr_M$Treatment=="B"]+xofs,ca_nbpr_M$uci[ca_nbpr_M$Treatment=="B"], code=3, angle=90, length=arrowlgth, col="blue")
+
+
+
+##Ery_ovi
+plot(eo_nbpr_M$DATE[eo_nbpr_M$Treatment=="C" ]-xofs,eo_nbpr_M$fit[eo_nbpr_M$Treatment=="C"], pch=15, ylim=c(min(eo_nbpr_M$lci), max(eo_nbpr_M$uci)), xlim=c(-0.3,2.3), xaxt="n", xlab="Year", ylab="Eryngium ovinum occurrence", las=1)
+axis(side = 1, at=c(0,1,2), labels=c(2017,2018,2019))
+
+arrows(eo_nbpr_M$DATE[eo_nbpr_M$Treatment=="C"]-xofs,eo_nbpr_M$lci[eo_nbpr_M$Treatment=="C"],eo_nbpr_M$DATE[eo_nbpr_M$Treatment=="C"]-xofs,eo_nbpr_M$uci[eo_nbpr_M$Treatment=="C"], code=3, angle=90, length=arrowlgth)
+
+points(eo_nbpr_M$DATE[eo_nbpr_M$Treatment=="A"],eo_nbpr_M$fit[eo_nbpr_M$Treatment=="A"], pch=15, col="red")
+arrows(eo_nbpr_M$DATE[eo_nbpr_M$Treatment=="A"],eo_nbpr_M$lci[eo_nbpr_M$Treatment=="A"],eo_nbpr_M$DATE[eo_nbpr_M$Treatment=="A"],eo_nbpr_M$uci[eo_nbpr_M$Treatment=="A"], code=3, angle=90, length=arrowlgth, col="red")
+points(eo_nbpr_M$DATE[eo_nbpr_M$Treatment=="B"]+xofs,eo_nbpr_M$fit[eo_nbpr_M$Treatment=="B"], pch=15, col="blue")
+arrows(eo_nbpr_M$DATE[eo_nbpr_M$Treatment=="B"]+xofs,eo_nbpr_M$lci[eo_nbpr_M$Treatment=="B"],eo_nbpr_M$DATE[eo_nbpr_M$Treatment=="B"]+xofs,eo_nbpr_M$uci[eo_nbpr_M$Treatment=="B"], code=3, angle=90, length=arrowlgth, col="blue")
 
 
 rahead(cv_ind2,6,6);dim(cv_ind2)
