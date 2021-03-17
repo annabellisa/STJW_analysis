@@ -2275,8 +2275,17 @@ ind.sp2<-tidy.df(ind.sp2)
 
 # use anova to determine the significance of the three way (anova(3way, 2way)) and the significance of the two way (anova(2way, null_model))
 
+unique(ct_ind2$DATE)
+ct_ind2$DATE<-ct_ind2$DATE-min(unique(ct_ind2$DATE))
+rahead(ct_ind2,6,6)
+
+
 #Chr_api
 three_way_ca_nb<-glmmadmb(Chr_api~DATE+Treatment+reserve+DATE:Treatment+DATE:Treatment:reserve+(1|PLOT_ID),family="truncnbinom1", data=ct_ind2[ct_ind2$Chr_api>0,])
+
+two_way_ca_nb<-glmer(Chr_api~DATE+Treatment+reserve+DATE:Treatment+(1|PLOT_ID), family="poisson", data=ct_ind2)
+summary(two_way_ca_nb)
+
 summary(three_way_ca_nb) #significant 
 two_way_ca_nb<-glmmadmb(Chr_api~DATE+Treatment+DATE:Treatment+(1|PLOT_ID), family="truncnbinom1", data=ct_ind2[ct_ind2$Chr_api>0,])
 summary(two_way_ca_nb) #not significant
@@ -2376,15 +2385,28 @@ ind.sp2$tnb.3p[which(ind.sp2$Sp=="Tri_ela")]<-Triela_3waynb[2,5]
 
 
 #predictions  
-nd1<-data.frame(DATE=rep(c(0,1,2),rep(3,3)),Treatment=as.factor(c("C","A","B")),reserve=c(rep("J",9),rep("M",9)))
+
+# when using the pred function on glmmadmb (i.e. not glmer, for which the pred function uses predictSE), we need to make sure the levels in the new data frame match the levels in the data that were modelled. 
+nd1<-data.frame(DATE=rep(c(0,1,2),rep(3,3)),Treatment=factor(c("C","A","B"), levels=c("C","A","B")),reserve=factor(c(rep("J",9),rep("M",9)),levels=c("J","M")))
 
 Chr_api_nbpr<-pred(model=three_way_ca_nb, new.data = nd1,se.fit = T,type="response") 
+
+Chr_api_nbpr_2way<-pred(model=two_way_ca_nb, new.data = nd1,se.fit = T,type="response") 
+
+summary(two_way_ca_nb)$coefficients
+
+model=three_way_ca_nb
+new.data=nd1
+se.fit=T
+type="response"
 
 Ery_ovi_nbpr<-pred(model=three_way_af_nb,new.data = nd1, se.fit=T, type="response")
 
 Lom_cor_nbpr<-pred(model=three_way_lc_nb, new.data=nd1, se.fit=T,type="response")
   
 Des_var_nbpr<-pred(model=two_way_dv_nb,new.data=nd1,type="response",se.fit=T)
+head(Des_var_nbpr)
+
 
 Gly_tab_ndpr<-pred(model=two_way_gt_nb, new.data=nd1, type="response", se.fit=T)
 
