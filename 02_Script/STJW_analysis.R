@@ -2279,7 +2279,6 @@ unique(ct_ind2$DATE)
 ct_ind2$DATE<-ct_ind2$DATE-min(unique(ct_ind2$DATE))
 rahead(ct_ind2,6,6)
 
-
 #Chr_api
 three_way_ca_nb<-glmmadmb(Chr_api~DATE+Treatment+reserve+DATE:Treatment+DATE:Treatment:reserve+(1|PLOT_ID),family="truncnbinom1", data=ct_ind2[ct_ind2$Chr_api>0,])
 
@@ -2287,7 +2286,7 @@ two_way_ca_nb<-glmer(Chr_api~DATE+Treatment+reserve+DATE:Treatment+(1|PLOT_ID), 
 summary(two_way_ca_nb)
 
 summary(three_way_ca_nb) #significant 
-two_way_ca_nb<-glmmadmb(Chr_api~DATE+Treatment+DATE:Treatment+(1|PLOT_ID), family="truncnbinom1", data=ct_ind2[ct_ind2$Chr_api>0,])
+two_way_ca_nb<-glmmadmb(Chr_api~DATE+Treatment+reserve+DATE:Treatment+(1|PLOT_ID), family="truncnbinom1", data=ct_ind2[ct_ind2$Chr_api>0,])
 summary(two_way_ca_nb) #not significant
 noint_ca_nb<-glmmadmb(Chr_api~DATE+Treatment+reserve+(1|PLOT_ID), family="truncnbinom1", data=ct_ind2[ct_ind2$Chr_api>0,])
 anova(three_way_ca_nb,two_way_ca_nb) #significant 3 way 
@@ -2300,7 +2299,7 @@ Chrapi_2waynb<-anova(two_way_ca_nb,noint_ca_nb)
 #Des_var 
 three_way_dv_nb<-glmmadmb(Des_var~DATE+Treatment+reserve+DATE:Treatment+DATE:Treatment:reserve+(1|PLOT_ID),family="truncnbinom1", data=ct_ind2[ct_ind2$Des_var>0,])
 summary(three_way_dv_nb) #not significant
-two_way_dv_nb<-glmmadmb(Des_var~DATE+Treatment+DATE:Treatment+(1|PLOT_ID), family="truncnbinom1", data=ct_ind2[ct_ind2$Des_var>0,])
+two_way_dv_nb<-glmmadmb(Des_var~DATE+Treatment+reserve+DATE:Treatment+(1|PLOT_ID), family="truncnbinom1", data=ct_ind2[ct_ind2$Des_var>0,])
 summary(two_way_dv_nb) #not significant
 noint_dv_nb<-glmmadmb(Des_var~DATE+Treatment+reserve+(1|PLOT_ID), family="truncnbinom1", data=ct_ind2[ct_ind2$Des_var>0,])
 anova(three_way_dv_nb,two_way_dv_nb) #not signigicant 
@@ -2313,7 +2312,7 @@ Desvar_2waynb<-anova(two_way_dv_nb, noint_dv_nb)
 #Ery_ovi 
 three_way_eo_nb<-glmmadmb(Ery_ovi~DATE+Treatment+reserve+DATE:Treatment+DATE:Treatment:reserve+(1|PLOT_ID),family="truncnbinom1",data=ct_ind2[ct_ind2$Ery_ovi>0,])
 summary(three_way_eo_nb) #not significant
-two_way_eo_nb<-glmmadmb(Ery_ovi~DATE+Treatment+DATE:Treatment+(1|PLOT_ID),family="truncnbinom1",data=ct_ind2[ct_ind2$Ery_ovi>0,])
+two_way_eo_nb<-glmmadmb(Ery_ovi~DATE+Treatment+reserve+DATE:Treatment+(1|PLOT_ID),family="truncnbinom1",data=ct_ind2[ct_ind2$Ery_ovi>0,])
 summary(two_way_eo_nb) #not significant
 noint_eo_nb<-glmmadmb(Ery_ovi~DATE+Treatment+reserve+(1|PLOT_ID), family="truncnbinom1", data=ct_ind2[ct_ind2$Ery_ovi>0,])
 anova(three_way_eo_nb,two_way_eo_nb) #significant 3way
@@ -2323,24 +2322,26 @@ AIC(three_way_eo_nb); AIC(two_way_eo_nb)
 Eryovi_3waynb<-anova(three_way_eo_nb,two_way_eo_nb)
 Eryovi_2waynb<-anova(two_way_eo_nb, noint_eo_nb)
 
-#Gly_tab - NOT WORKING
+#Gly_tab - 2 way not working
 three_way_gt_nb<-glmmadmb(Gly_tab~DATE+Treatment+reserve+DATE:Treatment+DATE:Treatment:reserve+(1|PLOT_ID),family="truncnbinom1", data=ct_ind2[ct_ind2$Gly_tab>0,])
-summary(three_way_gt_nb) # curvature at MLE was zero or negative
-two_way_gt_nb<-glmmadmb(Gly_tab~DATE+Treatment+DATE:Treatment+(1|PLOT_ID),family="truncnbinom1",data=ct_ind2[ct_ind2$Gly_tab>0,])
+summary(three_way_gt_nb) 
+two_way_gt_nb<-glmmadmb(Gly_tab~DATE+Treatment+reserve+DATE:Treatment+(1|PLOT_ID),family="truncnbinom1",data=ct_ind2[ct_ind2$Gly_tab>0,])
 summary(two_way_gt_nb) #not significant
-noint_gt_nb<-glmmadmb(Gly_tab~DATE+Treatment+reserve+(1|PLOT_ID), family="truncnbinom1", data=ct_ind2[ct_ind2$Gly_tab>0,]) #curvature at MLE was zero or negative
+noint_gt_nb<-glmmadmb(Gly_tab~DATE+Treatment+reserve+(1|PLOT_ID), family="truncnbinom1", data=ct_ind2[ct_ind2$Gly_tab>0,]) #ERROR curvature at MLE was zero or negative
 anova(three_way_gt_nb,two_way_gt_nb) 
 anova(two_way_gt_nb, noint_gt_nb) 
 AIC(three_way_gt_nb); AIC(two_way_gt_nb)
 
+Glytab_3waynb<-anova(three_way_gt_nb,two_way_gt_nb)
+Glytab_2waynb<-anova(two_way_gt_nb, noint_gt_nb) #not working 
 
 #Lom_cor
 three_way_lc_nb<-glmmadmb(Lom_cor~DATE+Treatment+reserve+DATE:Treatment+DATE:Treatment:reserve+(1|PLOT_ID),family="truncnbinom1", data=ct_ind2[ct_ind2$Lom_cor>0,])
 summary(three_way_lc_nb)#not significant
-two_way_lc_nb<-glmmadmb(Lom_cor~DATE+Treatment+DATE:Treatment+(1|PLOT_ID),family="truncnbinom1",data=ct_ind2[ct_ind2$Lom_cor>0,])
+two_way_lc_nb<-glmmadmb(Lom_cor~DATE+Treatment+reserve+DATE:Treatment+(1|PLOT_ID),family="truncnbinom1",data=ct_ind2[ct_ind2$Lom_cor>0,])
 summary(two_way_lc_nb) #not significant
 noint_lc_nb<-glmmadmb(Lom_cor~DATE+Treatment+reserve+(1|PLOT_ID), family="truncnbinom1", data=ct_ind2[ct_ind2$Lom_cor>0,]) 
-anova(three_way_lc_nb,two_way_lc_nb) #significant 3way
+anova(three_way_lc_nb,two_way_lc_nb) #very highly significant 3way- check
 anova(two_way_lc_nb, noint_lc_nb) #not significant
 AIC(three_way_lc_nb); AIC(two_way_lc_nb)
 
@@ -2350,7 +2351,7 @@ Lomcor_2waynb<-anova(two_way_lc_nb, noint_lc_nb)
 #Tri_ela 
 three_way_te_nb<-glmmadmb(Tri_ela~DATE+Treatment+reserve+DATE:Treatment+DATE:Treatment:reserve+(1|PLOT_ID), family="truncnbinom1", data=ct_ind2[ct_ind2$Tri_ela>0,])
 summary(three_way_te_nb) #not significant
-two_way_te_nb<-glmmadmb(Tri_ela~DATE+Treatment+DATE:Treatment+(1|PLOT_ID),family="truncnbinom1",data=ct_ind2[ct_ind2$Tri_ela>0,])
+two_way_te_nb<-glmmadmb(Tri_ela~DATE+Treatment+reserve+DATE:Treatment+(1|PLOT_ID),family="truncnbinom1",data=ct_ind2[ct_ind2$Tri_ela>0,])
 summary(two_way_te_nb) #not significant
 noint_te_nb<-glmmadmb(Tri_ela~DATE+Treatment+reserve+(1|PLOT_ID), family="truncnbinom1", data=ct_ind2[ct_ind2$Tri_ela>0,]) 
 anova(three_way_te_nb,two_way_te_nb) #not significant
@@ -2359,7 +2360,6 @@ AIC(three_way_te_nb); AIC(two_way_te_nb)
 
 Triela_3waynb<-anova(three_way_te_nb,two_way_te_nb)
 Triela_2waynb<-anova(two_way_te_nb, noint_te_nb)
-
 
 #add columns to ind.sp2 table
 ind.sp2$tnb.3p<-NA
@@ -2389,27 +2389,52 @@ ind.sp2$tnb.3p[which(ind.sp2$Sp=="Tri_ela")]<-Triela_3waynb[2,5]
 # when using the pred function on glmmadmb (i.e. not glmer, for which the pred function uses predictSE), we need to make sure the levels in the new data frame match the levels in the data that were modelled. 
 nd1<-data.frame(DATE=rep(c(0,1,2),rep(3,3)),Treatment=factor(c("C","A","B"), levels=c("C","A","B")),reserve=factor(c(rep("J",9),rep("M",9)),levels=c("J","M")))
 
-Chr_api_nbpr<-pred(model=three_way_ca_nb, new.data = nd1,se.fit = T,type="response") 
-
-Chr_api_nbpr_2way<-pred(model=two_way_ca_nb, new.data = nd1,se.fit = T,type="response") 
-
-summary(two_way_ca_nb)$coefficients
-
+#Chr_api
 model=three_way_ca_nb
 new.data=nd1
 se.fit=T
 type="response"
+summary(two_way_ca_nb)$coefficients
+Chr_api_nbpr<-pred(model=three_way_ca_nb, new.data = nd1,se.fit = T,type="response") 
 
-Ery_ovi_nbpr<-pred(model=three_way_af_nb,new.data = nd1, se.fit=T, type="response")
+Chr_api_nbpr_2way<-pred(model=two_way_ca_nb, new.data = nd1,se.fit = T,type="response") 
 
+# Ery_ovi
+model=three_way_af_nb
+new.data=nd1
+se.fit=T
+type="response"
+summary(three_way_eo_nb)$coefficients
+Ery_ovi_nbpr<-pred(model=three_way_eo_nb,new.data = nd1, se.fit=T, type="response")
+
+#Lom_cor
+model=three_way_lc_nb
+new.data=nd1
+se.fit=T
+type="response"
+summary(three_way_lc_nb)$coefficients
 Lom_cor_nbpr<-pred(model=three_way_lc_nb, new.data=nd1, se.fit=T,type="response")
-  
+
+#Des_var
+model=three_way_dv_nb
+new.data=nd1
+se.fit=T
+type="response"
 Des_var_nbpr<-pred(model=two_way_dv_nb,new.data=nd1,type="response",se.fit=T)
 head(Des_var_nbpr)
 
-
+#Gly_tab
+model=three_way_gt_nb
+new.data=nd1
+se.fit=T
+type="response"
 Gly_tab_ndpr<-pred(model=two_way_gt_nb, new.data=nd1, type="response", se.fit=T)
 
+#Tri_ela
+model=three_way_te_nb
+new.data=nd1
+se.fit=T
+type="response"
 Tri_ela_ndpr<-pred(model=two_way_te_nb, new.data=nd1, type="response", se.fit=T)
 
 #save.image("03_Workspaces/stjw_analysis.RData")
@@ -2420,7 +2445,11 @@ Tri_ela_ndpr<-pred(model=two_way_te_nb, new.data=nd1, type="response", se.fit=T)
 ind.sp2[which(ind.sp2$tnb.3p<0.05),]
 ind.sp2[which(ind.sp2$tnb.2p<0.05),]
 
-#plot species that are significant:
+
+#Since Chr_api, Ery_ovi and Lom_cor have significant 3 way interations, plot effects for both Mulangarri and Jerra. 
+#Des_var has significant 2-way interaction,so the effect is the same for both locations, plot for Mulangarri only
+#Tri_ela is not significant, don't plot
+
 summary(three_way_ca_nb) #final model
 summary(three_way_eo_nb) #final model
 summary(three_way_lc_nb)#final model
@@ -2441,45 +2470,70 @@ xofs<-0.2
 arrowlgth<-0.02
 
 ca_nbpr_M<-Chr_api_nbpr[which(Chr_api_nbpr$reserve=="M"),]
+ca_nbpr_J<-Chr_api_nbpr[which(Chr_api_nbpr$reserve=="J"),]
 eo_nbpr_M<-Ery_ovi_nbpr[which(Ery_ovi_nbpr$reserve=="M"),]
+eo_nbpr_J<-Ery_ovi_nbpr[which(Ery_ovi_nbpr$reserve=="J"),]
 lc_nbpr_M<-Lom_cor_nbpr[which(Lom_cor_nbpr$reserve=="M"),]
+lc_nbpr_J<-Lom_cor_nbpr[which(Lom_cor_nbpr$reserve=="J"),]
 dv_nbpr_M<-Des_var_nbpr[which(Des_var_nbpr$reserve=="M"),]
 
-## Chr_api - ylim values "Inf"
-plot(ca_nbpr_M$DATE[ca_nbpr_M$Treatment=="C" ]-xofs,ca_nbpr_M$fit[ca_nbpr_M$Treatment=="C"], pch=15, ylim=c(min(ca_nbpr_M$lci), max(ca_nbpr_M$uci)), xlim=c(-0.3,2.3), xaxt="n", xlab="Year", ylab="Chrysocephalum apiculatum occurrence", las=1)
+#save.image("03_Workspaces/stjw_analysis.RData")
+
+## Chr_api Mulangarri-
+plot(ca_nbpr_M$DATE[ca_nbpr_M$Treatment=="C" ]-xofs,ca_nbpr_M$fit.resp[ca_nbpr_M$Treatment=="C"], pch=15, ylim=c(min(ca_nbpr_M$lci.resp), max(ca_nbpr_M$uci.resp)), xlim=c(-0.3,2.3), xaxt="n", xlab="Year", ylab="Chrysocephalum apiculatum occurrence Mulangarri", las=1)
 axis(side = 1, at=c(0,1,2), labels=c(2017,2018,2019))
 
-arrows(ca_nbpr_M$DATE[ca_nbpr_M$Treatment=="C"]-xofs,ca_nbpr_M$lci[ca_nbpr_M$Treatment=="C"],ca_nbpr_M$DATE[ca_nbpr_M$Treatment=="C"]-xofs,ca_nbpr_M$uci[ca_nbpr_M$Treatment=="C"], code=3, angle=90, length=arrowlgth)
+arrows(ca_nbpr_M$DATE[ca_nbpr_M$Treatment=="C"]-xofs,ca_nbpr_M$lci.resp[ca_nbpr_M$Treatment=="C"],ca_nbpr_M$DATE[ca_nbpr_M$Treatment=="C"]-xofs,ca_nbpr_M$uci.resp[ca_nbpr_M$Treatment=="C"], code=3, angle=90, length=arrowlgth)
 
-points(ca_nbpr_M$DATE[ca_nbpr_M$Treatment=="A"],ca_nbpr_M$fit[ca_nbpr_M$Treatment=="A"], pch=15, col="red")
-arrows(ca_nbpr_M$DATE[ca_nbpr_M$Treatment=="A"],ca_nbpr_M$lci[ca_nbpr_M$Treatment=="A"],ca_nbpr_M$DATE[ca_nbpr_M$Treatment=="A"],ca_nbpr_M$uci[ca_nbpr_M$Treatment=="A"], code=3, angle=90, length=arrowlgth, col="red")
-points(ca_nbpr_M$DATE[ca_nbpr_M$Treatment=="B"]+xofs,ca_nbpr_M$fit[ca_nbpr_M$Treatment=="B"], pch=15, col="blue")
-arrows(ca_nbpr_M$DATE[ca_nbpr_M$Treatment=="B"]+xofs,ca_nbpr_M$lci[ca_nbpr_M$Treatment=="B"],ca_nbpr_M$DATE[ca_nbpr_M$Treatment=="B"]+xofs,ca_nbpr_M$uci[ca_nbpr_M$Treatment=="B"], code=3, angle=90, length=arrowlgth, col="blue")
+points(ca_nbpr_M$DATE[ca_nbpr_M$Treatment=="A"],ca_nbpr_M$fit.resp[ca_nbpr_M$Treatment=="A"], pch=15, col="red")
+arrows(ca_nbpr_M$DATE[ca_nbpr_M$Treatment=="A"],ca_nbpr_M$lci.resp[ca_nbpr_M$Treatment=="A"],ca_nbpr_M$DATE[ca_nbpr_M$Treatment=="A"],ca_nbpr_M$uci.resp[ca_nbpr_M$Treatment=="A"], code=3, angle=90, length=arrowlgth, col="red")
+points(ca_nbpr_M$DATE[ca_nbpr_M$Treatment=="B"]+xofs,ca_nbpr_M$fit.resp[ca_nbpr_M$Treatment=="B"], pch=15, col="blue")
+arrows(ca_nbpr_M$DATE[ca_nbpr_M$Treatment=="B"]+xofs,ca_nbpr_M$lci.resp[ca_nbpr_M$Treatment=="B"],ca_nbpr_M$DATE[ca_nbpr_M$Treatment=="B"]+xofs,ca_nbpr_M$uci.resp[ca_nbpr_M$Treatment=="B"], code=3, angle=90, length=arrowlgth, col="blue")
 
-
-
-##Ery_ovi
-plot(eo_nbpr_M$DATE[eo_nbpr_M$Treatment=="C" ]-xofs,eo_nbpr_M$fit[eo_nbpr_M$Treatment=="C"], pch=15, ylim=c(min(eo_nbpr_M$lci), max(eo_nbpr_M$uci)), xlim=c(-0.3,2.3), xaxt="n", xlab="Year", ylab="Eryngium ovinum occurrence", las=1)
+##Chr_api Jerrabomberra
+plot(ca_nbpr_J$DATE[ca_nbpr_J$Treatment=="C" ]-xofs,ca_nbpr_J$fit.resp[ca_nbpr_J$Treatment=="C"], pch=15, ylim=c(min(ca_nbpr_J$lci.resp), max(ca_nbpr_J$uci.resp)), xlim=c(-0.3,2.3), xaxt="n", xlab="Year", ylab="Chrysocephalum apiculatum occurrence Jerrabomberra", las=1)
 axis(side = 1, at=c(0,1,2), labels=c(2017,2018,2019))
 
-arrows(eo_nbpr_M$DATE[eo_nbpr_M$Treatment=="C"]-xofs,eo_nbpr_M$lci[eo_nbpr_M$Treatment=="C"],eo_nbpr_M$DATE[eo_nbpr_M$Treatment=="C"]-xofs,eo_nbpr_M$uci[eo_nbpr_M$Treatment=="C"], code=3, angle=90, length=arrowlgth)
+arrows(ca_nbpr_J$DATE[ca_nbpr_J$Treatment=="C"]-xofs,ca_nbpr_J$lci.resp[ca_nbpr_J$Treatment=="C"],ca_nbpr_J$DATE[ca_nbpr_J$Treatment=="C"]-xofs,ca_nbpr_J$uci.resp[ca_nbpr_J$Treatment=="C"], code=3, angle=90, length=arrowlgth)
 
-points(eo_nbpr_M$DATE[eo_nbpr_M$Treatment=="A"],eo_nbpr_M$fit[eo_nbpr_M$Treatment=="A"], pch=15, col="red")
-arrows(eo_nbpr_M$DATE[eo_nbpr_M$Treatment=="A"],eo_nbpr_M$lci[eo_nbpr_M$Treatment=="A"],eo_nbpr_M$DATE[eo_nbpr_M$Treatment=="A"],eo_nbpr_M$uci[eo_nbpr_M$Treatment=="A"], code=3, angle=90, length=arrowlgth, col="red")
-points(eo_nbpr_M$DATE[eo_nbpr_M$Treatment=="B"]+xofs,eo_nbpr_M$fit[eo_nbpr_M$Treatment=="B"], pch=15, col="blue")
-arrows(eo_nbpr_M$DATE[eo_nbpr_M$Treatment=="B"]+xofs,eo_nbpr_M$lci[eo_nbpr_M$Treatment=="B"],eo_nbpr_M$DATE[eo_nbpr_M$Treatment=="B"]+xofs,eo_nbpr_M$uci[eo_nbpr_M$Treatment=="B"], code=3, angle=90, length=arrowlgth, col="blue")
+points(ca_nbpr_J$DATE[ca_nbpr_J$Treatment=="A"],ca_nbpr_J$fit.resp[ca_nbpr_J$Treatment=="A"], pch=15, col="red")
+arrows(ca_nbpr_J$DATE[ca_nbpr_J$Treatment=="A"],ca_nbpr_J$lci.resp[ca_nbpr_J$Treatment=="A"],ca_nbpr_J$DATE[ca_nbpr_J$Treatment=="A"],ca_nbpr_J$uci.resp[ca_nbpr_J$Treatment=="A"], code=3, angle=90, length=arrowlgth, col="red")
+points(ca_nbpr_J$DATE[ca_nbpr_J$Treatment=="B"]+xofs,ca_nbpr_J$fit.resp[ca_nbpr_J$Treatment=="B"], pch=15, col="blue")
+arrows(ca_nbpr_J$DATE[ca_nbpr_J$Treatment=="B"]+xofs,ca_nbpr_J$lci.resp[ca_nbpr_J$Treatment=="B"],ca_nbpr_J$DATE[ca_nbpr_J$Treatment=="B"]+xofs,ca_nbpr_J$uci.resp[ca_nbpr_J$Treatment=="B"], code=3, angle=90, length=arrowlgth, col="blue")
 
 
-rahead(cv_ind2,6,6);dim(cv_ind2)
-apply(cv_ind2[,5:ncol(cv_ind2)],2,range)
+##Ery_ovi Mulangarri 
+plot(eo_nbpr_M$DATE[eo_nbpr_M$Treatment=="C" ]-xofs,eo_nbpr_M$fit.resp[eo_nbpr_M$Treatment=="C"], pch=15, ylim=c(min(eo_nbpr_M$lci.resp), max(eo_nbpr_M$uci.resp)), xlim=c(-0.3,2.3), xaxt="n", xlab="Year", ylab="Eryngium ovinum occurrence Mulangarri", las=1)
+axis(side = 1, at=c(0,1,2), labels=c(2017,2018,2019))
+
+arrows(eo_nbpr_M$DATE[eo_nbpr_M$Treatment=="C"]-xofs,eo_nbpr_M$lci.resp[eo_nbpr_M$Treatment=="C"],eo_nbpr_M$DATE[eo_nbpr_M$Treatment=="C"]-xofs,eo_nbpr_M$uci.resp[eo_nbpr_M$Treatment=="C"], code=3, angle=90, length=arrowlgth)
+
+points(eo_nbpr_M$DATE[eo_nbpr_M$Treatment=="A"],eo_nbpr_M$fit.resp[eo_nbpr_M$Treatment=="A"], pch=15, col="red")
+arrows(eo_nbpr_M$DATE[eo_nbpr_M$Treatment=="A"],eo_nbpr_M$lci.resp[eo_nbpr_M$Treatment=="A"],eo_nbpr_M$DATE[eo_nbpr_M$Treatment=="A"],eo_nbpr_M$uci.resp[eo_nbpr_M$Treatment=="A"], code=3, angle=90, length=arrowlgth, col="red")
+points(eo_nbpr_M$DATE[eo_nbpr_M$Treatment=="B"]+xofs,eo_nbpr_M$fit.resp[eo_nbpr_M$Treatment=="B"], pch=15, col="blue")
+arrows(eo_nbpr_M$DATE[eo_nbpr_M$Treatment=="B"]+xofs,eo_nbpr_M$lci.resp[eo_nbpr_M$Treatment=="B"],eo_nbpr_M$DATE[eo_nbpr_M$Treatment=="B"]+xofs,eo_nbpr_M$uci.resp[eo_nbpr_M$Treatment=="B"], code=3, angle=90, length=arrowlgth, col="blue")
+
+##Ery_ovi Jerrabomberra
+plot(eo_nbpr_J$DATE[eo_nbpr_J$Treatment=="C" ]-xofs,eo_nbpr_J$fit.resp[eo_nbpr_J$Treatment=="C"], pch=15, ylim=c(min(eo_nbpr_J$lci.resp), max(eo_nbpr_J$uci.resp)), xlim=c(-0.3,2.3), xaxt="n", xlab="Year", ylab="Eryngium ovinum occurrence Jerrabomberra", las=1)
+axis(side = 1, at=c(0,1,2), labels=c(2017,2018,2019))
+
+arrows(eo_nbpr_J$DATE[eo_nbpr_J$Treatment=="C"]-xofs,eo_nbpr_J$lci.resp[eo_nbpr_J$Treatment=="C"],eo_nbpr_J$DATE[eo_nbpr_J$Treatment=="C"]-xofs,eo_nbpr_J$uci.resp[eo_nbpr_J$Treatment=="C"], code=3, angle=90, length=arrowlgth)
+
+points(eo_nbpr_J$DATE[eo_nbpr_J$Treatment=="A"],eo_nbpr_J$fit.resp[eo_nbpr_J$Treatment=="A"], pch=15, col="red")
+arrows(eo_nbpr_J$DATE[eo_nbpr_J$Treatment=="A"],eo_nbpr_J$lci.resp[eo_nbpr_J$Treatment=="A"],eo_nbpr_J$DATE[eo_nbpr_J$Treatment=="A"],eo_nbpr_J$uci.resp[eo_nbpr_J$Treatment=="A"], code=3, angle=90, length=arrowlgth, col="red")
+points(eo_nbpr_J$DATE[eo_nbpr_J$Treatment=="B"]+xofs,eo_nbpr_J$fit.resp[eo_nbpr_J$Treatment=="B"], pch=15, col="blue")
+arrows(eo_nbpr_J$DATE[eo_nbpr_J$Treatment=="B"]+xofs,eo_nbpr_J$lci.resp[eo_nbpr_J$Treatment=="B"],eo_nbpr_J$DATE[eo_nbpr_J$Treatment=="B"]+xofs,eo_nbpr_J$uci.resp[eo_nbpr_J$Treatment=="B"], code=3, angle=90, length=arrowlgth, col="blue")
+
+
+##Lom_cor Mulangarri 
+
+##Lom_cor Jerrabomberra
+
+##Des_var 
+
 
 
 # close indiv species ----
-
-
-
-
-
 
 
 
