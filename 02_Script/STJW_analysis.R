@@ -2322,7 +2322,7 @@ AIC(three_way_eo_nb); AIC(two_way_eo_nb)
 Eryovi_3waynb<-anova(three_way_eo_nb,two_way_eo_nb)
 Eryovi_2waynb<-anova(two_way_eo_nb, noint_eo_nb)
 
-#Gly_tab - 2 way not working
+#Gly_tab - not enough data to fit a complex interaction model
 three_way_gt_nb<-glmmadmb(Gly_tab~DATE+Treatment+reserve+DATE:Treatment+DATE:Treatment:reserve+(1|PLOT_ID),family="truncnbinom1", data=ct_ind2[ct_ind2$Gly_tab>0,])
 summary(three_way_gt_nb) 
 two_way_gt_nb<-glmmadmb(Gly_tab~DATE+Treatment+reserve+DATE:Treatment+(1|PLOT_ID),family="truncnbinom1",data=ct_ind2[ct_ind2$Gly_tab>0,])
@@ -2333,7 +2333,7 @@ anova(two_way_gt_nb, noint_gt_nb)
 AIC(three_way_gt_nb); AIC(two_way_gt_nb)
 
 Glytab_3waynb<-anova(three_way_gt_nb,two_way_gt_nb)
-Glytab_2waynb<-anova(two_way_gt_nb, noint_gt_nb) #not working 
+Glytab_2waynb<-anova(two_way_gt_nb, noint_gt_nb)
 
 #Lom_cor
 three_way_lc_nb<-glmmadmb(Lom_cor~DATE+Treatment+reserve+DATE:Treatment+DATE:Treatment:reserve+(1|PLOT_ID),family="truncnbinom1", data=ct_ind2[ct_ind2$Lom_cor>0,])
@@ -2448,7 +2448,7 @@ ind.sp2[which(ind.sp2$tnb.2p<0.05),]
 
 #Since Chr_api, Ery_ovi and Lom_cor have significant 3 way interations, plot effects for both Mulangarri and Jerra. 
 #Des_var has significant 2-way interaction,so the effect is the same for both locations, plot for Mulangarri only
-#Tri_ela is not significant, don't plot
+#Tri_ela not significant, don't plot
 
 summary(three_way_ca_nb) #final model
 summary(three_way_eo_nb) #final model
@@ -2524,14 +2524,41 @@ arrows(eo_nbpr_J$DATE[eo_nbpr_J$Treatment=="A"],eo_nbpr_J$lci.resp[eo_nbpr_J$Tre
 points(eo_nbpr_J$DATE[eo_nbpr_J$Treatment=="B"]+xofs,eo_nbpr_J$fit.resp[eo_nbpr_J$Treatment=="B"], pch=15, col="blue")
 arrows(eo_nbpr_J$DATE[eo_nbpr_J$Treatment=="B"]+xofs,eo_nbpr_J$lci.resp[eo_nbpr_J$Treatment=="B"],eo_nbpr_J$DATE[eo_nbpr_J$Treatment=="B"]+xofs,eo_nbpr_J$uci.resp[eo_nbpr_J$Treatment=="B"], code=3, angle=90, length=arrowlgth, col="blue")
 
-
 ##Lom_cor Mulangarri 
+plot(lc_nbpr_M$DATE[lc_nbpr_M$Treatment=="C" ]-xofs,lc_nbpr_M$fit.resp[lc_nbpr_M$Treatment=="C"], pch=15, ylim=c(min(lc_nbpr_M$lci.resp), max(lc_nbpr_M$uci.resp)), xlim=c(-0.3,2.3), xaxt="n", xlab="Year", ylab="Lomandra filiformis coriacea occurrence Mulangarri", las=1)
+axis(side = 1, at=c(0,1,2), labels=c(2017,2018,2019))
+
+arrows(lc_nbpr_M$DATE[lc_nbpr_M$Treatment=="C"]-xofs,lc_nbpr_M$lci.resp[lc_nbpr_M$Treatment=="C"],lc_nbpr_M$DATE[lc_nbpr_M$Treatment=="C"]-xofs,lc_nbpr_M$uci.resp[lc_nbpr_M$Treatment=="C"], code=3, angle=90, length=arrowlgth)
+
+points(lc_nbpr_M$DATE[lc_nbpr_M$Treatment=="A"],lc_nbpr_M$fit.resp[lc_nbpr_M$Treatment=="A"], pch=15, col="red")
+arrows(lc_nbpr_M$DATE[lc_nbpr_M$Treatment=="A"],lc_nbpr_M$lci.resp[lc_nbpr_M$Treatment=="A"],lc_nbpr_M$DATE[lc_nbpr_M$Treatment=="A"],lc_nbpr_M$uci.resp[lc_nbpr_M$Treatment=="A"], code=3, angle=90, length=arrowlgth, col="red")
+points(lc_nbpr_M$DATE[lc_nbpr_M$Treatment=="B"]+xofs,lc_nbpr_M$fit.resp[lc_nbpr_M$Treatment=="B"], pch=15, col="blue")
+arrows(lc_nbpr_M$DATE[lc_nbpr_M$Treatment=="B"]+xofs,lc_nbpr_M$lci.resp[lc_nbpr_M$Treatment=="B"],lc_nbpr_M$DATE[lc_nbpr_M$Treatment=="B"]+xofs,lc_nbpr_M$uci.resp[lc_nbpr_M$Treatment=="B"], code=3, angle=90, length=arrowlgth, col="blue")
 
 ##Lom_cor Jerrabomberra
+plot(lc_nbpr_J$DATE[lc_nbpr_J$Treatment=="C" ]-xofs,lc_nbpr_J$fit.resp[lc_nbpr_J$Treatment=="C"], pch=15, ylim=c(min(lc_nbpr_J$lci.resp), max(lc_nbpr_J$uci.resp)), xlim=c(-0.3,2.3), xaxt="n", xlab="Year", ylab="Lomandra filiformis coriacea occurrence Jerrabomberra", las=1)
+axis(side = 1, at=c(0,1,2), labels=c(2017,2018,2019))
+
+arrows(lc_nbpr_J$DATE[lc_nbpr_J$Treatment=="C"]-xofs,lc_nbpr_J$lci.resp[lc_nbpr_J$Treatment=="C"],lc_nbpr_J$DATE[lc_nbpr_J$Treatment=="C"]-xofs,lc_nbpr_J$uci.resp[lc_nbpr_J$Treatment=="C"], code=3, angle=90, length=arrowlgth)
+
+points(lc_nbpr_J$DATE[lc_nbpr_J$Treatment=="A"],lc_nbpr_J$fit.resp[lc_nbpr_J$Treatment=="A"], pch=15, col="red")
+arrows(lc_nbpr_J$DATE[lc_nbpr_J$Treatment=="A"],lc_nbpr_J$lci.resp[lc_nbpr_J$Treatment=="A"],lc_nbpr_J$DATE[lc_nbpr_J$Treatment=="A"],lc_nbpr_J$uci.resp[lc_nbpr_J$Treatment=="A"], code=3, angle=90, length=arrowlgth, col="red")
+points(lc_nbpr_J$DATE[lc_nbpr_J$Treatment=="B"]+xofs,lc_nbpr_J$fit.resp[lc_nbpr_J$Treatment=="B"], pch=15, col="blue")
+arrows(lc_nbpr_J$DATE[lc_nbpr_J$Treatment=="B"]+xofs,lc_nbpr_J$lci.resp[lc_nbpr_J$Treatment=="B"],lc_nbpr_J$DATE[lc_nbpr_J$Treatment=="B"]+xofs,lc_nbpr_J$uci.resp[lc_nbpr_J$Treatment=="B"], code=3, angle=90, length=arrowlgth, col="blue")
 
 ##Des_var 
+plot(dv_nbpr_M$DATE[dv_nbpr_M$Treatment=="C" ]-xofs,dv_nbpr_M$fit.resp[dv_nbpr_M$Treatment=="C"], pch=15, ylim=c(min(dv_nbpr_M$lci.resp), max(dv_nbpr_M$uci.resp)), xlim=c(-0.3,2.3), xaxt="n", xlab="Year", ylab="Desmodium varians occurrence", las=1)
+axis(side = 1, at=c(0,1,2), labels=c(2017,2018,2019))
+
+arrows(dv_nbpr_M$DATE[dv_nbpr_M$Treatment=="C"]-xofs,dv_nbpr_M$lci.resp[dv_nbpr_M$Treatment=="C"],dv_nbpr_M$DATE[dv_nbpr_M$Treatment=="C"]-xofs,dv_nbpr_M$uci.resp[dv_nbpr_M$Treatment=="C"], code=3, angle=90, length=arrowlgth)
+
+points(dv_nbpr_M$DATE[dv_nbpr_M$Treatment=="A"],dv_nbpr_M$fit.resp[dv_nbpr_M$Treatment=="A"], pch=15, col="red")
+arrows(dv_nbpr_M$DATE[dv_nbpr_M$Treatment=="A"],dv_nbpr_M$lci.resp[dv_nbpr_M$Treatment=="A"],dv_nbpr_M$DATE[dv_nbpr_M$Treatment=="A"],dv_nbpr_M$uci.resp[dv_nbpr_M$Treatment=="A"], code=3, angle=90, length=arrowlgth, col="red")
+points(dv_nbpr_M$DATE[dv_nbpr_M$Treatment=="B"]+xofs,dv_nbpr_M$fit.resp[dv_nbpr_M$Treatment=="B"], pch=15, col="blue")
+arrows(dv_nbpr_M$DATE[dv_nbpr_M$Treatment=="B"]+xofs,dv_nbpr_M$lci.resp[dv_nbpr_M$Treatment=="B"],dv_nbpr_M$DATE[dv_nbpr_M$Treatment=="B"]+xofs,dv_nbpr_M$uci.resp[dv_nbpr_M$Treatment=="B"], code=3, angle=90, length=arrowlgth, col="blue")
 
 
+#save.image("03_Workspaces/stjw_analysis.RData")
 
 # close indiv species ----
 
