@@ -10,16 +10,15 @@
 invisible(lapply(paste("01_Functions/",dir("01_Functions"),sep=""), function(x) source(x)))
 
 #install glmmADMB
-install.packages("devtools")
-install.packages("R2admb")
-devtools::install_github("bbolker/glmmadmb")
+# install.packages("devtools")
+# install.packages("R2admb")
+# devtools::install_github("bbolker/glmmadmb")
 
 # Load libraries:
 library(lme4); library(vegan); library(AICcmodavg); library(lmerTest); library(glmmADMB)
 
 # Load workspace
 load("03_Workspaces/stjw_analysis.RData")
-
 
 # The diversity workspace has only the diversity anaysis (not individual species):
 load("03_Workspaces/stjw_analysis_diversity.RData")
@@ -1829,10 +1828,9 @@ cv_ind<-cv_dat[,c(1:4, which(colnames(cv_dat) %in% indsp))]
 # Make sure columns match:
 table(colnames(ct_ind)==colnames(cv_ind))
 
-# Model individual species using count data, as :
-rahead(ct_ind,6,6)
+# Model individual species using count data, as presence/absence:
+rahead(ct_ind,6,6); dim(ct_ind)
 rahead(cv_ind,6,6)
-dim(ct_ind)
 
 # Format date for modelling:
 ind_po<-ct_ind
@@ -1846,6 +1844,7 @@ rahead(ind_po,6,6); dim(ind_po)
 # Individual species to model:
 head(pinfo,3); dim(pinfo)
 
+# In total, 14 native forb species were used to define the study plots:
 ind.sp<-data.frame(ind_species=c("Eryngium ovinum", "Chrysocephalum apiculatum", "Arthropodium fimbriatum", "Wurmbea dioica", "Desmodium varians", "Plantago varia", "Tricoryne elatior", "Triptilodiscus pygmaeus","Lomandra filiformis coriacea", "Lomandra bracteata", "Lomandra filiformis","Lomandra multiflora","Glycine clandestina","Glycine tabacina"))
 
 # These should all be TRUE:
@@ -1855,42 +1854,27 @@ ind.sp<-merge(ind.sp, pinfo, by.x="ind_species", by.y="Species")
 ind.sp
 indsp<-ind.sp$Sp
 
-#Add proportion of zeros column
-#exclude species that have more than 95% zeros
+# Add proportion of zeros column
+# exclude species that have more than 95% zeros
 ind.sp$prop0<-NA
 ind.sp$prop0[which(ind.sp$Sp=="Chr_api")]<-table(ind_po$Chr_api)[1]/sum(table(ind_po$Chr_api))
-
 ind.sp$prop0[which(ind.sp$Sp=="Gly_cla")]<-table(ind_po$Gly_cla)[1]/sum(table(ind_po$Gly_cla))
-
 ind.sp$prop0[which(ind.sp$Sp=="Art_fim")]<-table(ind_po$Art_fim)[1]/sum(table(ind_po$Art_fim))
-
 ind.sp$prop0[which(ind.sp$Sp=="Des_var")]<-table(ind_po$Des_var)[1]/sum(table(ind_po$Des_var))
-
 ind.sp$prop0[which(ind.sp$Sp=="Ery_ovi")]<-table(ind_po$Ery_ovi)[1]/sum(table(ind_po$Ery_ovi))
-
 ind.sp$prop0[which(ind.sp$Sp=="Gly_tab")]<-table(ind_po$Gly_tab)[1]/sum(table(ind_po$Gly_tab))
-
 ind.sp$prop0[which(ind.sp$Sp=="Lom_bra")]<-table(ind_po$Lom_bra)[1]/sum(table(ind_po$Lom_bra))
-
 ind.sp$prop0[which(ind.sp$Sp=="Lom_fil")]<-table(ind_po$Lom_fil)[1]/sum(table(ind_po$Lom_fil))
-
 ind.sp$prop0[which(ind.sp$Sp=="Lom_cor")]<-table(ind_po$Lom_cor)[1]/sum(table(ind_po$Lom_cor))
-
 ind.sp$prop0[which(ind.sp$Sp=="Lom_mul")]<-table(ind_po$Lom_mul)[1]/sum(table(ind_po$Lom_mul))
-
 ind.sp$prop0[which(ind.sp$Sp=="Pla_var")]<-table(ind_po$Pla_var)[1]/sum(table(ind_po$Pla_var))
-
 ind.sp$prop0[which(ind.sp$Sp=="Tri_ela")]<-table(ind_po$Tri_ela)[1]/sum(table(ind_po$Tri_ela))
-
 ind.sp$prop0[which(ind.sp$Sp=="Tri_pyg")]<-table(ind_po$Tri_pyg)[1]/sum(table(ind_po$Tri_pyg))
-
 ind.sp$prop0[which(ind.sp$Sp=="Wur_dio")]<-table(ind_po$Wur_dio)[1]/sum(table(ind_po$Wur_dio))
 
-#Add count column
-# exclude species that have less than 10 counts
+# Add count column
 ind.sp$count<-NA
 ind.sp$count[which(ind.sp$Sp=="Chr_api")]<-sum(ct_ind$Chr_api)
-
 ind.sp$count[which(ind.sp$Sp=="Wur_dio")]<-sum(ct_ind$Wur_dio)
 ind.sp$count[which(ind.sp$Sp=="Art_fim")]<-sum(ct_ind$Art_fim)
 ind.sp$count[which(ind.sp$Sp=="Des_var")]<-sum(ct_ind$Des_var)
@@ -1905,9 +1889,14 @@ ind.sp$count[which(ind.sp$Sp=="Pla_var")]<-sum(ct_ind$Pla_var)
 ind.sp$count[which(ind.sp$Sp=="Tri_ela")]<-sum(ct_ind$Tri_ela)
 ind.sp$count[which(ind.sp$Sp=="Tri_pyg")]<-sum(ct_ind$Tri_pyg)
 
-# exclude sp. that have more than 95% zeros or less than 10 counts- Gly_cla; Lom_bra; Lom_fil; Lom_mul
+# Establish minimum data thresholds for analysis
 
-ind.sp<-ind.sp[-c(5,7,8,10),]
+# For binomial models, exclude sp. that have fewer observations than the number of quadrats (48) Gly_cla; Lom_bra; Lom_fil; Lom_mul; Wur_dio
+
+head(ind.sp)
+
+ind.sp$fit_binom<-"yes"
+ind.sp$fit_binom[unique(c(which(ind.sp$prop0> 0.95),which(ind.sp$count<48)))]<-"no"
 ind.sp<-tidy.df(ind.sp)
 head(ind.sp); dim(ind.sp)
 
@@ -1915,7 +1904,10 @@ head(ind.sp); dim(ind.sp)
 
 #  INDIVIDUAL SPECIES BINOMIAL MODELS:    	# ----
 
-#Chr_api 
+# Fit binomial models for nine species:
+ind.sp$Sp[which(ind.sp$fit_binom=="yes")]
+
+# Chr_api 
 ind_po$Chr_api<-ifelse(ind_po$Chr_api>0,1,0)
 three_way_Chr_api<-glmer(Chr_api~DATE+Treatment+reserve+DATE:Treatment+DATE:Treatment:reserve+(1|PLOT_ID), family="binomial", data=ind_po)
 summary(three_way_Chr_api)
@@ -1927,7 +1919,7 @@ summary(two_way_Chr_api) #final model
 Chr_api3way<-anova(three_way_Chr_api,two_way_Chr_api) #p value for 3way int,not significant
 Chr_api2way<-anova(two_way_Chr_api, noint_Chr_api) #p value for 2way, no effect of spraying
 
-#Art_fim
+# Art_fim
 ind_po$Art_fim<-ifelse(ind_po$Art_fim>0,1,0)
 ind_po$DATE<-ind_po$DATE-min(ind_po$DATE)
 three_way_Art_fim<-glmer(Art_fim~DATE+Treatment+reserve+DATE:Treatment+DATE:Treatment:reserve+(1|PLOT_ID), family="binomial", data=ind_po)
@@ -1942,7 +1934,7 @@ anova(two_way_Art_fim, noint_Art_fim)
 Art_fim3way<-anova(three_way_Art_fim,two_way_Art_fim) 
 Art_fim2way<-anova(two_way_Art_fim, noint_Art_fim)
 
-#Des_var - three and two way
+# Des_var - three and two way
 ind_po$Des_var<-ifelse(ind_po$Des_var>0,1,0)
 ind_po$DATE<-ind_po$DATE-min(ind_po$DATE)
 three_way_Des_var<-glmer(Des_var~DATE+Treatment+reserve+DATE:Treatment+DATE:Treatment:reserve+(1|PLOT_ID), family="binomial", data=ind_po)
@@ -1957,7 +1949,7 @@ anova(two_way_Des_var, noint_Des_var)
 Des_var3way<-anova(three_way_Des_var,two_way_Des_var)
 Des_var2way<-anova(two_way_Des_var, noint_Des_var) 
 
-#Ery_ovi 
+# Ery_ovi 
 ind_po$Ery_ovi<-ifelse(ind_po$Ery_ovi>0,1,0)
 ind_po$DATE<-ind_po$DATE-min(ind_po$DATE)
 three_way_Ery_ovi<-glmer(Ery_ovi~DATE+Treatment+reserve+DATE:Treatment+DATE:Treatment:reserve+(1|PLOT_ID), family="binomial", data=ind_po)
@@ -1971,23 +1963,8 @@ anova(two_way_Ery_ovi, noint_Ery_ovi)
 
 Ery_ovi3way<-anova(three_way_Ery_ovi,two_way_Ery_ovi) 
 Ery_ovi2way<-anova(two_way_Ery_ovi, noint_Ery_ovi) 
-  
-#Gly_cla 
-ind_po$Gly_cla<-ifelse(ind_po$Gly_cla>0,1,0)
-ind_po$DATE<-ind_po$DATE-min(ind_po$DATE)
-three_way_Gly_cla<-glmer(Gly_cla~DATE+Treatment+reserve+DATE:Treatment+DATE:Treatment:reserve+(1|PLOT_ID), family="binomial", data=ind_po)
-summary(three_way_Gly_cla)
 
-two_way_Gly_cla<-glmer(Gly_cla~DATE+Treatment+reserve+DATE:Treatment+(1|PLOT_ID), family="binomial", data=ind_po)
-noint_Gly_cla<-glmer(Gly_cla~DATE+Treatment+reserve+(1|PLOT_ID), family="binomial", data=ind_po)
-summary(two_way_Gly_cla)#final model
-anova(three_way_Gly_cla,two_way_Gly_cla)
-anova(two_way_Gly_cla, noint_Gly_cla) 
-
-Gly_cla3way<-anova(three_way_Gly_cla,two_way_Gly_cla)
-Gly_cla2way<-anova(two_way_Gly_cla, noint_Gly_cla)
-
-#Gly_tab
+# Gly_tab
 ind_po$Gly_tab<-ifelse(ind_po$Gly_tab>0,1,0)
 ind_po$DATE<-ind_po$DATE-min(ind_po$DATE)
 three_way_Gly_tab<-glmer(Gly_tab~DATE+Treatment+reserve+DATE:Treatment+DATE:Treatment:reserve+(1|PLOT_ID), family="binomial", data=ind_po)
@@ -2002,37 +1979,7 @@ anova(two_way_Gly_tab, noint_Gly_tab)
 Gly_tab3way<-anova(three_way_Gly_tab,two_way_Gly_tab)
 Gly_tab2way<-anova(two_way_Gly_tab, noint_Gly_tab) 
 
-#Lom_bra
-ind_po$Lom_bra<-ifelse(ind_po$Lom_bra>0,1,0)
-ind_po$DATE<-ind_po$DATE-min(ind_po$DATE)
-three_way_Lom_bra<-glmer(Lom_bra~DATE+Treatment+reserve+DATE:Treatment+DATE:Treatment:reserve+(1|PLOT_ID), family="binomial", data=ind_po)
-summary(three_way_Lom_bra)
-
-two_way_Lom_bra<-glmer(Lom_bra~DATE+Treatment+reserve+DATE:Treatment+(1|PLOT_ID), family="binomial", data=ind_po)
-noint_Lom_bra<-glmer(Lom_bra~DATE+Treatment+reserve+(1|PLOT_ID), family="binomial", data=ind_po)
-summary(two_way_Lom_bra) #final model
-anova(three_way_Lom_bra,two_way_Lom_bra)
-anova(two_way_Lom_bra, noint_Lom_bra)
-
-Lom_bra3way<-anova(three_way_Lom_bra,two_way_Lom_bra)
-Lom_bra2way<-anova(two_way_Lom_bra, noint_Lom_bra)
-
-#Lom_fil
-ind_po$Lom_fil<-ifelse(ind_po$Lom_fil>0,1,0)
-ind_po$DATE<-ind_po$DATE-min(ind_po$DATE)
-three_way_Lom_fil<-glmer(Lom_fil~DATE+Treatment+reserve+DATE:Treatment+DATE:Treatment:reserve+(1|PLOT_ID), family="binomial", data=ind_po)
-summary(three_way_Lom_fil)
-
-two_way_Lom_fil<-glmer(Lom_fil~DATE+Treatment+reserve+DATE:Treatment+(1|PLOT_ID), family="binomial", data=ind_po)
-noint_Lom_fil<-glmer(Lom_fil~DATE+Treatment+reserve+(1|PLOT_ID), family="binomial", data=ind_po)
-summary(two_way_Lom_fil) #final model
-anova(three_way_Lom_fil,two_way_Lom_fil) 
-anova(two_way_Lom_fil, noint_Lom_fil) 
-
-Lom_fil3way<-anova(three_way_Lom_fil,two_way_Lom_fil)
-Lom_fil2way<-anova(two_way_Lom_fil, noint_Lom_fil) 
-
-#Lom_cor 
+# Lom_cor 
 ind_po$Lom_cor<-ifelse(ind_po$Lom_cor>0,1,0)
 ind_po$DATE<-ind_po$DATE-min(ind_po$DATE)
 three_way_Lom_cor<-glmer(Lom_cor~DATE+Treatment+reserve+DATE:Treatment+DATE:Treatment:reserve+(1|PLOT_ID), family="binomial", data=ind_po)
@@ -2047,22 +1994,7 @@ anova(two_way_Lom_cor, noint_Lom_cor)
 Lom_cor3way<-anova(three_way_Lom_cor,two_way_Lom_cor)
 Lom_cor2way<-anova(two_way_Lom_cor, noint_Lom_cor) 
 
-#Lom_mul - not working 
-ind_po$Lom_mul<-ifelse(ind_po$Lom_mul>0,1,0)
-ind_po$DATE<-ind_po$DATE-min(ind_po$DATE)
-three_way_Lom_mul<-glmer(Lom_mul~DATE+Treatment+reserve+DATE:Treatment+DATE:Treatment:reserve+(1|PLOT_ID), family="binomial", data=ind_po)
-
-two_way_Lom_mul<-glmer(Lom_mul~DATE+Treatment+reserve+DATE:Treatment+(1|PLOT_ID), family="binomial", data=ind_po)
-
-noint_Lom_mul<-glmer(Lom_mul~DATE+Treatment+reserve+(1|PLOT_ID), family="binomial", data=ind_po)
-summary(two_way_Lom_mul)
-anova(three_way_Lom_mul,two_way_Lom_mul) 
-anova(two_way_Lom_mul, noint_Lom_mul) 
-
-Lom_mul3way<-anova(three_way_Lom_mul,two_way_Lom_mul) 
-Lom_mul2way<-anova(two_way_Lom_mul, noint_Lom_mul)
-
-#Pla_var
+# Pla_var
 ind_po$Pla_var<-ifelse(ind_po$Pla_var>0,1,0)
 ind_po$DATE<-ind_po$DATE-min(ind_po$DATE)
 three_way_Pla_var<-glmer(Pla_var~DATE+Treatment+reserve+DATE:Treatment+DATE:Treatment:reserve+(1|PLOT_ID), family="binomial", data=ind_po)
@@ -2077,7 +2009,7 @@ anova(two_way_Pla_var, noint_Pla_var)
 Pla_var3way<-anova(three_way_Pla_var,two_way_Pla_var) 
 Pla_var2way<-anova(two_way_Pla_var, noint_Pla_var) 
 
-#Tri_ela
+# Tri_ela
 ind_po$Tri_ela<-ifelse(ind_po$Tri_ela>0,1,0)
 ind_po$DATE<-ind_po$DATE-min(ind_po$DATE)
 three_way_Tri_ela<-glmer(Tri_ela~DATE+Treatment+reserve+DATE:Treatment+DATE:Treatment:reserve+(1|PLOT_ID), family="binomial", data=ind_po)
@@ -2092,7 +2024,7 @@ anova(two_way_Tri_ela, noint_Tri_ela)
 Tri_ela3way<-anova(three_way_Tri_ela,two_way_Tri_ela) 
 Tri_ela2way<-anova(two_way_Tri_ela, noint_Tri_ela)
 
-#Tri_pyg
+# Tri_pyg
 ind_po$Tri_pyg<-ifelse(ind_po$Tri_pyg>0,1,0)
 ind_po$DATE<-ind_po$DATE-min(ind_po$DATE)
 three_way_Tri_pyg<-glmer(Tri_pyg~DATE+Treatment+reserve+DATE:Treatment+DATE:Treatment:reserve+(1|PLOT_ID), family="binomial", data=ind_po)
@@ -2107,22 +2039,7 @@ anova(two_way_Tri_pyg, noint_Tri_pyg)
 Tri_pyg3way<-anova(three_way_Tri_pyg,two_way_Tri_pyg) 
 Tri_pyg2way<-anova(two_way_Tri_pyg, noint_Tri_pyg) 
 
-#Wur_dio - 
-ind_po$Wur_dio<-ifelse(ind_po$Wur_dio>0,1,0)
-ind_po$DATE<-ind_po$DATE-min(ind_po$DATE)
-three_way_Wur_dio<-glmer(Wur_dio~DATE+Treatment+reserve+DATE:Treatment+DATE:Treatment:reserve+(1|PLOT_ID), family="binomial", data=ind_po)
-summary(three_way_Wur_dio)
-
-two_way_Wur_dio<-glmer(Wur_dio~DATE+Treatment+reserve+DATE:Treatment+(1|PLOT_ID), family="binomial", data=ind_po)
-noint_Wur_dio<-glmer(Wur_dio~DATE+Treatment+reserve+(1|PLOT_ID), family="binomial", data=ind_po)
-summary(two_way_Wur_dio) 
-anova(three_way_Wur_dio,two_way_Wur_dio) 
-anova(two_way_Wur_dio, noint_Wur_dio) 
-
-Wur_dio3way<-anova(three_way_Wur_dio,two_way_Wur_dio)
-Wur_dio2way<-anova(two_way_Wur_dio, noint_Wur_dio)
-  
-#add pvalue columns
+# add pvalue columns
 ind.sp$threewaypvalue<-NA
 ind.sp$twowaypvalue<-NA
 
@@ -2138,22 +2055,11 @@ ind.sp$twowaypvalue[which(ind.sp$Sp=="Des_var")]<-Des_var2way[2,8]
 ind.sp$threewaypvalue[which(ind.sp$Sp=="Ery_ovi")]<-Ery_ovi3way[2,8]
 ind.sp$twowaypvalue[which(ind.sp$Sp=="Ery_ovi")]<-Ery_ovi2way[2,8]
 
-ind.sp$threewaypvalue[which(ind.sp$Sp=="Gly_cla")]<-Gly_cla3way[2,8]
-ind.sp$twowaypvalue[which(ind.sp$Sp=="Gly_cla")]<-Gly_cla2way[2,8]
-
 ind.sp$twowaypvalue[which(ind.sp$Sp=="Gly_tab")]<-Gly_tab3way[2,which(colnames(Gly_tab3way)=="Pr(>Chisq)")]
 ind.sp$threewaypvalue[which(ind.sp$Sp=="Gly_tab")]<-Gly_tab2way[2,which(colnames(Gly_tab2way)=="Pr(>Chisq)")]
 
-ind.sp$threewaypvalue[which(ind.sp$Sp=="Lom_bra")]<-Lom_bra3way[2,8]
-ind.sp$twowaypvalue[which(ind.sp$Sp=="Lom_bra")]<-Lom_bra2way[2,8]
-
-ind.sp$threewaypvalue[which(ind.sp$Sp=="Lom_fil")]<-Lom_fil3way[2,8]
-ind.sp$twowaypvalue[which(ind.sp$Sp=="Lom_fil")]<-Lom_fil2way[2,8]
-
 ind.sp$threewaypvalue[which(ind.sp$Sp=="Lom_cor")]<-Lom_cor3way[2,8]
 ind.sp$twowaypvalue[which(ind.sp$Sp=="Lom_cor")]<-Lom_cor2way[2,8]
-
-#Lom_mul error (will be removed anyway because counts         oo low)
 
 ind.sp$threewaypvalue[which(ind.sp$Sp=="Pla_var")]<-Pla_var3way[2,8]
 ind.sp$twowaypvalue[which(ind.sp$Sp=="Pla_var")]<-Pla_var2way[2,8]
@@ -2163,9 +2069,6 @@ ind.sp$twowaypvalue[which(ind.sp$Sp=="Tri_ela")]<-Tri_ela2way[2,8]
 
 ind.sp$threewaypvalue[which(ind.sp$Sp=="Tri_pyg")]<-Tri_pyg3way[2,8]
 ind.sp$twowaypvalue[which(ind.sp$Sp=="Tri_pyg")]<-Tri_pyg2way[2,8]
-
-ind.sp$threewaypvalue[which(ind.sp$Sp=="Wur_dio")]<-Wur_dio3way[2,8]
-ind.sp$twowaypvalue[which(ind.sp$Sp=="Wur_dio")]<-Wur_dio2way[2,8]
 
 # save.image("03_Workspaces/stjw_analysis.RData")
 
@@ -2181,23 +2084,18 @@ Lom_cor_pr<-pred(model=two_way_Lom_cor, new.data=nd1, se.fit=T,type="response")
 Pla_var_pr<-pred(model=two_way_Pla_var, new.data=nd1, se.fit=T,type="response")
 Tri_ela_pr<-pred(model=two_way_Tri_ela, new.data=nd1, se.fit=T,type="response")
 Tri_pyg_pr<-pred(model=two_way_Tri_pyg, new.data=nd1, se.fit=T,type="response")
-Wur_dio_pr<-pred(model = two_way_Wur_dio,new.data=nd1,se.fit=T,type="response")
 
 # save.image("03_Workspaces/stjw_analysis.RData")
 
 # Plots:
 
 # Plot species with significant interaction:
-# Plot effects for Mulangarri only. There was no significant three-way, so the effect is the same for both locations. There is significantly more Wur_dio at Mulanggari, but there is no reserve effect for Des_var
-
-# Disregard Wur_dio since it has only 31 counts, which is less than 48 (we have 48 quadrats)
+# Plot effects for Mulangarri only. There was no significant three-way, so the effect is the same for both locations. There was no significant reserve effect for Des_var
 
 ind.sp[which(ind.sp$threewaypvalue<0.05),]
 ind.sp[which(ind.sp$twowaypvalue<0.05),]
 summary(two_way_Des_var) #final model
-summary(two_way_Wur_dio) #final model
 head(Des_var_pr,3)
-head(Wur_dio_pr,3)
 
 dev.new(width=6, height=4, dpi=100, pointsize=16,noRStudioGD = T)
 par(mfrow=c(1,1),mar=c(4,4,2,1), oma=c(0,0,0,6), mgp=c(2.5,1,0))
@@ -2224,23 +2122,16 @@ par(xpd=F)
 
 # close binomial models ----
 
-# Individual species modeling:
+#  INDIVIDUAL SPECIES ABUNDANCE MODELS:    	# ----
 
-# COUNT DATA:
+sp.tomodel<-ind.sp$Sp[ind.sp$fit_binom=="yes"]
 
-# remove Wur_dio, as above
-
-ind.sp2<-ind.sp[-which(ind.sp$Sp=="Wur_dio"),]
-ind.sp2<-tidy.df(ind.sp2)
-ind.sp2[,c("Sp","count","prop0")]
-sp.tomodel<-ind.sp2$Sp
+# For the count data with zeroes removed, use truncated negative binomial model - in glmmADMB package
 
 ct_ind2<-ct_ind[,c(1:4,which(colnames(ct_ind)%in% sp.tomodel))]
 rahead(ct_ind2,6,6);dim(ct_ind2)
-cv_ind2<-cv_ind[,c(1:4,which(colnames(cv_ind)%in% sp.tomodel))]
-rahead(cv_ind2,6,6);dim(cv_ind2)
 
-# histograms of data
+# histograms of count data
 
 dev.new(width=8, height=8, dpi=80, pointsize=16,noRStudioGD = T)
 par(mfrow=c(3,3),mar=c(4,4,2,1), oma=c(0,0,0,0), mgp=c(2.5,1,0))
@@ -2251,16 +2142,18 @@ for (i in 1:length(sp.tomodel)){
   hist(data.thisrun[which(data.thisrun>0)], xlab="", ylab="", main=sp.thisrun, font.main=1)
 } # close for
 
-# for the count data with zeroes removed, use truncated negative binomial model - in glmmADMB package
-
 # How many data points do we have for the truncated nbin models?
-ind.sp2$data_points<-apply(ct_ind2[,5:ncol(ct_ind2)], 2, function(x) length(which(x>0)))
+abund_data<-data.frame(Sp=names(apply(ct_ind2[,5:ncol(ct_ind2)], 2, function(x) length(which(x>0)))),abund=apply(ct_ind2[,5:ncol(ct_ind2)], 2, function(x) length(which(x>0))))
+abund_data<-tidy.df(abund_data)
 
-ind.sp2
-ind.sp2[,c("Sp","count","prop0", "data_points")]
-rahead(ct_ind2,6,6); dim(ct_ind)
+ind.sp<-merge(ind.sp, abund_data, by="Sp", all.x=T, all.y=F)
+ind.sp$fit_abund<-NA
 
-# Let's only fit models where we have more data points than sites (. Anything less is not enough data because we have such a complicated model structure. So remove Art_fim, Pla_var (which was rank deficient anyway - not enough data) and Tri_pyg
+# Let's only fit models where we have more data points than sites. Anything less is not enough data because we have such a complicated model structure. So remove Art_fim, Pla_var (which was rank deficient anyway - not enough data) and Tri_pyg
+
+
+# COUNT DATA
+
 
 # This will leave six species to investigate
 ind.sp2<-ind.sp2[-which(ind.sp2$Sp=="Art_fim"),]
@@ -2464,7 +2357,6 @@ head(Ery_ovi_nbpr,3)
 head(Lom_cor_nbpr,3)
 head(Des_var_nbpr,3)
 
-sp.tomodel<-ind.sp2$Sp
 
 dev.new(width=10, height=4, dpi=100, pointsize=16,noRStudioGD = T)
 par(mfrow=c(1,2),mar=c(4,4,2,1), oma=c(0,0,0,6), mgp=c(2.5,1,0))
@@ -2569,6 +2461,7 @@ arrows(dv_nbpr_M$DATE[dv_nbpr_M$Treatment=="A"],dv_nbpr_M$lci.resp[dv_nbpr_M$Tre
 points(dv_nbpr_M$DATE[dv_nbpr_M$Treatment=="B"]+xofs,dv_nbpr_M$fit.resp[dv_nbpr_M$Treatment=="B"], pch=15, col="blue")
 arrows(dv_nbpr_M$DATE[dv_nbpr_M$Treatment=="B"]+xofs,dv_nbpr_M$lci.resp[dv_nbpr_M$Treatment=="B"],dv_nbpr_M$DATE[dv_nbpr_M$Treatment=="B"]+xofs,dv_nbpr_M$uci.resp[dv_nbpr_M$Treatment=="B"], code=3, angle=90, length=arrowlgth, col="blue")
 
+# close abundance models ----
 
 #save.image("03_Workspaces/stjw_analysis.RData")
 
