@@ -1767,6 +1767,8 @@ table(pinfo$func_grp)
 
 # save.image("03_Workspaces/stjw_analysis.RData")
 
+# CHECK DATA ---- 
+
 # Make sure all species data columns match:
 
 rahead(ct_dat,3,7); dim(ct_dat)
@@ -1817,6 +1819,30 @@ for (i in 1:length(sp.totest)){
 # NO more problems in re-formatted data. 
 sp.testout
 
+# close check data ----
+
+# DATA TO MODEL (ind_po) ----
+
+ct_ind<-ct_dat[,c(1:4, which(colnames(ct_dat) %in% indsp))]
+cv_ind<-cv_dat[,c(1:4, which(colnames(cv_dat) %in% indsp))]
+
+# Make sure columns match:
+table(colnames(ct_ind)==colnames(cv_ind))
+
+# Model individual species using count data, as :
+rahead(ct_ind,6,6)
+rahead(cv_ind,6,6)
+dim(ct_ind)
+
+# Format date for modelling:
+ind_po<-ct_ind
+ind_po$DATE<-ind_po$DATE-min(ind_po$DATE)
+rahead(ind_po,6,6); dim(ind_po)
+
+# close data to model ----
+
+# ---- Set-up individual species data:
+
 # Individual species to model:
 head(pinfo,3); dim(pinfo)
 
@@ -1829,23 +1855,68 @@ ind.sp<-merge(ind.sp, pinfo, by.x="ind_species", by.y="Species")
 ind.sp
 indsp<-ind.sp$Sp
 
-ct_ind<-ct_dat[,c(1:4, which(colnames(ct_dat) %in% indsp))]
-cv_ind<-cv_dat[,c(1:4, which(colnames(cv_dat) %in% indsp))]
+#Add proportion of zeros column
+#exclude species that have more than 95% zeros
+ind.sp$prop0<-NA
+ind.sp$prop0[which(ind.sp$Sp=="Chr_api")]<-table(ind_po$Chr_api)[1]/sum(table(ind_po$Chr_api))
 
-# Make sure columns match:
-table(colnames(ct_ind)==colnames(cv_ind))
+ind.sp$prop0[which(ind.sp$Sp=="Gly_cla")]<-table(ind_po$Gly_cla)[1]/sum(table(ind_po$Gly_cla))
 
-# Model individual species using these data sets:
-rahead(ct_ind,6,6)
-rahead(cv_ind,6,6)
-dim(ct_ind)
+ind.sp$prop0[which(ind.sp$Sp=="Art_fim")]<-table(ind_po$Art_fim)[1]/sum(table(ind_po$Art_fim))
 
-ind_po<-ct_ind
-rahead(ind_po,6,6); dim(ind_po)
+ind.sp$prop0[which(ind.sp$Sp=="Des_var")]<-table(ind_po$Des_var)[1]/sum(table(ind_po$Des_var))
+
+ind.sp$prop0[which(ind.sp$Sp=="Ery_ovi")]<-table(ind_po$Ery_ovi)[1]/sum(table(ind_po$Ery_ovi))
+
+ind.sp$prop0[which(ind.sp$Sp=="Gly_tab")]<-table(ind_po$Gly_tab)[1]/sum(table(ind_po$Gly_tab))
+
+ind.sp$prop0[which(ind.sp$Sp=="Lom_bra")]<-table(ind_po$Lom_bra)[1]/sum(table(ind_po$Lom_bra))
+
+ind.sp$prop0[which(ind.sp$Sp=="Lom_fil")]<-table(ind_po$Lom_fil)[1]/sum(table(ind_po$Lom_fil))
+
+ind.sp$prop0[which(ind.sp$Sp=="Lom_cor")]<-table(ind_po$Lom_cor)[1]/sum(table(ind_po$Lom_cor))
+
+ind.sp$prop0[which(ind.sp$Sp=="Lom_mul")]<-table(ind_po$Lom_mul)[1]/sum(table(ind_po$Lom_mul))
+
+ind.sp$prop0[which(ind.sp$Sp=="Pla_var")]<-table(ind_po$Pla_var)[1]/sum(table(ind_po$Pla_var))
+
+ind.sp$prop0[which(ind.sp$Sp=="Tri_ela")]<-table(ind_po$Tri_ela)[1]/sum(table(ind_po$Tri_ela))
+
+ind.sp$prop0[which(ind.sp$Sp=="Tri_pyg")]<-table(ind_po$Tri_pyg)[1]/sum(table(ind_po$Tri_pyg))
+
+ind.sp$prop0[which(ind.sp$Sp=="Wur_dio")]<-table(ind_po$Wur_dio)[1]/sum(table(ind_po$Wur_dio))
+
+#Add count column
+# exclude species that have less than 10 counts
+ind.sp$count<-NA
+ind.sp$count[which(ind.sp$Sp=="Chr_api")]<-sum(ct_ind$Chr_api)
+
+ind.sp$count[which(ind.sp$Sp=="Wur_dio")]<-sum(ct_ind$Wur_dio)
+ind.sp$count[which(ind.sp$Sp=="Art_fim")]<-sum(ct_ind$Art_fim)
+ind.sp$count[which(ind.sp$Sp=="Des_var")]<-sum(ct_ind$Des_var)
+ind.sp$count[which(ind.sp$Sp=="Ery_ovi")]<-sum(ct_ind$Ery_ovi)
+ind.sp$count[which(ind.sp$Sp=="Gly_cla")]<-sum(ct_ind$Gly_cla) 
+ind.sp$count[which(ind.sp$Sp=="Gly_tab")]<-sum(ct_ind$Gly_tab)
+ind.sp$count[which(ind.sp$Sp=="Lom_bra")]<-sum(ct_ind$Lom_bra)
+ind.sp$count[which(ind.sp$Sp=="Lom_fil")]<-sum(ct_ind$Lom_fil)
+ind.sp$count[which(ind.sp$Sp=="Lom_cor")]<-sum(ct_ind$Lom_cor)
+ind.sp$count[which(ind.sp$Sp=="Lom_mul")]<-sum(ct_ind$Lom_mul)
+ind.sp$count[which(ind.sp$Sp=="Pla_var")]<-sum(ct_ind$Pla_var)
+ind.sp$count[which(ind.sp$Sp=="Tri_ela")]<-sum(ct_ind$Tri_ela)
+ind.sp$count[which(ind.sp$Sp=="Tri_pyg")]<-sum(ct_ind$Tri_pyg)
+
+# exclude sp. that have more than 95% zeros or less than 10 counts- Gly_cla; Lom_bra; Lom_fil; Lom_mul
+
+ind.sp<-ind.sp[-c(5,7,8,10),]
+ind.sp<-tidy.df(ind.sp)
+head(ind.sp); dim(ind.sp)
+
+# close individual species data ----
+
+#  INDIVIDUAL SPECIES BINOMIAL MODELS:    	# ----
 
 #Chr_api 
 ind_po$Chr_api<-ifelse(ind_po$Chr_api>0,1,0)
-ind_po$DATE<-ind_po$DATE-min(ind_po$DATE)
 three_way_Chr_api<-glmer(Chr_api~DATE+Treatment+reserve+DATE:Treatment+DATE:Treatment:reserve+(1|PLOT_ID), family="binomial", data=ind_po)
 summary(three_way_Chr_api)
 
@@ -1855,7 +1926,6 @@ noint_Chr_api<-glmer(Chr_api~DATE+Treatment+reserve+(1|PLOT_ID), family="binomia
 summary(two_way_Chr_api) #final model
 Chr_api3way<-anova(three_way_Chr_api,two_way_Chr_api) #p value for 3way int,not significant
 Chr_api2way<-anova(two_way_Chr_api, noint_Chr_api) #p value for 2way, no effect of spraying
-
 
 #Art_fim
 ind_po$Art_fim<-ifelse(ind_po$Art_fim>0,1,0)
@@ -2096,77 +2166,10 @@ ind.sp$twowaypvalue[which(ind.sp$Sp=="Tri_pyg")]<-Tri_pyg2way[2,8]
 
 ind.sp$threewaypvalue[which(ind.sp$Sp=="Wur_dio")]<-Wur_dio3way[2,8]
 ind.sp$twowaypvalue[which(ind.sp$Sp=="Wur_dio")]<-Wur_dio2way[2,8]
-                          
-#Add proportion of zeros column
-#exclude species that have more than 95% zeros
-ind.sp$prop0<-NA
-ind.sp$prop0[which(ind.sp$Sp=="Chr_api")]<-table(ind_po$Chr_api)[1]/sum(table(ind_po$Chr_api))
 
-ind.sp$prop0[which(ind.sp$Sp=="Gly_cla")]<-table(ind_po$Gly_cla)[1]/sum(table(ind_po$Gly_cla))
+# save.image("03_Workspaces/stjw_analysis.RData")
 
-ind.sp$prop0[which(ind.sp$Sp=="Art_fim")]<-table(ind_po$Art_fim)[1]/sum(table(ind_po$Art_fim))
-
-ind.sp$prop0[which(ind.sp$Sp=="Des_var")]<-table(ind_po$Des_var)[1]/sum(table(ind_po$Des_var))
-
-ind.sp$prop0[which(ind.sp$Sp=="Ery_ovi")]<-table(ind_po$Ery_ovi)[1]/sum(table(ind_po$Ery_ovi))
-
-ind.sp$prop0[which(ind.sp$Sp=="Gly_tab")]<-table(ind_po$Gly_tab)[1]/sum(table(ind_po$Gly_tab))
-
-ind.sp$prop0[which(ind.sp$Sp=="Lom_bra")]<-table(ind_po$Lom_bra)[1]/sum(table(ind_po$Lom_bra))
-
-ind.sp$prop0[which(ind.sp$Sp=="Lom_fil")]<-table(ind_po$Lom_fil)[1]/sum(table(ind_po$Lom_fil))
-
-ind.sp$prop0[which(ind.sp$Sp=="Lom_cor")]<-table(ind_po$Lom_cor)[1]/sum(table(ind_po$Lom_cor))
-
-ind.sp$prop0[which(ind.sp$Sp=="Lom_mul")]<-table(ind_po$Lom_mul)[1]/sum(table(ind_po$Lom_mul))
-
-ind.sp$prop0[which(ind.sp$Sp=="Pla_var")]<-table(ind_po$Pla_var)[1]/sum(table(ind_po$Pla_var))
-
-ind.sp$prop0[which(ind.sp$Sp=="Tri_ela")]<-table(ind_po$Tri_ela)[1]/sum(table(ind_po$Tri_ela))
-
-ind.sp$prop0[which(ind.sp$Sp=="Tri_pyg")]<-table(ind_po$Tri_pyg)[1]/sum(table(ind_po$Tri_pyg))
-
-ind.sp$prop0[which(ind.sp$Sp=="Wur_dio")]<-table(ind_po$Wur_dio)[1]/sum(table(ind_po$Wur_dio))
-
-#Add count column
-#exclude species that have less than 10 counts
-ind.sp$count<-NA
-ind.sp$count[which(ind.sp$Sp=="Chr_api")]<-sum(ct_ind$Chr_api)
-
-ind.sp$count[which(ind.sp$Sp=="Wur_dio")]<-sum(ct_ind$Wur_dio)
-
-ind.sp$count[which(ind.sp$Sp=="Art_fim")]<-sum(ct_ind$Art_fim)
-
-ind.sp$count[which(ind.sp$Sp=="Des_var")]<-sum(ct_ind$Des_var)
-
-ind.sp$count[which(ind.sp$Sp=="Ery_ovi")]<-sum(ct_ind$Ery_ovi)
-
-ind.sp$count[which(ind.sp$Sp=="Gly_cla")]<-sum(ct_ind$Gly_cla) 
-
-ind.sp$count[which(ind.sp$Sp=="Gly_tab")]<-sum(ct_ind$Gly_tab)
-
-ind.sp$count[which(ind.sp$Sp=="Lom_bra")]<-sum(ct_ind$Lom_bra)
-
-ind.sp$count[which(ind.sp$Sp=="Lom_fil")]<-sum(ct_ind$Lom_fil)
-
-ind.sp$count[which(ind.sp$Sp=="Lom_cor")]<-sum(ct_ind$Lom_cor)
-
-ind.sp$count[which(ind.sp$Sp=="Lom_mul")]<-sum(ct_ind$Lom_mul)
-
-ind.sp$count[which(ind.sp$Sp=="Pla_var")]<-sum(ct_ind$Pla_var)
-
-ind.sp$count[which(ind.sp$Sp=="Tri_ela")]<-sum(ct_ind$Tri_ela)
-
-ind.sp$count[which(ind.sp$Sp=="Tri_pyg")]<-sum(ct_ind$Tri_pyg)
-
-#exclude sp. that have more than 95% zeros or less than 10 counts- Gly_cla; Lom_bra; Lom_fil; Lom_mul
-
-ind.sp<-ind.sp[-c(5,7,8,10),]
-ind.sp<-tidy.df(ind.sp)
-
-#save.image("03_Workspaces/stjw_analysis.RData")
-
-#predictions  
+# predictions  
 nd1<-data.frame(DATE=rep(c(0,1,2),rep(3,3)),Treatment=as.factor(c("C","A","B")),reserve=c(rep("J",9),rep("M",9)))
 
 Art_fim_pr<-pred(model=two_way_Art_fim, new.data = nd1,se.fit = T,type="response")
@@ -2186,6 +2189,9 @@ Wur_dio_pr<-pred(model = two_way_Wur_dio,new.data=nd1,se.fit=T,type="response")
 
 # Plot species with significant interaction:
 # Plot effects for Mulangarri only. There was no significant three-way, so the effect is the same for both locations. There is significantly more Wur_dio at Mulanggari, but there is no reserve effect for Des_var
+
+# Disregard Wur_dio since it has only 31 counts, which is less than 48 (we have 48 quadrats)
+
 ind.sp[which(ind.sp$threewaypvalue<0.05),]
 ind.sp[which(ind.sp$twowaypvalue<0.05),]
 summary(two_way_Des_var) #final model
@@ -2193,14 +2199,13 @@ summary(two_way_Wur_dio) #final model
 head(Des_var_pr,3)
 head(Wur_dio_pr,3)
 
-dev.new(width=10, height=4, dpi=100, pointsize=16,noRStudioGD = T)
-par(mfrow=c(1,2),mar=c(4,4,2,1), oma=c(0,0,0,6), mgp=c(2.5,1,0))
+dev.new(width=6, height=4, dpi=100, pointsize=16,noRStudioGD = T)
+par(mfrow=c(1,1),mar=c(4,4,2,1), oma=c(0,0,0,6), mgp=c(2.5,1,0))
 
 xofs<-0.2
 arrowlgth<-0.02
 
 Des_var_pr_M<-Des_var_pr[which(Des_var_pr$reserve=="M"),]
-Wur_dio_pr_M<-Wur_dio_pr[which(Wur_dio_pr$reserve=="M"),]
 
 ## Des_var
 
@@ -2213,26 +2218,17 @@ points(Des_var_pr_M$DATE[Des_var_pr_M$Treatment=="A"],Des_var_pr_M$fit[Des_var_p
 arrows(Des_var_pr_M$DATE[Des_var_pr_M$Treatment=="A"],Des_var_pr_M$lci[Des_var_pr_M$Treatment=="A"],Des_var_pr_M$DATE[Des_var_pr_M$Treatment=="A"],Des_var_pr_M$uci[Des_var_pr_M$Treatment=="A"], code=3, angle=90, length=arrowlgth, col="red")
 points(Des_var_pr_M$DATE[Des_var_pr_M$Treatment=="B"]+xofs,Des_var_pr_M$fit[Des_var_pr_M$Treatment=="B"], pch=15, col="blue")
 arrows(Des_var_pr_M$DATE[Des_var_pr_M$Treatment=="B"]+xofs,Des_var_pr_M$lci[Des_var_pr_M$Treatment=="B"],Des_var_pr_M$DATE[Des_var_pr_M$Treatment=="B"]+xofs,Des_var_pr_M$uci[Des_var_pr_M$Treatment=="B"], code=3, angle=90, length=arrowlgth, col="blue")
-
-## Wur_dio
-
-plot(Wur_dio_pr_M$DATE[Wur_dio_pr_M$Treatment=="C" ]-xofs,Wur_dio_pr_M$fit[Wur_dio_pr_M$Treatment=="C"], pch=15, ylim=c(min(Wur_dio_pr_M$lci), max(Wur_dio_pr_M$uci)), xlim=c(-0.3,2.3), xaxt="n", xlab="Year", ylab="Wurmbea dioica occurrence", las=1)
-axis(side = 1, at=c(0,1,2), labels=c(2017,2018,2019))
-
-arrows(Wur_dio_pr_M$DATE[Wur_dio_pr_M$Treatment=="C"]-xofs,Wur_dio_pr_M$lci[Wur_dio_pr_M$Treatment=="C"],Wur_dio_pr_M$DATE[Wur_dio_pr_M$Treatment=="C"]-xofs,Wur_dio_pr_M$uci[Wur_dio_pr_M$Treatment=="C"], code=3, angle=90, length=arrowlgth)
-
-points(Wur_dio_pr_M$DATE[Wur_dio_pr_M$Treatment=="A"],Wur_dio_pr_M$fit[Wur_dio_pr_M$Treatment=="A"], pch=15, col="red")
-arrows(Wur_dio_pr_M$DATE[Wur_dio_pr_M$Treatment=="A"],Wur_dio_pr_M$lci[Wur_dio_pr_M$Treatment=="A"],Wur_dio_pr_M$DATE[Wur_dio_pr_M$Treatment=="A"],Wur_dio_pr_M$uci[Wur_dio_pr_M$Treatment=="A"], code=3, angle=90, length=arrowlgth, col="red")
-points(Wur_dio_pr_M$DATE[Wur_dio_pr_M$Treatment=="B"]+xofs,Wur_dio_pr_M$fit[Wur_dio_pr_M$Treatment=="B"], pch=15, col="blue")
-arrows(Wur_dio_pr_M$DATE[Wur_dio_pr_M$Treatment=="B"]+xofs,Wur_dio_pr_M$lci[Wur_dio_pr_M$Treatment=="B"],Wur_dio_pr_M$DATE[Wur_dio_pr_M$Treatment=="B"]+xofs,Wur_dio_pr_M$uci[Wur_dio_pr_M$Treatment=="B"], code=3, angle=90, length=arrowlgth, col="blue")
-
 par(xpd=NA)
-legend(2.6,0.6,legend=c("Control","Spot spray","Boom spray"), col=c("black","red","blue"), pch=15, bty="n", pt.cex = 3)
+legend(2.6,0.6,legend=c("Control","Spot spray","Boom spray"), col=c("black","red","blue"), pch=15, bty="n", pt.cex = 2)
 par(xpd=F)
 
-#Individual species modeling:
-#remove Wur_dio since it has only 31 counts, which is less than 48 (we have 48 quadrats)
+# close binomial models ----
 
+# Individual species modeling:
+
+# COUNT DATA:
+
+# remove Wur_dio, as above
 
 ind.sp2<-ind.sp[-which(ind.sp$Sp=="Wur_dio"),]
 ind.sp2<-tidy.df(ind.sp2)
@@ -2244,7 +2240,8 @@ rahead(ct_ind2,6,6);dim(ct_ind2)
 cv_ind2<-cv_ind[,c(1:4,which(colnames(cv_ind)%in% sp.tomodel))]
 rahead(cv_ind2,6,6);dim(cv_ind2)
 
-#histograms of data
+# histograms of data
+
 dev.new(width=8, height=8, dpi=80, pointsize=16,noRStudioGD = T)
 par(mfrow=c(3,3),mar=c(4,4,2,1), oma=c(0,0,0,0), mgp=c(2.5,1,0))
 
@@ -2336,6 +2333,12 @@ Glytab_3waynb<-anova(three_way_gt_nb,two_way_gt_nb)
 Glytab_2waynb<-anova(two_way_gt_nb, noint_gt_nb)
 
 #Lom_cor
+rahead(ct_ind2, 6, 6)
+lcdat<-ct_ind2[which(ct_ind$Lom_cor>0),c("DATE","reserve","PLOT_ID","Treatment","Lom_cor")]
+head(lcdat); dim(lcdat)
+
+plot()
+
 three_way_lc_nb<-glmmadmb(Lom_cor~DATE+Treatment+reserve+DATE:Treatment+DATE:Treatment:reserve+(1|PLOT_ID),family="truncnbinom1", data=ct_ind2[ct_ind2$Lom_cor>0,])
 summary(three_way_lc_nb)#not significant
 two_way_lc_nb<-glmmadmb(Lom_cor~DATE+Treatment+reserve+DATE:Treatment+(1|PLOT_ID),family="truncnbinom1",data=ct_ind2[ct_ind2$Lom_cor>0,])
@@ -2503,6 +2506,9 @@ arrows(ca_nbpr_J$DATE[ca_nbpr_J$Treatment=="B"]+xofs,ca_nbpr_J$lci.resp[ca_nbpr_
 
 
 ##Ery_ovi Mulangarri 
+
+dev.new(width=10, height=4, dpi=100, pointsize=16,noRStudioGD = T)
+par(mfrow=c(1,2),mar=c(4,4,2,1), oma=c(0,0,0,6), mgp=c(2.5,1,0))
 plot(eo_nbpr_M$DATE[eo_nbpr_M$Treatment=="C" ]-xofs,eo_nbpr_M$fit.resp[eo_nbpr_M$Treatment=="C"], pch=15, ylim=c(min(eo_nbpr_M$lci.resp), max(eo_nbpr_M$uci.resp)), xlim=c(-0.3,2.3), xaxt="n", xlab="Year", ylab="Eryngium ovinum occurrence Mulangarri", las=1)
 axis(side = 1, at=c(0,1,2), labels=c(2017,2018,2019))
 
@@ -2525,6 +2531,9 @@ points(eo_nbpr_J$DATE[eo_nbpr_J$Treatment=="B"]+xofs,eo_nbpr_J$fit.resp[eo_nbpr_
 arrows(eo_nbpr_J$DATE[eo_nbpr_J$Treatment=="B"]+xofs,eo_nbpr_J$lci.resp[eo_nbpr_J$Treatment=="B"],eo_nbpr_J$DATE[eo_nbpr_J$Treatment=="B"]+xofs,eo_nbpr_J$uci.resp[eo_nbpr_J$Treatment=="B"], code=3, angle=90, length=arrowlgth, col="blue")
 
 ##Lom_cor Mulangarri 
+
+dev.new(width=10, height=4, dpi=100, pointsize=16,noRStudioGD = T)
+par(mfrow=c(1,2),mar=c(4,4,2,1), oma=c(0,0,0,6), mgp=c(2.5,1,0))
 plot(lc_nbpr_M$DATE[lc_nbpr_M$Treatment=="C" ]-xofs,lc_nbpr_M$fit.resp[lc_nbpr_M$Treatment=="C"], pch=15, ylim=c(min(lc_nbpr_M$lci.resp), max(lc_nbpr_M$uci.resp)), xlim=c(-0.3,2.3), xaxt="n", xlab="Year", ylab="Lomandra filiformis coriacea occurrence Mulangarri", las=1)
 axis(side = 1, at=c(0,1,2), labels=c(2017,2018,2019))
 
@@ -2547,6 +2556,9 @@ points(lc_nbpr_J$DATE[lc_nbpr_J$Treatment=="B"]+xofs,lc_nbpr_J$fit.resp[lc_nbpr_
 arrows(lc_nbpr_J$DATE[lc_nbpr_J$Treatment=="B"]+xofs,lc_nbpr_J$lci.resp[lc_nbpr_J$Treatment=="B"],lc_nbpr_J$DATE[lc_nbpr_J$Treatment=="B"]+xofs,lc_nbpr_J$uci.resp[lc_nbpr_J$Treatment=="B"], code=3, angle=90, length=arrowlgth, col="blue")
 
 ##Des_var 
+
+dev.new(width=10, height=4, dpi=100, pointsize=16,noRStudioGD = T)
+par(mfrow=c(1,2),mar=c(4,4,2,1), oma=c(0,0,0,6), mgp=c(2.5,1,0))
 plot(dv_nbpr_M$DATE[dv_nbpr_M$Treatment=="C" ]-xofs,dv_nbpr_M$fit.resp[dv_nbpr_M$Treatment=="C"], pch=15, ylim=c(min(dv_nbpr_M$lci.resp), max(dv_nbpr_M$uci.resp)), xlim=c(-0.3,2.3), xaxt="n", xlab="Year", ylab="Desmodium varians occurrence", las=1)
 axis(side = 1, at=c(0,1,2), labels=c(2017,2018,2019))
 
