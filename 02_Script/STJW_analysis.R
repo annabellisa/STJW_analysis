@@ -2147,30 +2147,32 @@ abund_data<-data.frame(Sp=names(apply(ct_ind2[,5:ncol(ct_ind2)], 2, function(x) 
 abund_data<-tidy.df(abund_data)
 
 ind.sp<-merge(ind.sp, abund_data, by="Sp", all.x=T, all.y=F)
-ind.sp$fit_abund<-NA
+ind.sp$fit_abund<-ind.sp$fit_binom
 
-# Let's only fit models where we have more data points than sites. Anything less is not enough data because we have such a complicated model structure. So remove Art_fim, Pla_var (which was rank deficient anyway - not enough data) and Tri_pyg
+# Fit models where we have more data points than quadrats (48) Anything less is not enough data because we have such a complicated model structure. 
 
+ind.sp$fit_abund[which(ind.sp$abund<48)]<-"no"
 
-# COUNT DATA
+# This leaves six species for which we can (attemp to) fit abundance models:
+# Some may still not have enough data for complex three way interactions
+abund.tomodel<-ind.sp$Sp[ind.sp$fit_abund=="yes"]
 
+# Add indicator to whether three way converged or not. This can be our indication of whether to look at the three way:
 
-# This will leave six species to investigate
-ind.sp2<-ind.sp2[-which(ind.sp2$Sp=="Art_fim"),]
-ind.sp2<-ind.sp2[-which(ind.sp2$Sp=="Pla_var"),]
-ind.sp2<-ind.sp2[-which(ind.sp2$Sp=="Tri_pyg"),]
-ind.sp2<-tidy.df(ind.sp2)
+ind.sp$converge_3way<-NA
 
 # save.image("03_Workspaces/stjw_analysis.RData")
 
 # use anova to determine the significance of the three way (anova(3way, 2way)) and the significance of the two way (anova(2way, null_model))
 
+# Abundance data to model:
 unique(ct_ind2$DATE)
 ct_ind2$DATE<-ct_ind2$DATE-min(unique(ct_ind2$DATE))
 rahead(ct_ind2,6,6)
 
-#Chr_api
+# Chr_api
 three_way_ca_nb<-glmmadmb(Chr_api~DATE+Treatment+reserve+DATE:Treatment+DATE:Treatment:reserve+(1|PLOT_ID),family="truncnbinom1", data=ct_ind2[ct_ind2$Chr_api>0,])
+ind.sp$converge_3way[ind.sp$Sp=="Chr_api"]<-"yes"
 
 two_way_ca_nb<-glmer(Chr_api~DATE+Treatment+reserve+DATE:Treatment+(1|PLOT_ID), family="poisson", data=ct_ind2)
 summary(two_way_ca_nb)
@@ -2225,13 +2227,6 @@ AIC(three_way_gt_nb); AIC(two_way_gt_nb)
 Glytab_3waynb<-anova(three_way_gt_nb,two_way_gt_nb)
 Glytab_2waynb<-anova(two_way_gt_nb, noint_gt_nb)
 
-#Lom_cor
-rahead(ct_ind2, 6, 6)
-lcdat<-ct_ind2[which(ct_ind$Lom_cor>0),c("DATE","reserve","PLOT_ID","Treatment","Lom_cor")]
-head(lcdat); dim(lcdat)
-
-plot()
-
 three_way_lc_nb<-glmmadmb(Lom_cor~DATE+Treatment+reserve+DATE:Treatment+DATE:Treatment:reserve+(1|PLOT_ID),family="truncnbinom1", data=ct_ind2[ct_ind2$Lom_cor>0,])
 summary(three_way_lc_nb)#not significant
 two_way_lc_nb<-glmmadmb(Lom_cor~DATE+Treatment+reserve+DATE:Treatment+(1|PLOT_ID),family="truncnbinom1",data=ct_ind2[ct_ind2$Lom_cor>0,])
@@ -2257,27 +2252,27 @@ AIC(three_way_te_nb); AIC(two_way_te_nb)
 Triela_3waynb<-anova(three_way_te_nb,two_way_te_nb)
 Triela_2waynb<-anova(two_way_te_nb, noint_te_nb)
 
-#add columns to ind.sp2 table
-ind.sp2$tnb.3p<-NA
-ind.sp2$tnb.2p<-NA
+# add columns to ind.sp2 table
+ind.sp$tnb.3p<-NA
+ind.sp$tnb.2p<-NA
 
-ind.sp2$tnb.2p[which(ind.sp2$Sp=="Chr_api")]<-Chrapi_2waynb[2,5]
-ind.sp2$tnb.3p[which(ind.sp2$Sp=="Chr_api")]<-Chrapi_3waynb[2,5]
+ind.sp$tnb.2p[which(ind.sp$Sp=="Chr_api")]<-Chrapi_2waynb[2,5]
+ind.sp$tnb.3p[which(ind.sp$Sp=="Chr_api")]<-Chrapi_3waynb[2,5]
 
-ind.sp2$tnb.2p[which(ind.sp2$Sp=="Des_var")]<-Desvar_2waynb[2,5]
-ind.sp2$tnb.3p[which(ind.sp2$Sp=="Des_var")]<-Desvar_3waynb[2,5]
+ind.sp$tnb.2p[which(ind.sp$Sp=="Des_var")]<-Desvar_2waynb[2,5]
+ind.sp$ind.sp[which(ind.sp2$Sp=="Des_var")]<-Desvar_3waynb[2,5]
 
-ind.sp2$tnb.2p[which(ind.sp2$Sp=="Ery_ovi")]<-Eryovi_2waynb[2,5]
-ind.sp2$tnb.3p[which(ind.sp2$Sp=="Ery_ovi")]<-Eryovi_3waynb[2,5]
+ind.sp$tnb.2p[which(ind.sp$Sp=="Ery_ovi")]<-Eryovi_2waynb[2,5]
+ind.sp$tnb.3p[which(ind.sp$Sp=="Ery_ovi")]<-Eryovi_3waynb[2,5]
 
-ind.sp2$tnb.2p[which(ind.sp2$Sp=="Gly_tab")]<-Glytab_2waynb[2,5]
-ind.sp2$tnb.3p[which(ind.sp2$Sp=="Gly_tab")]<-Glytab_3waynb[2,5] #NOT WORKING
+ind.sp$tnb.2p[which(ind.sp$Sp=="Gly_tab")]<-Glytab_2waynb[2,5]
+ind.sp$tnb.3p[which(ind.sp$Sp=="Gly_tab")]<-Glytab_3waynb[2,5] #NOT WORKING
 
-ind.sp2$tnb.2p[which(ind.sp2$Sp=="Lom_cor")]<-Lomcor_2waynb[2,5]
-ind.sp2$tnb.3p[which(ind.sp2$Sp=="Lom_cor")]<-Lomcor_3waynb[2,5]
+ind.sp$tnb.2p[which(ind.sp$Sp=="Lom_cor")]<-Lomcor_2waynb[2,5]
+ind.sp$tnb.3p[which(ind.sp$Sp=="Lom_cor")]<-Lomcor_3waynb[2,5]
 
-ind.sp2$tnb.2p[which(ind.sp2$Sp=="Tri_ela")]<-Triela_2waynb[2,5]
-ind.sp2$tnb.3p[which(ind.sp2$Sp=="Tri_ela")]<-Triela_3waynb[2,5]
+ind.sp$tnb.2p[which(ind.sp$Sp=="Tri_ela")]<-Triela_2waynb[2,5]
+ind.sp$tnb.3p[which(ind.sp$Sp=="Tri_ela")]<-Triela_3waynb[2,5]
 
 
 #predictions  
