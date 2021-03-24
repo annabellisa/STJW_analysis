@@ -1820,26 +1820,9 @@ sp.testout
 
 # close check data ----
 
-# DATA TO MODEL (ind_po) ----
+# save.image("03_Workspaces/stjw_analysis.RData")
 
-ct_ind<-ct_dat[,c(1:4, which(colnames(ct_dat) %in% indsp))]
-cv_ind<-cv_dat[,c(1:4, which(colnames(cv_dat) %in% indsp))]
-
-# Make sure columns match:
-table(colnames(ct_ind)==colnames(cv_ind))
-
-# Model individual species using count data, as presence/absence:
-rahead(ct_ind,6,6); dim(ct_ind)
-rahead(cv_ind,6,6)
-
-# Format date for modelling:
-ind_po<-ct_ind
-ind_po$DATE<-ind_po$DATE-min(ind_po$DATE)
-rahead(ind_po,6,6); dim(ind_po)
-
-# close data to model ----
-
-# ---- Set-up individual species data:
+# Set-up individual species data: ---- 
 
 # Individual species to model:
 head(pinfo,3); dim(pinfo)
@@ -1891,20 +1874,43 @@ ind.sp$count[which(ind.sp$Sp=="Tri_pyg")]<-sum(ct_ind$Tri_pyg)
 
 # Establish minimum data thresholds for analysis
 
-# For binomial models, exclude sp. that have fewer observations than the number of quadrats (48) Gly_cla; Lom_bra; Lom_fil; Lom_mul; Wur_dio
+# For binomial models, exclude sp. that have more than 90 % zeros Art_fim; Gly_cla; Lom_bra; Lom_fil; Lom_mul; Wur_dio
+
+# The data for Art_fim, although abundant, are spatially clustered and not related to treatment (i.e. all treatments in M1 in each year); thus, we only have a single quadrat and couldn't model that
 
 head(ind.sp)
 
 ind.sp$fit_binom<-"yes"
-ind.sp$fit_binom[unique(c(which(ind.sp$prop0> 0.95),which(ind.sp$count<48)))]<-"no"
+ind.sp$fit_binom[which(ind.sp$prop0> 0.9)]<-"no"
 ind.sp<-tidy.df(ind.sp)
 head(ind.sp); dim(ind.sp)
 
 # close individual species data ----
 
+# DATA TO MODEL (ind_po) ----
+
+ct_ind<-ct_dat[,c(1:4, which(colnames(ct_dat) %in% indsp))]
+cv_ind<-cv_dat[,c(1:4, which(colnames(cv_dat) %in% indsp))]
+
+# Make sure columns match:
+table(colnames(ct_ind)==colnames(cv_ind))
+
+# Model individual species using count data, as presence/absence:
+rahead(ct_ind,6,6); dim(ct_ind)
+rahead(cv_ind,6,6)
+
+# Format date for modelling:
+ind_po<-ct_ind
+ind_po$DATE<-ind_po$DATE-min(ind_po$DATE)
+rahead(ind_po,6,6); dim(ind_po)
+
+# close data to model ----
+
+# save.image("03_Workspaces/stjw_analysis.RData")
+
 #  INDIVIDUAL SPECIES BINOMIAL MODELS:    	# ----
 
-# Fit binomial models for nine species:
+# Fit binomial models for eight species:
 ind.sp$Sp[which(ind.sp$fit_binom=="yes")]
 
 # Chr_api 
@@ -1916,23 +1922,8 @@ two_way_Chr_api<-glmer(Chr_api~DATE+Treatment+reserve+DATE:Treatment+(1|PLOT_ID)
 noint_Chr_api<-glmer(Chr_api~DATE+Treatment+reserve+(1|PLOT_ID), family="binomial", data=ind_po)
 
 summary(two_way_Chr_api) #final model
-Chr_api3way<-anova(three_way_Chr_api,two_way_Chr_api) #p value for 3way int,not significant
+Chr_api3way<-anova(three_way_Chr_api,two_way_Chr_api) #p value for 3way int, not significant
 Chr_api2way<-anova(two_way_Chr_api, noint_Chr_api) #p value for 2way, no effect of spraying
-
-# Art_fim
-ind_po$Art_fim<-ifelse(ind_po$Art_fim>0,1,0)
-ind_po$DATE<-ind_po$DATE-min(ind_po$DATE)
-three_way_Art_fim<-glmer(Art_fim~DATE+Treatment+reserve+DATE:Treatment+DATE:Treatment:reserve+(1|PLOT_ID), family="binomial", data=ind_po)
-summary(three_way_Art_fim)
-
-two_way_Art_fim<-glmer(Art_fim~DATE+Treatment+reserve+DATE:Treatment+(1|PLOT_ID), family="binomial", data=ind_po)
-noint_Art_fim<-glmer(Art_fim~DATE+Treatment+reserve+(1|PLOT_ID), family="binomial", data=ind_po)
-summary(two_way_Art_fim) #final model
-anova(three_way_Art_fim,two_way_Art_fim) 
-anova(two_way_Art_fim, noint_Art_fim) 
-
-Art_fim3way<-anova(three_way_Art_fim,two_way_Art_fim) 
-Art_fim2way<-anova(two_way_Art_fim, noint_Art_fim)
 
 # Des_var - three and two way
 ind_po$Des_var<-ifelse(ind_po$Des_var>0,1,0)
@@ -2039,44 +2030,40 @@ anova(two_way_Tri_pyg, noint_Tri_pyg)
 Tri_pyg3way<-anova(three_way_Tri_pyg,two_way_Tri_pyg) 
 Tri_pyg2way<-anova(two_way_Tri_pyg, noint_Tri_pyg) 
 
-# add pvalue columns
-ind.sp$threewaypvalue<-NA
-ind.sp$twowaypvalue<-NA
+# add p value columns
+ind.sp$binom_3wayP<-NA
+ind.sp$binom_2wayP<-NA
 
-ind.sp$threewaypvalue[which(ind.sp$Sp=="Chr_api")]<-Chr_api3way[2,which(colnames(Chr_api3way)=="Pr(>Chisq)")]
-ind.sp$twowaypvalue[which(ind.sp$Sp=="Chr_api")]<-Chr_api2way[2,which(colnames(Chr_api2way)=="Pr(>Chisq)")]
+ind.sp$binom_3wayP[which(ind.sp$Sp=="Chr_api")]<-Chr_api3way[2,which(colnames(Chr_api3way)=="Pr(>Chisq)")]
+ind.sp$binom_2wayP[which(ind.sp$Sp=="Chr_api")]<-Chr_api2way[2,which(colnames(Chr_api2way)=="Pr(>Chisq)")]
 
-ind.sp$threewaypvalue[which(ind.sp$Sp=="Art_fim")]<-Art_fim3way[2,which(colnames(Art_fim3way)=="Pr(>Chisq)")]
-ind.sp$twowaypvalue[which(ind.sp$Sp=="Art_fim")]<-Art_fim2way[2,which(colnames(Art_fim2way)=="Pr(>Chisq)")]
+ind.sp$binom_3wayP[which(ind.sp$Sp=="Des_var")]<-Des_var3way[2,which(colnames(Des_var3way)=="Pr(>Chisq)")]
+ind.sp$binom_2wayP[which(ind.sp$Sp=="Des_var")]<-Des_var2way[2,8]
 
-ind.sp$threewaypvalue[which(ind.sp$Sp=="Des_var")]<-Des_var3way[2,which(colnames(Des_var3way)=="Pr(>Chisq)")]
-ind.sp$twowaypvalue[which(ind.sp$Sp=="Des_var")]<-Des_var2way[2,8]
+ind.sp$binom_3wayP[which(ind.sp$Sp=="Ery_ovi")]<-Ery_ovi3way[2,8]
+ind.sp$binom_2wayP[which(ind.sp$Sp=="Ery_ovi")]<-Ery_ovi2way[2,8]
 
-ind.sp$threewaypvalue[which(ind.sp$Sp=="Ery_ovi")]<-Ery_ovi3way[2,8]
-ind.sp$twowaypvalue[which(ind.sp$Sp=="Ery_ovi")]<-Ery_ovi2way[2,8]
+ind.sp$binom_2wayP[which(ind.sp$Sp=="Gly_tab")]<-Gly_tab3way[2,which(colnames(Gly_tab3way)=="Pr(>Chisq)")]
+ind.sp$binom_3wayP[which(ind.sp$Sp=="Gly_tab")]<-Gly_tab2way[2,which(colnames(Gly_tab2way)=="Pr(>Chisq)")]
 
-ind.sp$twowaypvalue[which(ind.sp$Sp=="Gly_tab")]<-Gly_tab3way[2,which(colnames(Gly_tab3way)=="Pr(>Chisq)")]
-ind.sp$threewaypvalue[which(ind.sp$Sp=="Gly_tab")]<-Gly_tab2way[2,which(colnames(Gly_tab2way)=="Pr(>Chisq)")]
+ind.sp$binom_3wayP[which(ind.sp$Sp=="Lom_cor")]<-Lom_cor3way[2,8]
+ind.sp$binom_2wayP[which(ind.sp$Sp=="Lom_cor")]<-Lom_cor2way[2,8]
 
-ind.sp$threewaypvalue[which(ind.sp$Sp=="Lom_cor")]<-Lom_cor3way[2,8]
-ind.sp$twowaypvalue[which(ind.sp$Sp=="Lom_cor")]<-Lom_cor2way[2,8]
+ind.sp$binom_3wayP[which(ind.sp$Sp=="Pla_var")]<-Pla_var3way[2,8]
+ind.sp$binom_2wayP[which(ind.sp$Sp=="Pla_var")]<-Pla_var2way[2,8]
 
-ind.sp$threewaypvalue[which(ind.sp$Sp=="Pla_var")]<-Pla_var3way[2,8]
-ind.sp$twowaypvalue[which(ind.sp$Sp=="Pla_var")]<-Pla_var2way[2,8]
+ind.sp$binom_3wayP[which(ind.sp$Sp=="Tri_ela")]<-Tri_ela3way[2,8]
+ind.sp$binom_2wayP[which(ind.sp$Sp=="Tri_ela")]<-Tri_ela2way[2,8]
 
-ind.sp$threewaypvalue[which(ind.sp$Sp=="Tri_ela")]<-Tri_ela3way[2,8]
-ind.sp$twowaypvalue[which(ind.sp$Sp=="Tri_ela")]<-Tri_ela2way[2,8]
-
-ind.sp$threewaypvalue[which(ind.sp$Sp=="Tri_pyg")]<-Tri_pyg3way[2,8]
-ind.sp$twowaypvalue[which(ind.sp$Sp=="Tri_pyg")]<-Tri_pyg2way[2,8]
+ind.sp$binom_3wayP[which(ind.sp$Sp=="Tri_pyg")]<-Tri_pyg3way[2,8]
+ind.sp$binom_2wayP[which(ind.sp$Sp=="Tri_pyg")]<-Tri_pyg2way[2,8]
 
 # save.image("03_Workspaces/stjw_analysis.RData")
 
 # predictions  
 nd1<-data.frame(DATE=rep(c(0,1,2),rep(3,3)),Treatment=as.factor(c("C","A","B")),reserve=c(rep("J",9),rep("M",9)))
 
-Art_fim_pr<-pred(model=two_way_Art_fim, new.data = nd1,se.fit = T,type="response")
-Chr_api_pr<-pred(model=two_way_Wur_dio,new.data=nd1,se.fit=T,type="response")
+Chr_api_pr<-pred(model=two_way_Chr_api,new.data=nd1,se.fit=T,type="response")
 Des_var_pr<-pred(model=two_way_Des_var, new.data=nd1, se.fit=T, type="response")
 Ery_ovi_pr<-pred(model=two_way_Ery_ovi, new.data=nd1, se.fit=T, type="response") #check again
 Gly_tab_pr<-pred(model=two_way_Gly_tab, new.data=nd1, se.fit=T, type="response")
@@ -2092,8 +2079,8 @@ Tri_pyg_pr<-pred(model=two_way_Tri_pyg, new.data=nd1, se.fit=T,type="response")
 # Plot species with significant interaction:
 # Plot effects for Mulangarri only. There was no significant three-way, so the effect is the same for both locations. There was no significant reserve effect for Des_var
 
-ind.sp[which(ind.sp$threewaypvalue<0.05),]
-ind.sp[which(ind.sp$twowaypvalue<0.05),]
+ind.sp[which(ind.sp$binom_3wayP<0.05),]
+ind.sp[which(ind.sp$binom_2wayP<0.05),]
 summary(two_way_Des_var) #final model
 head(Des_var_pr,3)
 
@@ -2124,11 +2111,15 @@ par(xpd=F)
 
 #  INDIVIDUAL SPECIES ABUNDANCE MODELS:    	# ----
 
+# Start with species that passed the binomial threshold:
 sp.tomodel<-ind.sp$Sp[ind.sp$fit_binom=="yes"]
 
 # For the count data with zeroes removed, use truncated negative binomial model - in glmmADMB package
 
+# Abundance data to model:
 ct_ind2<-ct_ind[,c(1:4,which(colnames(ct_ind)%in% sp.tomodel))]
+unique(ct_ind2$DATE)
+ct_ind2$DATE<-ct_ind2$DATE-min(unique(ct_ind2$DATE))
 rahead(ct_ind2,6,6);dim(ct_ind2)
 
 # histograms of count data
@@ -2149,11 +2140,15 @@ abund_data<-tidy.df(abund_data)
 ind.sp<-merge(ind.sp, abund_data, by="Sp", all.x=T, all.y=F)
 ind.sp$fit_abund<-ind.sp$fit_binom
 
-# Fit models where we have more data points than quadrats (48) Anything less is not enough data because we have such a complicated model structure. 
+# Fit abundance models for species with greater abundance thanthe number of quadrats (48) Anything less is not enough data because we have such a complicated model structure. 
 
 ind.sp$fit_abund[which(ind.sp$abund<48)]<-"no"
 
-# This leaves six species for which we can (attemp to) fit abundance models:
+# Remove Gly_tab from the analysis as even the simple models would converge
+
+ind.sp$fit_abund[which(ind.sp$Sp=="Gly_tab")]<-"no"
+
+# This leaves five species for which we can (attemp to) fit abundance models:
 # Some may still not have enough data for complex three way interactions
 abund.tomodel<-ind.sp$Sp[ind.sp$fit_abund=="yes"]
 
@@ -2165,21 +2160,15 @@ ind.sp$converge_3way<-NA
 
 # use anova to determine the significance of the three way (anova(3way, 2way)) and the significance of the two way (anova(2way, null_model))
 
-# Abundance data to model:
-unique(ct_ind2$DATE)
-ct_ind2$DATE<-ct_ind2$DATE-min(unique(ct_ind2$DATE))
-rahead(ct_ind2,6,6)
-
 # Chr_api
 three_way_ca_nb<-glmmadmb(Chr_api~DATE+Treatment+reserve+DATE:Treatment+DATE:Treatment:reserve+(1|PLOT_ID),family="truncnbinom1", data=ct_ind2[ct_ind2$Chr_api>0,])
+
 ind.sp$converge_3way[ind.sp$Sp=="Chr_api"]<-"yes"
-
-two_way_ca_nb<-glmer(Chr_api~DATE+Treatment+reserve+DATE:Treatment+(1|PLOT_ID), family="poisson", data=ct_ind2)
-summary(two_way_ca_nb)
-
 summary(three_way_ca_nb) #significant 
+
 two_way_ca_nb<-glmmadmb(Chr_api~DATE+Treatment+reserve+DATE:Treatment+(1|PLOT_ID), family="truncnbinom1", data=ct_ind2[ct_ind2$Chr_api>0,])
 summary(two_way_ca_nb) #not significant
+
 noint_ca_nb<-glmmadmb(Chr_api~DATE+Treatment+reserve+(1|PLOT_ID), family="truncnbinom1", data=ct_ind2[ct_ind2$Chr_api>0,])
 anova(three_way_ca_nb,two_way_ca_nb) #significant 3 way 
 anova(two_way_ca_nb,noint_ca_nb) #significant 2 way
@@ -2188,94 +2177,99 @@ AIC(three_way_ca_nb); AIC(two_way_ca_nb)
 Chrapi_3waynb<-anova(three_way_ca_nb,two_way_ca_nb)
 Chrapi_2waynb<-anova(two_way_ca_nb,noint_ca_nb)
 
-#Des_var 
+# Des_var 
 three_way_dv_nb<-glmmadmb(Des_var~DATE+Treatment+reserve+DATE:Treatment+DATE:Treatment:reserve+(1|PLOT_ID),family="truncnbinom1", data=ct_ind2[ct_ind2$Des_var>0,])
 summary(three_way_dv_nb) #not significant
+
+ind.sp$converge_3way[ind.sp$Sp=="Des_var"]<-"no"
+
 two_way_dv_nb<-glmmadmb(Des_var~DATE+Treatment+reserve+DATE:Treatment+(1|PLOT_ID), family="truncnbinom1", data=ct_ind2[ct_ind2$Des_var>0,])
 summary(two_way_dv_nb) #not significant
 noint_dv_nb<-glmmadmb(Des_var~DATE+Treatment+reserve+(1|PLOT_ID), family="truncnbinom1", data=ct_ind2[ct_ind2$Des_var>0,])
-anova(three_way_dv_nb,two_way_dv_nb) #not signigicant 
-anova(two_way_dv_nb, noint_dv_nb) #significant 2 way
-AIC(three_way_dv_nb); AIC(two_way_dv_nb)
 
-Desvar_3waynb<-anova(three_way_dv_nb,two_way_dv_nb)
+# 3 way model did not converge, do not compare models; take the two-way to be the final model:
+# anova(three_way_dv_nb,two_way_dv_nb) #not signigicant 
+
+anova(two_way_dv_nb, noint_dv_nb) # significant 2 way
+
+Desvar_3waynb<-NA
 Desvar_2waynb<-anova(two_way_dv_nb, noint_dv_nb)
 
-#Ery_ovi 
+# Ery_ovi 
 three_way_eo_nb<-glmmadmb(Ery_ovi~DATE+Treatment+reserve+DATE:Treatment+DATE:Treatment:reserve+(1|PLOT_ID),family="truncnbinom1",data=ct_ind2[ct_ind2$Ery_ovi>0,])
-summary(three_way_eo_nb) #not significant
+summary(three_way_eo_nb) # not significant
+
+ind.sp$converge_3way[ind.sp$Sp=="Ery_ovi"]<-"yes"
+
 two_way_eo_nb<-glmmadmb(Ery_ovi~DATE+Treatment+reserve+DATE:Treatment+(1|PLOT_ID),family="truncnbinom1",data=ct_ind2[ct_ind2$Ery_ovi>0,])
 summary(two_way_eo_nb) #not significant
 noint_eo_nb<-glmmadmb(Ery_ovi~DATE+Treatment+reserve+(1|PLOT_ID), family="truncnbinom1", data=ct_ind2[ct_ind2$Ery_ovi>0,])
-anova(three_way_eo_nb,two_way_eo_nb) #significant 3way
-anova(two_way_eo_nb, noint_eo_nb) #not significant
+
+anova(three_way_eo_nb,two_way_eo_nb) # significant 3way
+anova(two_way_eo_nb, noint_eo_nb) # not significant
 AIC(three_way_eo_nb); AIC(two_way_eo_nb)
 
 Eryovi_3waynb<-anova(three_way_eo_nb,two_way_eo_nb)
 Eryovi_2waynb<-anova(two_way_eo_nb, noint_eo_nb)
 
-#Gly_tab - not enough data to fit a complex interaction model
-three_way_gt_nb<-glmmadmb(Gly_tab~DATE+Treatment+reserve+DATE:Treatment+DATE:Treatment:reserve+(1|PLOT_ID),family="truncnbinom1", data=ct_ind2[ct_ind2$Gly_tab>0,])
-summary(three_way_gt_nb) 
-two_way_gt_nb<-glmmadmb(Gly_tab~DATE+Treatment+reserve+DATE:Treatment+(1|PLOT_ID),family="truncnbinom1",data=ct_ind2[ct_ind2$Gly_tab>0,])
-summary(two_way_gt_nb) #not significant
-noint_gt_nb<-glmmadmb(Gly_tab~DATE+Treatment+reserve+(1|PLOT_ID), family="truncnbinom1", data=ct_ind2[ct_ind2$Gly_tab>0,]) #ERROR curvature at MLE was zero or negative
-anova(three_way_gt_nb,two_way_gt_nb) 
-anova(two_way_gt_nb, noint_gt_nb) 
-AIC(three_way_gt_nb); AIC(two_way_gt_nb)
-
-Glytab_3waynb<-anova(three_way_gt_nb,two_way_gt_nb)
-Glytab_2waynb<-anova(two_way_gt_nb, noint_gt_nb)
+# Lom_cor 
 
 three_way_lc_nb<-glmmadmb(Lom_cor~DATE+Treatment+reserve+DATE:Treatment+DATE:Treatment:reserve+(1|PLOT_ID),family="truncnbinom1", data=ct_ind2[ct_ind2$Lom_cor>0,])
-summary(three_way_lc_nb)#not significant
-two_way_lc_nb<-glmmadmb(Lom_cor~DATE+Treatment+reserve+DATE:Treatment+(1|PLOT_ID),family="truncnbinom1",data=ct_ind2[ct_ind2$Lom_cor>0,])
-summary(two_way_lc_nb) #not significant
-noint_lc_nb<-glmmadmb(Lom_cor~DATE+Treatment+reserve+(1|PLOT_ID), family="truncnbinom1", data=ct_ind2[ct_ind2$Lom_cor>0,]) 
-anova(three_way_lc_nb,two_way_lc_nb) #very highly significant 3way- check
-anova(two_way_lc_nb, noint_lc_nb) #not significant
-AIC(three_way_lc_nb); AIC(two_way_lc_nb)
+summary(three_way_lc_nb) # not significant
 
-Lomcor_3waynb<-anova(three_way_lc_nb,two_way_lc_nb)
+ind.sp$converge_3way[ind.sp$Sp=="Lom_cor"]<-"no"
+
+two_way_lc_nb<-glmmadmb(Lom_cor~DATE+Treatment+reserve+DATE:Treatment+(1|PLOT_ID),family="truncnbinom1",data=ct_ind2[ct_ind2$Lom_cor>0,])
+summary(two_way_lc_nb) # not significant
+noint_lc_nb<-glmmadmb(Lom_cor~DATE+Treatment+reserve+(1|PLOT_ID), family="truncnbinom1", data=ct_ind2[ct_ind2$Lom_cor>0,]) 
+
+# 3 way model did not converge, do not compare models; take the two-way to be the final model:
+# anova(three_way_lc_nb,two_way_lc_nb) #very highly significant 3way- check
+
+anova(two_way_lc_nb, noint_lc_nb) # not significant
+
+Lomcor_3waynb<-NA
 Lomcor_2waynb<-anova(two_way_lc_nb, noint_lc_nb)
 
-#Tri_ela 
+# Tri_ela 
 three_way_te_nb<-glmmadmb(Tri_ela~DATE+Treatment+reserve+DATE:Treatment+DATE:Treatment:reserve+(1|PLOT_ID), family="truncnbinom1", data=ct_ind2[ct_ind2$Tri_ela>0,])
-summary(three_way_te_nb) #not significant
+summary(three_way_te_nb) # not significant
+
+ind.sp$converge_3way[ind.sp$Sp=="Tri_ela"]<-"yes"
+
 two_way_te_nb<-glmmadmb(Tri_ela~DATE+Treatment+reserve+DATE:Treatment+(1|PLOT_ID),family="truncnbinom1",data=ct_ind2[ct_ind2$Tri_ela>0,])
 summary(two_way_te_nb) #not significant
 noint_te_nb<-glmmadmb(Tri_ela~DATE+Treatment+reserve+(1|PLOT_ID), family="truncnbinom1", data=ct_ind2[ct_ind2$Tri_ela>0,]) 
-anova(three_way_te_nb,two_way_te_nb) #not significant
-anova(two_way_te_nb, noint_te_nb) #not significant
+
+anova(three_way_te_nb,two_way_te_nb) # not significant
+anova(two_way_te_nb, noint_te_nb) # not significant
 AIC(three_way_te_nb); AIC(two_way_te_nb)
 
 Triela_3waynb<-anova(three_way_te_nb,two_way_te_nb)
 Triela_2waynb<-anova(two_way_te_nb, noint_te_nb)
 
-# add columns to ind.sp2 table
-ind.sp$tnb.3p<-NA
-ind.sp$tnb.2p<-NA
+# add columns to ind.sp table
+ind.sp$abund.2p<-NA
+ind.sp$abund.3p<-NA
 
-ind.sp$tnb.2p[which(ind.sp$Sp=="Chr_api")]<-Chrapi_2waynb[2,5]
-ind.sp$tnb.3p[which(ind.sp$Sp=="Chr_api")]<-Chrapi_3waynb[2,5]
+ind.sp$abund.2p[which(ind.sp$Sp=="Chr_api")]<-Chrapi_2waynb[2,5]
+ind.sp$abund.3p[which(ind.sp$Sp=="Chr_api")]<-Chrapi_3waynb[2,5]
 
-ind.sp$tnb.2p[which(ind.sp$Sp=="Des_var")]<-Desvar_2waynb[2,5]
-ind.sp$ind.sp[which(ind.sp2$Sp=="Des_var")]<-Desvar_3waynb[2,5]
+ind.sp$abund.2p[which(ind.sp$Sp=="Des_var")]<-Desvar_2waynb[2,5]
+ind.sp$abund.3p[which(ind.sp2$Sp=="Des_var")]<-Desvar_3waynb
 
-ind.sp$tnb.2p[which(ind.sp$Sp=="Ery_ovi")]<-Eryovi_2waynb[2,5]
-ind.sp$tnb.3p[which(ind.sp$Sp=="Ery_ovi")]<-Eryovi_3waynb[2,5]
+ind.sp$abund.2p[which(ind.sp$Sp=="Ery_ovi")]<-Eryovi_2waynb[2,5]
+ind.sp$abund.3p[which(ind.sp$Sp=="Ery_ovi")]<-Eryovi_3waynb[2,5]
 
-ind.sp$tnb.2p[which(ind.sp$Sp=="Gly_tab")]<-Glytab_2waynb[2,5]
-ind.sp$tnb.3p[which(ind.sp$Sp=="Gly_tab")]<-Glytab_3waynb[2,5] #NOT WORKING
+ind.sp$abund.2p[which(ind.sp$Sp=="Lom_cor")]<-Lomcor_2waynb[2,5]
+ind.sp$abund.3p[which(ind.sp$Sp=="Lom_cor")]<-Lomcor_3waynb
 
-ind.sp$tnb.2p[which(ind.sp$Sp=="Lom_cor")]<-Lomcor_2waynb[2,5]
-ind.sp$tnb.3p[which(ind.sp$Sp=="Lom_cor")]<-Lomcor_3waynb[2,5]
+ind.sp$abund.2p[which(ind.sp$Sp=="Tri_ela")]<-Triela_2waynb[2,5]
+ind.sp$abund.3p[which(ind.sp$Sp=="Tri_ela")]<-Triela_3waynb[2,5]
 
-ind.sp$tnb.2p[which(ind.sp$Sp=="Tri_ela")]<-Triela_2waynb[2,5]
-ind.sp$tnb.3p[which(ind.sp$Sp=="Tri_ela")]<-Triela_3waynb[2,5]
+ind.sp[,c(1,which(colnames(ind.sp)=="abund"):ncol(ind.sp))]
 
-
-#predictions  
+# predictions  
 
 # when using the pred function on glmmadmb (i.e. not glmer, for which the pred function uses predictSE), we need to make sure the levels in the new data frame match the levels in the data that were modelled. 
 nd1<-data.frame(DATE=rep(c(0,1,2),rep(3,3)),Treatment=factor(c("C","A","B"), levels=c("C","A","B")),reserve=factor(c(rep("J",9),rep("M",9)),levels=c("J","M")))
