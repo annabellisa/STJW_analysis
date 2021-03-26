@@ -9,7 +9,7 @@
 # Load functions:
 invisible(lapply(paste("01_Functions/",dir("01_Functions"),sep=""), function(x) source(x)))
 
-#install glmmADMB
+# install glmmADMB
 # install.packages("devtools")
 # install.packages("R2admb")
 # devtools::install_github("bbolker/glmmadmb")
@@ -2109,6 +2109,8 @@ par(xpd=F)
 
 # close binomial models ----
 
+# save.image("03_Workspaces/stjw_analysis.RData")
+
 #  INDIVIDUAL SPECIES ABUNDANCE MODELS:    	# ----
 
 # Start with species that passed the binomial threshold:
@@ -2140,7 +2142,7 @@ abund_data<-tidy.df(abund_data)
 ind.sp<-merge(ind.sp, abund_data, by="Sp", all.x=T, all.y=F)
 ind.sp$fit_abund<-ind.sp$fit_binom
 
-# Fit abundance models for species with greater abundance thanthe number of quadrats (48) Anything less is not enough data because we have such a complicated model structure. 
+# Fit abundance models for species with greater abundance thanthe number of quadrats (48). Anything less is not enough data because we have such a complicated model structure. 
 
 ind.sp$fit_abund[which(ind.sp$abund<48)]<-"no"
 
@@ -2249,29 +2251,37 @@ Triela_3waynb<-anova(three_way_te_nb,two_way_te_nb)
 Triela_2waynb<-anova(two_way_te_nb, noint_te_nb)
 
 # add columns to ind.sp table
-ind.sp$abund.2p<-NA
 ind.sp$abund.3p<-NA
+ind.sp$abund.2p<-NA
 
-ind.sp$abund.2p[which(ind.sp$Sp=="Chr_api")]<-Chrapi_2waynb[2,5]
-ind.sp$abund.3p[which(ind.sp$Sp=="Chr_api")]<-Chrapi_3waynb[2,5]
+ind.sp$abund.3p[which(ind.sp$Sp=="Chr_api")]<-round(Chrapi_3waynb[2,5],4)
+ind.sp$abund.2p[which(ind.sp$Sp=="Chr_api")]<-round(Chrapi_2waynb[2,5],4)
 
-ind.sp$abund.2p[which(ind.sp$Sp=="Des_var")]<-Desvar_2waynb[2,5]
 ind.sp$abund.3p[which(ind.sp2$Sp=="Des_var")]<-Desvar_3waynb
+ind.sp$abund.2p[which(ind.sp$Sp=="Des_var")]<-Desvar_2waynb[2,5]
 
-ind.sp$abund.2p[which(ind.sp$Sp=="Ery_ovi")]<-Eryovi_2waynb[2,5]
 ind.sp$abund.3p[which(ind.sp$Sp=="Ery_ovi")]<-Eryovi_3waynb[2,5]
+ind.sp$abund.2p[which(ind.sp$Sp=="Ery_ovi")]<-Eryovi_2waynb[2,5]
 
-ind.sp$abund.2p[which(ind.sp$Sp=="Lom_cor")]<-Lomcor_2waynb[2,5]
 ind.sp$abund.3p[which(ind.sp$Sp=="Lom_cor")]<-Lomcor_3waynb
+ind.sp$abund.2p[which(ind.sp$Sp=="Lom_cor")]<-Lomcor_2waynb[2,5]
 
-ind.sp$abund.2p[which(ind.sp$Sp=="Tri_ela")]<-Triela_2waynb[2,5]
 ind.sp$abund.3p[which(ind.sp$Sp=="Tri_ela")]<-Triela_3waynb[2,5]
+ind.sp$abund.2p[which(ind.sp$Sp=="Tri_ela")]<-Triela_2waynb[2,5]
 
 ind.sp[,c(1,which(colnames(ind.sp)=="abund"):ncol(ind.sp))]
 
 # predictions  
 
+ind.sp[,c(1,which(colnames(ind.sp)=="abund"):ncol(ind.sp))]
+head(ind.sp)
+
+xx<-ct_ind2[,c(1:4, which(colnames(ct_ind2)=="Des_var"))]
+head(xx)
+xx<-aggregate(Des_var~DATE+reserve+Treatment, data=xx, FUN=sum)
+
 # when using the pred function on glmmadmb (i.e. not glmer, for which the pred function uses predictSE), we need to make sure the levels in the new data frame match the levels in the data that were modelled. 
+
 nd1<-data.frame(DATE=rep(c(0,1,2),rep(3,3)),Treatment=factor(c("C","A","B"), levels=c("C","A","B")),reserve=factor(c(rep("J",9),rep("M",9)),levels=c("J","M")))
 
 #Chr_api
@@ -2292,78 +2302,49 @@ type="response"
 summary(three_way_eo_nb)$coefficients
 Ery_ovi_nbpr<-pred(model=three_way_eo_nb,new.data = nd1, se.fit=T, type="response")
 
-#Lom_cor
-model=three_way_lc_nb
-new.data=nd1
-se.fit=T
-type="response"
-summary(three_way_lc_nb)$coefficients
-Lom_cor_nbpr<-pred(model=three_way_lc_nb, new.data=nd1, se.fit=T,type="response")
-
 #Des_var
-model=three_way_dv_nb
+model=two_way_dv_nb
 new.data=nd1
 se.fit=T
 type="response"
 Des_var_nbpr<-pred(model=two_way_dv_nb,new.data=nd1,type="response",se.fit=T)
 head(Des_var_nbpr)
 
-#Gly_tab
-model=three_way_gt_nb
-new.data=nd1
-se.fit=T
-type="response"
-Gly_tab_ndpr<-pred(model=two_way_gt_nb, new.data=nd1, type="response", se.fit=T)
-
-#Tri_ela
-model=three_way_te_nb
-new.data=nd1
-se.fit=T
-type="response"
-Tri_ela_ndpr<-pred(model=two_way_te_nb, new.data=nd1, type="response", se.fit=T)
-
-#save.image("03_Workspaces/stjw_analysis.RData")
-
+# save.image("03_Workspaces/stjw_analysis.RData")
 
 #PLots
 
-ind.sp2[which(ind.sp2$tnb.3p<0.05),]
-ind.sp2[which(ind.sp2$tnb.2p<0.05),]
+ind.sp[which(ind.sp$abund.3p<0.05),]
+ind.sp[which(ind.sp$abund.2p<0.05),]
 
-
-#Since Chr_api, Ery_ovi and Lom_cor have significant 3 way interations, plot effects for both Mulangarri and Jerra. 
-#Des_var has significant 2-way interaction,so the effect is the same for both locations, plot for Mulangarri only
-#Tri_ela not significant, don't plot
+# Since Chr_api, Ery_ovi have significant 3 way interations, plot effects for both Mulangarri and Jerra. 
+# Des_var has significant 2-way interaction,so the effect is the same for both locations, plot for Mulangarri only
 
 summary(three_way_ca_nb) #final model
 summary(three_way_eo_nb) #final model
-summary(three_way_lc_nb)#final model
 summary(two_way_dv_nb) #final model
-
 
 head(Chr_api_nbpr,3)
 head(Ery_ovi_nbpr,3)
-head(Lom_cor_nbpr,3)
 head(Des_var_nbpr,3)
 
-
-dev.new(width=10, height=4, dpi=100, pointsize=16,noRStudioGD = T)
-par(mfrow=c(1,2),mar=c(4,4,2,1), oma=c(0,0,0,6), mgp=c(2.5,1,0))
-
-xofs<-0.2
-arrowlgth<-0.02
+# Subset data by location:
 
 ca_nbpr_M<-Chr_api_nbpr[which(Chr_api_nbpr$reserve=="M"),]
 ca_nbpr_J<-Chr_api_nbpr[which(Chr_api_nbpr$reserve=="J"),]
 eo_nbpr_M<-Ery_ovi_nbpr[which(Ery_ovi_nbpr$reserve=="M"),]
 eo_nbpr_J<-Ery_ovi_nbpr[which(Ery_ovi_nbpr$reserve=="J"),]
-lc_nbpr_M<-Lom_cor_nbpr[which(Lom_cor_nbpr$reserve=="M"),]
-lc_nbpr_J<-Lom_cor_nbpr[which(Lom_cor_nbpr$reserve=="J"),]
 dv_nbpr_M<-Des_var_nbpr[which(Des_var_nbpr$reserve=="M"),]
 
 #save.image("03_Workspaces/stjw_analysis.RData")
 
+xofs<-0.2
+arrowlgth<-0.02
+
 ## Chr_api Mulangarri-
+dev.new(width=10, height=4, dpi=100, pointsize=16,noRStudioGD = T)
+par(mfrow=c(1,2),mar=c(4,4,2,1), oma=c(0,0,0,6), mgp=c(2.5,1,0))
+
 plot(ca_nbpr_M$DATE[ca_nbpr_M$Treatment=="C" ]-xofs,ca_nbpr_M$fit.resp[ca_nbpr_M$Treatment=="C"], pch=15, ylim=c(min(ca_nbpr_M$lci.resp), max(ca_nbpr_M$uci.resp)), xlim=c(-0.3,2.3), xaxt="n", xlab="Year", ylab="Chrysocephalum apiculatum occurrence Mulangarri", las=1)
 axis(side = 1, at=c(0,1,2), labels=c(2017,2018,2019))
 
@@ -2384,7 +2365,6 @@ points(ca_nbpr_J$DATE[ca_nbpr_J$Treatment=="A"],ca_nbpr_J$fit.resp[ca_nbpr_J$Tre
 arrows(ca_nbpr_J$DATE[ca_nbpr_J$Treatment=="A"],ca_nbpr_J$lci.resp[ca_nbpr_J$Treatment=="A"],ca_nbpr_J$DATE[ca_nbpr_J$Treatment=="A"],ca_nbpr_J$uci.resp[ca_nbpr_J$Treatment=="A"], code=3, angle=90, length=arrowlgth, col="red")
 points(ca_nbpr_J$DATE[ca_nbpr_J$Treatment=="B"]+xofs,ca_nbpr_J$fit.resp[ca_nbpr_J$Treatment=="B"], pch=15, col="blue")
 arrows(ca_nbpr_J$DATE[ca_nbpr_J$Treatment=="B"]+xofs,ca_nbpr_J$lci.resp[ca_nbpr_J$Treatment=="B"],ca_nbpr_J$DATE[ca_nbpr_J$Treatment=="B"]+xofs,ca_nbpr_J$uci.resp[ca_nbpr_J$Treatment=="B"], code=3, angle=90, length=arrowlgth, col="blue")
-
 
 ##Ery_ovi Mulangarri 
 
@@ -2411,36 +2391,11 @@ arrows(eo_nbpr_J$DATE[eo_nbpr_J$Treatment=="A"],eo_nbpr_J$lci.resp[eo_nbpr_J$Tre
 points(eo_nbpr_J$DATE[eo_nbpr_J$Treatment=="B"]+xofs,eo_nbpr_J$fit.resp[eo_nbpr_J$Treatment=="B"], pch=15, col="blue")
 arrows(eo_nbpr_J$DATE[eo_nbpr_J$Treatment=="B"]+xofs,eo_nbpr_J$lci.resp[eo_nbpr_J$Treatment=="B"],eo_nbpr_J$DATE[eo_nbpr_J$Treatment=="B"]+xofs,eo_nbpr_J$uci.resp[eo_nbpr_J$Treatment=="B"], code=3, angle=90, length=arrowlgth, col="blue")
 
-##Lom_cor Mulangarri 
-
-dev.new(width=10, height=4, dpi=100, pointsize=16,noRStudioGD = T)
-par(mfrow=c(1,2),mar=c(4,4,2,1), oma=c(0,0,0,6), mgp=c(2.5,1,0))
-plot(lc_nbpr_M$DATE[lc_nbpr_M$Treatment=="C" ]-xofs,lc_nbpr_M$fit.resp[lc_nbpr_M$Treatment=="C"], pch=15, ylim=c(min(lc_nbpr_M$lci.resp), max(lc_nbpr_M$uci.resp)), xlim=c(-0.3,2.3), xaxt="n", xlab="Year", ylab="Lomandra filiformis coriacea occurrence Mulangarri", las=1)
-axis(side = 1, at=c(0,1,2), labels=c(2017,2018,2019))
-
-arrows(lc_nbpr_M$DATE[lc_nbpr_M$Treatment=="C"]-xofs,lc_nbpr_M$lci.resp[lc_nbpr_M$Treatment=="C"],lc_nbpr_M$DATE[lc_nbpr_M$Treatment=="C"]-xofs,lc_nbpr_M$uci.resp[lc_nbpr_M$Treatment=="C"], code=3, angle=90, length=arrowlgth)
-
-points(lc_nbpr_M$DATE[lc_nbpr_M$Treatment=="A"],lc_nbpr_M$fit.resp[lc_nbpr_M$Treatment=="A"], pch=15, col="red")
-arrows(lc_nbpr_M$DATE[lc_nbpr_M$Treatment=="A"],lc_nbpr_M$lci.resp[lc_nbpr_M$Treatment=="A"],lc_nbpr_M$DATE[lc_nbpr_M$Treatment=="A"],lc_nbpr_M$uci.resp[lc_nbpr_M$Treatment=="A"], code=3, angle=90, length=arrowlgth, col="red")
-points(lc_nbpr_M$DATE[lc_nbpr_M$Treatment=="B"]+xofs,lc_nbpr_M$fit.resp[lc_nbpr_M$Treatment=="B"], pch=15, col="blue")
-arrows(lc_nbpr_M$DATE[lc_nbpr_M$Treatment=="B"]+xofs,lc_nbpr_M$lci.resp[lc_nbpr_M$Treatment=="B"],lc_nbpr_M$DATE[lc_nbpr_M$Treatment=="B"]+xofs,lc_nbpr_M$uci.resp[lc_nbpr_M$Treatment=="B"], code=3, angle=90, length=arrowlgth, col="blue")
-
-##Lom_cor Jerrabomberra
-plot(lc_nbpr_J$DATE[lc_nbpr_J$Treatment=="C" ]-xofs,lc_nbpr_J$fit.resp[lc_nbpr_J$Treatment=="C"], pch=15, ylim=c(min(lc_nbpr_J$lci.resp), max(lc_nbpr_J$uci.resp)), xlim=c(-0.3,2.3), xaxt="n", xlab="Year", ylab="Lomandra filiformis coriacea occurrence Jerrabomberra", las=1)
-axis(side = 1, at=c(0,1,2), labels=c(2017,2018,2019))
-
-arrows(lc_nbpr_J$DATE[lc_nbpr_J$Treatment=="C"]-xofs,lc_nbpr_J$lci.resp[lc_nbpr_J$Treatment=="C"],lc_nbpr_J$DATE[lc_nbpr_J$Treatment=="C"]-xofs,lc_nbpr_J$uci.resp[lc_nbpr_J$Treatment=="C"], code=3, angle=90, length=arrowlgth)
-
-points(lc_nbpr_J$DATE[lc_nbpr_J$Treatment=="A"],lc_nbpr_J$fit.resp[lc_nbpr_J$Treatment=="A"], pch=15, col="red")
-arrows(lc_nbpr_J$DATE[lc_nbpr_J$Treatment=="A"],lc_nbpr_J$lci.resp[lc_nbpr_J$Treatment=="A"],lc_nbpr_J$DATE[lc_nbpr_J$Treatment=="A"],lc_nbpr_J$uci.resp[lc_nbpr_J$Treatment=="A"], code=3, angle=90, length=arrowlgth, col="red")
-points(lc_nbpr_J$DATE[lc_nbpr_J$Treatment=="B"]+xofs,lc_nbpr_J$fit.resp[lc_nbpr_J$Treatment=="B"], pch=15, col="blue")
-arrows(lc_nbpr_J$DATE[lc_nbpr_J$Treatment=="B"]+xofs,lc_nbpr_J$lci.resp[lc_nbpr_J$Treatment=="B"],lc_nbpr_J$DATE[lc_nbpr_J$Treatment=="B"]+xofs,lc_nbpr_J$uci.resp[lc_nbpr_J$Treatment=="B"], code=3, angle=90, length=arrowlgth, col="blue")
-
 ##Des_var 
 
 dev.new(width=10, height=4, dpi=100, pointsize=16,noRStudioGD = T)
 par(mfrow=c(1,2),mar=c(4,4,2,1), oma=c(0,0,0,6), mgp=c(2.5,1,0))
-plot(dv_nbpr_M$DATE[dv_nbpr_M$Treatment=="C" ]-xofs,dv_nbpr_M$fit.resp[dv_nbpr_M$Treatment=="C"], pch=15, ylim=c(min(dv_nbpr_M$lci.resp), max(dv_nbpr_M$uci.resp)), xlim=c(-0.3,2.3), xaxt="n", xlab="Year", ylab="Desmodium varians occurrence", las=1)
+plot(dv_nbpr_M$DATE[dv_nbpr_M$Treatment=="C" ]-xofs,dv_nbpr_M$fit.resp[dv_nbpr_M$Treatment=="C"], pch=15, ylim=c(min(dv_nbpr_M$lci.resp), 26), xlim=c(-0.3,2.3), xaxt="n", xlab="Year", ylab="Desmodium varians occurrence", las=1)
 axis(side = 1, at=c(0,1,2), labels=c(2017,2018,2019))
 
 arrows(dv_nbpr_M$DATE[dv_nbpr_M$Treatment=="C"]-xofs,dv_nbpr_M$lci.resp[dv_nbpr_M$Treatment=="C"],dv_nbpr_M$DATE[dv_nbpr_M$Treatment=="C"]-xofs,dv_nbpr_M$uci.resp[dv_nbpr_M$Treatment=="C"], code=3, angle=90, length=arrowlgth)
