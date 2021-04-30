@@ -1756,7 +1756,7 @@ par(xpd=F)
 
 # close plot component 1 ----
 
-#  INDIVIDUAL SPECIES:    	# ----
+#  INDIVIDUAL SPECIES data set-up:    	# ----
 
 # Need to check with RM: why was Desmodium varians classified as a legume rather than a native leg forb?
 # Is it OK for us to classify it as native leg forb (I have done this above in the 'format data' section)?
@@ -1766,7 +1766,7 @@ table(pinfo$func_grp)
 
 # save.image("03_Workspaces/stjw_analysis.RData")
 
-# CHECK DATA ---- 
+# CHECK DATA
 
 # Make sure all species data columns match:
 
@@ -1818,11 +1818,7 @@ for (i in 1:length(sp.totest)){
 # NO more problems in re-formatted data. 
 sp.testout
 
-# close check data ----
-
 # save.image("03_Workspaces/stjw_analysis.RData")
-
-# Set-up individual species data: ---- 
 
 # Individual species to model:
 head(pinfo,3); dim(pinfo)
@@ -2094,7 +2090,7 @@ Des_var_pr_M<-Des_var_pr[which(Des_var_pr$reserve=="M"),]
 
 ## Des_var
 
-plot(Des_var_pr_M$DATE[Des_var_pr_M$Treatment=="C" ]-xofs,Des_var_pr_M$fit[Des_var_pr_M$Treatment=="C"], pch=15, ylim=c(min(Des_var_pr_M$lci), max(Des_var_pr_M$uci)), xlim=c(-0.3,2.3), xaxt="n", xlab="Year", ylab="Desmodium varians occurrence", las=1)
+plot(Des_var_pr_M$DATE[Des_var_pr_M$Treatment=="C" ]-xofs,Des_var_pr_M$fit[Des_var_pr_M$Treatment=="C"], pch=15, ylim=c(min(Des_var_pr_M$lci), max(Des_var_pr_M$uci)), xlim=c(-0.3,2.3), xaxt="n", xlab="Year", ylab=bquote(italic("D. varians ")~.("occurence")), las=1)
 axis(side = 1, at=c(0,1,2), labels=c(2017,2018,2019))
 
 arrows(Des_var_pr_M$DATE[Des_var_pr_M$Treatment=="C"]-xofs,Des_var_pr_M$lci[Des_var_pr_M$Treatment=="C"],Des_var_pr_M$DATE[Des_var_pr_M$Treatment=="C"]-xofs,Des_var_pr_M$uci[Des_var_pr_M$Treatment=="C"], code=3, angle=90, length=arrowlgth)
@@ -2142,7 +2138,7 @@ abund_data<-tidy.df(abund_data)
 ind.sp<-merge(ind.sp, abund_data, by="Sp", all.x=T, all.y=F)
 ind.sp$fit_abund<-ind.sp$fit_binom
 
-# Fit abundance models for species with greater abundance thanthe number of quadrats (48). Anything less is not enough data because we have such a complicated model structure. 
+# Fit abundance models for species with greater abundance than the number of quadrats (48). Anything less is not enough data because we have such a complicated model structure. 
 
 ind.sp$fit_abund[which(ind.sp$abund<48)]<-"no"
 
@@ -2276,10 +2272,6 @@ ind.sp[,c(1,which(colnames(ind.sp)=="abund"):ncol(ind.sp))]
 ind.sp[,c(1,which(colnames(ind.sp)=="abund"):ncol(ind.sp))]
 head(ind.sp)
 
-xx<-ct_ind2[,c(1:4, which(colnames(ct_ind2)=="Des_var"))]
-head(xx)
-xx<-aggregate(Des_var~DATE+reserve+Treatment, data=xx, FUN=sum)
-
 # when using the pred function on glmmadmb (i.e. not glmer, for which the pred function uses predictSE), we need to make sure the levels in the new data frame match the levels in the data that were modelled. 
 
 nd1<-data.frame(DATE=rep(c(0,1,2),rep(3,3)),Treatment=factor(c("C","A","B"), levels=c("C","A","B")),reserve=factor(c(rep("J",9),rep("M",9)),levels=c("J","M")))
@@ -2302,7 +2294,7 @@ type="response"
 summary(three_way_eo_nb)$coefficients
 Ery_ovi_nbpr<-pred(model=three_way_eo_nb,new.data = nd1, se.fit=T, type="response")
 
-#Des_var
+#Des_var (predictions not reliable)
 model=two_way_dv_nb
 new.data=nd1
 se.fit=T
@@ -2335,6 +2327,7 @@ ca_nbpr_J<-Chr_api_nbpr[which(Chr_api_nbpr$reserve=="J"),]
 eo_nbpr_M<-Ery_ovi_nbpr[which(Ery_ovi_nbpr$reserve=="M"),]
 eo_nbpr_J<-Ery_ovi_nbpr[which(Ery_ovi_nbpr$reserve=="J"),]
 dv_nbpr_M<-Des_var_nbpr[which(Des_var_nbpr$reserve=="M"),]
+dv_nbpr_J<-Des_var_nbpr[which(Des_var_nbpr$reserve=="J"),]
 
 #save.image("03_Workspaces/stjw_analysis.RData")
 
@@ -2343,10 +2336,13 @@ arrowlgth<-0.02
 
 ## Chr_api Mulangarri-
 dev.new(width=10, height=4, dpi=100, pointsize=16,noRStudioGD = T)
-par(mfrow=c(1,2),mar=c(4,4,2,1), oma=c(0,0,0,6), mgp=c(2.5,1,0))
+par(mfrow=c(1,2),mar=c(4,4,3,1), oma=c(0,0,0,6), mgp=c(2.5,1,0))
 
-plot(ca_nbpr_M$DATE[ca_nbpr_M$Treatment=="C" ]-xofs,ca_nbpr_M$fit.resp[ca_nbpr_M$Treatment=="C"], pch=15, ylim=c(min(ca_nbpr_M$lci.resp), max(ca_nbpr_M$uci.resp)), xlim=c(-0.3,2.3), xaxt="n", xlab="Year", ylab="Chrysocephalum apiculatum occurrence Mulangarri", las=1)
+plot(ca_nbpr_M$DATE[ca_nbpr_M$Treatment=="C" ]-xofs,ca_nbpr_M$fit.resp[ca_nbpr_M$Treatment=="C"], pch=15, ylim=c(min(ca_nbpr_M$lci.resp), max(ca_nbpr_M$uci.resp)), xlim=c(-0.3,2.3), xaxt="n", xlab="Year", ylab=bquote(italic("C. apiculatum")~.("abundance")), las=1)
 axis(side = 1, at=c(0,1,2), labels=c(2017,2018,2019))
+mtext("Mulangarri", side=3, line=1.5, adj=0, cex=0.9)
+p.Chrapi_3waynb<-round(Chrapi_3waynb[2,which(colnames(Chrapi_3waynb)=="Pr(>Chi)")],3)
+title(main=paste("Three-way int, ","P=",p.Chrapi_3waynb, sep=""), font.main=1, adj=0, cex.main=0.9, line=0.5)
 
 arrows(ca_nbpr_M$DATE[ca_nbpr_M$Treatment=="C"]-xofs,ca_nbpr_M$lci.resp[ca_nbpr_M$Treatment=="C"],ca_nbpr_M$DATE[ca_nbpr_M$Treatment=="C"]-xofs,ca_nbpr_M$uci.resp[ca_nbpr_M$Treatment=="C"], code=3, angle=90, length=arrowlgth)
 
@@ -2356,8 +2352,9 @@ points(ca_nbpr_M$DATE[ca_nbpr_M$Treatment=="B"]+xofs,ca_nbpr_M$fit.resp[ca_nbpr_
 arrows(ca_nbpr_M$DATE[ca_nbpr_M$Treatment=="B"]+xofs,ca_nbpr_M$lci.resp[ca_nbpr_M$Treatment=="B"],ca_nbpr_M$DATE[ca_nbpr_M$Treatment=="B"]+xofs,ca_nbpr_M$uci.resp[ca_nbpr_M$Treatment=="B"], code=3, angle=90, length=arrowlgth, col="blue")
 
 ##Chr_api Jerrabomberra
-plot(ca_nbpr_J$DATE[ca_nbpr_J$Treatment=="C" ]-xofs,ca_nbpr_J$fit.resp[ca_nbpr_J$Treatment=="C"], pch=15, ylim=c(min(ca_nbpr_J$lci.resp), max(ca_nbpr_J$uci.resp)), xlim=c(-0.3,2.3), xaxt="n", xlab="Year", ylab="Chrysocephalum apiculatum occurrence Jerrabomberra", las=1)
+plot(ca_nbpr_J$DATE[ca_nbpr_J$Treatment=="C" ]-xofs,ca_nbpr_J$fit.resp[ca_nbpr_J$Treatment=="C"], pch=15, ylim=c(min(ca_nbpr_J$lci.resp), max(ca_nbpr_J$uci.resp)), xlim=c(-0.3,2.3), xaxt="n", xlab="Year", ylab=bquote(italic("C. apiculatum")~.("abundance")), las=1)
 axis(side = 1, at=c(0,1,2), labels=c(2017,2018,2019))
+mtext("Jerrabomberra", side=3, line=1.5, adj=0, cex=0.9)
 
 arrows(ca_nbpr_J$DATE[ca_nbpr_J$Treatment=="C"]-xofs,ca_nbpr_J$lci.resp[ca_nbpr_J$Treatment=="C"],ca_nbpr_J$DATE[ca_nbpr_J$Treatment=="C"]-xofs,ca_nbpr_J$uci.resp[ca_nbpr_J$Treatment=="C"], code=3, angle=90, length=arrowlgth)
 
@@ -2366,12 +2363,18 @@ arrows(ca_nbpr_J$DATE[ca_nbpr_J$Treatment=="A"],ca_nbpr_J$lci.resp[ca_nbpr_J$Tre
 points(ca_nbpr_J$DATE[ca_nbpr_J$Treatment=="B"]+xofs,ca_nbpr_J$fit.resp[ca_nbpr_J$Treatment=="B"], pch=15, col="blue")
 arrows(ca_nbpr_J$DATE[ca_nbpr_J$Treatment=="B"]+xofs,ca_nbpr_J$lci.resp[ca_nbpr_J$Treatment=="B"],ca_nbpr_J$DATE[ca_nbpr_J$Treatment=="B"]+xofs,ca_nbpr_J$uci.resp[ca_nbpr_J$Treatment=="B"], code=3, angle=90, length=arrowlgth, col="blue")
 
+par(xpd=NA)
+legend(2.6,20,legend=c("Control","Spot spray","Boom spray"), col=c("black","red","blue"), pch=15, bty="n", pt.cex = 3)
+par(xpd=F)
+
 ##Ery_ovi Mulangarri 
 
 dev.new(width=10, height=4, dpi=100, pointsize=16,noRStudioGD = T)
-par(mfrow=c(1,2),mar=c(4,4,2,1), oma=c(0,0,0,6), mgp=c(2.5,1,0))
-plot(eo_nbpr_M$DATE[eo_nbpr_M$Treatment=="C" ]-xofs,eo_nbpr_M$fit.resp[eo_nbpr_M$Treatment=="C"], pch=15, ylim=c(min(eo_nbpr_M$lci.resp), max(eo_nbpr_M$uci.resp)), xlim=c(-0.3,2.3), xaxt="n", xlab="Year", ylab="Eryngium ovinum occurrence Mulangarri", las=1)
+par(mfrow=c(1,2),mar=c(4,4,3,1), oma=c(0,0,0,6), mgp=c(2.5,1,0))
+plot(eo_nbpr_M$DATE[eo_nbpr_M$Treatment=="C" ]-xofs,eo_nbpr_M$fit.resp[eo_nbpr_M$Treatment=="C"], pch=15, ylim=c(min(eo_nbpr_M$lci.resp), max(eo_nbpr_M$uci.resp)), xlim=c(-0.3,2.3), xaxt="n", xlab="Year", ylab=bquote(italic("E. ovinum")~.("abundance")), las=1)
 axis(side = 1, at=c(0,1,2), labels=c(2017,2018,2019))
+mtext("Mulangarri", side=3, line=1.5, adj=0, cex=0.9)
+title(main=paste("Three-way int, ","P < 0.001", sep=""), font.main=1, adj=0, cex.main=0.9, line=0.5)
 
 arrows(eo_nbpr_M$DATE[eo_nbpr_M$Treatment=="C"]-xofs,eo_nbpr_M$lci.resp[eo_nbpr_M$Treatment=="C"],eo_nbpr_M$DATE[eo_nbpr_M$Treatment=="C"]-xofs,eo_nbpr_M$uci.resp[eo_nbpr_M$Treatment=="C"], code=3, angle=90, length=arrowlgth)
 
@@ -2381,8 +2384,9 @@ points(eo_nbpr_M$DATE[eo_nbpr_M$Treatment=="B"]+xofs,eo_nbpr_M$fit.resp[eo_nbpr_
 arrows(eo_nbpr_M$DATE[eo_nbpr_M$Treatment=="B"]+xofs,eo_nbpr_M$lci.resp[eo_nbpr_M$Treatment=="B"],eo_nbpr_M$DATE[eo_nbpr_M$Treatment=="B"]+xofs,eo_nbpr_M$uci.resp[eo_nbpr_M$Treatment=="B"], code=3, angle=90, length=arrowlgth, col="blue")
 
 ##Ery_ovi Jerrabomberra
-plot(eo_nbpr_J$DATE[eo_nbpr_J$Treatment=="C" ]-xofs,eo_nbpr_J$fit.resp[eo_nbpr_J$Treatment=="C"], pch=15, ylim=c(min(eo_nbpr_J$lci.resp), max(eo_nbpr_J$uci.resp)), xlim=c(-0.3,2.3), xaxt="n", xlab="Year", ylab="Eryngium ovinum occurrence Jerrabomberra", las=1)
+plot(eo_nbpr_J$DATE[eo_nbpr_J$Treatment=="C" ]-xofs,eo_nbpr_J$fit.resp[eo_nbpr_J$Treatment=="C"], pch=15, ylim=c(min(eo_nbpr_J$lci.resp), max(eo_nbpr_J$uci.resp)), xlim=c(-0.3,2.3), xaxt="n", xlab="Year", ylab=bquote(italic("E. ovinum")~.("abundance")), las=1)
 axis(side = 1, at=c(0,1,2), labels=c(2017,2018,2019))
+mtext("Jerrabomberra", side=3, line=1.5, adj=0, cex=0.9)
 
 arrows(eo_nbpr_J$DATE[eo_nbpr_J$Treatment=="C"]-xofs,eo_nbpr_J$lci.resp[eo_nbpr_J$Treatment=="C"],eo_nbpr_J$DATE[eo_nbpr_J$Treatment=="C"]-xofs,eo_nbpr_J$uci.resp[eo_nbpr_J$Treatment=="C"], code=3, angle=90, length=arrowlgth)
 
@@ -2391,12 +2395,19 @@ arrows(eo_nbpr_J$DATE[eo_nbpr_J$Treatment=="A"],eo_nbpr_J$lci.resp[eo_nbpr_J$Tre
 points(eo_nbpr_J$DATE[eo_nbpr_J$Treatment=="B"]+xofs,eo_nbpr_J$fit.resp[eo_nbpr_J$Treatment=="B"], pch=15, col="blue")
 arrows(eo_nbpr_J$DATE[eo_nbpr_J$Treatment=="B"]+xofs,eo_nbpr_J$lci.resp[eo_nbpr_J$Treatment=="B"],eo_nbpr_J$DATE[eo_nbpr_J$Treatment=="B"]+xofs,eo_nbpr_J$uci.resp[eo_nbpr_J$Treatment=="B"], code=3, angle=90, length=arrowlgth, col="blue")
 
-##Des_var 
+par(xpd=NA)
+legend(2.6,20,legend=c("Control","Spot spray","Boom spray"), col=c("black","red","blue"), pch=15, bty="n", pt.cex = 3)
+par(xpd=F)
+
+##Des_var (predictions not reliable)
 
 dev.new(width=10, height=4, dpi=100, pointsize=16,noRStudioGD = T)
-par(mfrow=c(1,2),mar=c(4,4,2,1), oma=c(0,0,0,6), mgp=c(2.5,1,0))
-plot(dv_nbpr_M$DATE[dv_nbpr_M$Treatment=="C" ]-xofs,dv_nbpr_M$fit.resp[dv_nbpr_M$Treatment=="C"], pch=15, ylim=c(min(dv_nbpr_M$lci.resp), 26), xlim=c(-0.3,2.3), xaxt="n", xlab="Year", ylab="Desmodium varians occurrence", las=1)
+par(mfrow=c(1,2),mar=c(4,4,3,1), oma=c(0,0,0,6), mgp=c(2.5,1,0))
+plot(dv_nbpr_M$DATE[dv_nbpr_M$Treatment=="C" ]-xofs,dv_nbpr_M$fit.resp[dv_nbpr_M$Treatment=="C"], pch=15, ylim=c(min(dv_nbpr_M$lci.resp), 26), xlim=c(-0.3,2.3), xaxt="n", xlab="Year", ylab=bquote(italic("D. varians")~.("abundance")), las=1)
 axis(side = 1, at=c(0,1,2), labels=c(2017,2018,2019))
+mtext("Mulangarri", side=3, line=1.5, adj=0, cex=0.9)
+p.Desvar_2waynb<-round(Desvar_2waynb[2,which(colnames(Desvar_2waynb)=="Pr(>Chi)")],3)
+title(main=paste("Two-way int, ","P=",p.Desvar_2waynb, sep=""), font.main=1, adj=0, cex.main=0.9, line=0.5)
 
 arrows(dv_nbpr_M$DATE[dv_nbpr_M$Treatment=="C"]-xofs,dv_nbpr_M$lci.resp[dv_nbpr_M$Treatment=="C"],dv_nbpr_M$DATE[dv_nbpr_M$Treatment=="C"]-xofs,dv_nbpr_M$uci.resp[dv_nbpr_M$Treatment=="C"], code=3, angle=90, length=arrowlgth)
 
@@ -2405,13 +2416,25 @@ arrows(dv_nbpr_M$DATE[dv_nbpr_M$Treatment=="A"],dv_nbpr_M$lci.resp[dv_nbpr_M$Tre
 points(dv_nbpr_M$DATE[dv_nbpr_M$Treatment=="B"]+xofs,dv_nbpr_M$fit.resp[dv_nbpr_M$Treatment=="B"], pch=15, col="blue")
 arrows(dv_nbpr_M$DATE[dv_nbpr_M$Treatment=="B"]+xofs,dv_nbpr_M$lci.resp[dv_nbpr_M$Treatment=="B"],dv_nbpr_M$DATE[dv_nbpr_M$Treatment=="B"]+xofs,dv_nbpr_M$uci.resp[dv_nbpr_M$Treatment=="B"], code=3, angle=90, length=arrowlgth, col="blue")
 
+##Des_var Jerrabomberra
+plot(dv_nbpr_J$DATE[dv_nbpr_J$Treatment=="C" ]-xofs,dv_nbpr_J$fit.resp[dv_nbpr_J$Treatment=="C"], pch=15, ylim=c(min(dv_nbpr_J$lci.resp), max(dv_nbpr_J$uci.resp)), xlim=c(-0.3,2.3), xaxt="n", xlab="Year", ylab=bquote(italic("D. varians")~.("abundance")), las=1)
+axis(side = 1, at=c(0,1,2), labels=c(2017,2018,2019))
+mtext("Jerrabomberra", side=3, line=1.5, adj=0, cex=0.9)
+
+arrows(dv_nbpr_J$DATE[dv_nbpr_J$Treatment=="C"]-xofs,dv_nbpr_J$lci.resp[dv_nbpr_J$Treatment=="C"],dv_nbpr_J$DATE[dv_nbpr_J$Treatment=="C"]-xofs,dv_nbpr_J$uci.resp[dv_nbpr_J$Treatment=="C"], code=3, angle=90, length=arrowlgth)
+
+points(dv_nbpr_J$DATE[dv_nbpr_J$Treatment=="A"],dv_nbpr_J$fit.resp[dv_nbpr_J$Treatment=="A"], pch=15, col="red")
+arrows(dv_nbpr_J$DATE[dv_nbpr_J$Treatment=="A"],dv_nbpr_J$lci.resp[dv_nbpr_J$Treatment=="A"],dv_nbpr_J$DATE[dv_nbpr_J$Treatment=="A"],dv_nbpr_J$uci.resp[dv_nbpr_J$Treatment=="A"], code=3, angle=90, length=arrowlgth, col="red")
+points(dv_nbpr_J$DATE[dv_nbpr_J$Treatment=="B"]+xofs,dv_nbpr_J$fit.resp[dv_nbpr_J$Treatment=="B"], pch=15, col="blue")
+arrows(dv_nbpr_J$DATE[dv_nbpr_J$Treatment=="B"]+xofs,dv_nbpr_J$lci.resp[dv_nbpr_J$Treatment=="B"],dv_nbpr_J$DATE[dv_nbpr_J$Treatment=="B"]+xofs,dv_nbpr_J$uci.resp[dv_nbpr_J$Treatment=="B"], code=3, angle=90, length=arrowlgth, col="blue")
+
+par(xpd=NA)
+legend(2.6,20,legend=c("Control","Spot spray","Boom spray"), col=c("black","red","blue"), pch=15, bty="n", pt.cex = 3)
+par(xpd=F)
+
 # close abundance models ----
 
 #save.image("03_Workspaces/stjw_analysis.RData")
-
-# close indiv species ----
-
-
 
 #  COMPONENT 4 seed viability:    	# ----
 
