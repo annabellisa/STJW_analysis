@@ -2465,8 +2465,8 @@ plot(1:6, sd_nd$fit, ylim=c(min(sd_nd$lci),max(sd_nd$uci)), las=1, type="p", xli
 
 arrows(1:6, sd_nd$lci, 1:6, sd_nd$uci, code=3, length=0.05, angle=90,col=c("red","blue","cornflowerblue"))
 points(1:6, sd_nd$fit, pch=15, cex=1, col=c("red","blue","cornflowerblue"))
-axis(side=1, at=c(2, 5), labels=c("A","B"))
-title(xlab="Treatment", mgp=c(2.3,1,0))
+axis(side=1, at=c(2, 5), labels=c("None","Mod-high"))
+title(xlab="STJW Density", mgp=c(2.3,1,0))
 arrows(c(3.5),0,c(3.5),1.5, length=0, col="grey70")
 
 p.trt<-round(anova(sd_mod1)[1,5],3)
@@ -2474,7 +2474,7 @@ p.mth<-round(anova(sd_mod1)[2,5],3)
 p.int<-round(anova(sd_mod1)[3,5],3)
 p.mth<-"< 0.001"
 
-title(main=paste("P values: Treatment =",p.trt,"\nMethod =",p.mth,"; Int. =",p.int, sep=""), font.main=1, adj=0, cex.main=0.8, line=0.5)
+title(main=paste("P values: STJW density = ",p.trt,"\nSpray method ",p.mth,"; Int. = ",p.int, sep=""), font.main=1, adj=0, cex.main=0.8, line=0.5)
 
 par(xpd=NA)
 legend(6.5,0.6,legend=c("Spot spray","Fine boom","Coarse boom"), col=c("red","blue","cornflowerblue"), pch=15, bty="n", pt.cex = 2.8)
