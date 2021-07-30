@@ -1480,6 +1480,14 @@ gdf$invsimp2w_resM_coef<-ifelse(gdf$invsimp_3wayP>0.05,round(unlist(lapply(coef.
 
 # Plot significant binomial models:
 
+# update y labels for manuscript:
+
+head(gdf,2)
+gdf$ylabn<-NA
+gdf$ylabn[gdf$group=="native_legherb"]<-"Native legume forb"
+gdf$ylabn[gdf$group=="exotic_legherb"]<-"Exotic legume forb"
+
+
 panel.size<-2
 
 dev.new(width=panel.size*3.5,height=panel.size*3,noRStudioGD = T,dpi=80, pointsize=(panel.size*3.5)*2)
@@ -1491,10 +1499,11 @@ for(i in 18:19){
   pred.thisrun<-preds.binom[[i]]
   anova.thisrun<-anova.binom[[i]]
   coef.thisrun<-coef.binom[[i]]
-  ylab.thisrun<-gdf$ylab[i]
+  ylab.thisrun<-gdf$ylabn[i]
   meta.thisrun<-gdf[i,]
   xofs<-0.2
   arrowlgth<-0.02
+  if(i==18) codes.thisrun<-letters[1:2] else codes.thisrun<-letters[3:4]
   
   head(pred.thisrun)
   
@@ -1514,7 +1523,7 @@ for(i in 18:19){
   arrows(mul.preds$DATE[mul.preds$Treatment=="A"],mul.preds$lci[mul.preds$Treatment=="A"],mul.preds$DATE[mul.preds$Treatment=="A"],mul.preds$uci[mul.preds$Treatment=="A"], code=3, angle=90, length=arrowlgth, col="red")
   points(mul.preds$DATE[mul.preds$Treatment=="B"]+xofs,mul.preds$fit[mul.preds$Treatment=="B"], pch=15, col="blue")
   arrows(mul.preds$DATE[mul.preds$Treatment=="B"]+xofs,mul.preds$lci[mul.preds$Treatment=="B"],mul.preds$DATE[mul.preds$Treatment=="B"]+xofs,mul.preds$uci[mul.preds$Treatment=="B"], code=3, angle=90, length=arrowlgth, col="blue")
-  mtext("Mulangarri", side=3, line=1.5, adj=0, cex=0.9)
+  mtext(paste("(",codes.thisrun[1],") ", "Mulangarri",sep=""), side=3, line=1.2, adj=0, cex=0.9)
   
   # JERRA
   
@@ -1526,12 +1535,12 @@ for(i in 18:19){
   points(jerra.preds$DATE[jerra.preds$Treatment=="B"]+xofs,jerra.preds$fit[jerra.preds$Treatment=="B"], pch=15, col="blue")
   arrows(jerra.preds$DATE[jerra.preds$Treatment=="B"]+xofs,jerra.preds$lci[jerra.preds$Treatment=="B"],jerra.preds$DATE[jerra.preds$Treatment=="B"]+xofs,jerra.preds$uci[jerra.preds$Treatment=="B"], code=3, angle=90, length=arrowlgth, col="blue")
   
-  mtext("Jerrabomberra", side=3, line=1.5, adj=0, cex=0.9)
+  mtext(paste("(",codes.thisrun[2],") ", "Jerrabomberra", sep=""), side=3, line=1.2, adj=0, cex=0.9)
   
   if (gdf$bin_3wayP[i]<0.05){
     
     p.trt_yr_int<-round(anova.thisrun[2,which(colnames(anova.thisrun)=="Pr(>Chisq)")],3)
-    title(main=paste("Three-way int, ","P=",p.trt_yr_int, sep=""), font.main=1, adj=0, cex.main=1, line=0.5)
+    title(main=bquote(Three-way~int.~italic(P)~"="~.(p.trt_yr_int)), font.main=1, adj=0, cex.main=1, line=0.5)
     
   } # close if 3-way signif
   
@@ -1540,7 +1549,7 @@ for(i in 18:19){
   if (gdf$bin_2wayP[i]<0.05){
     
     p.trt_yr_int<-round(anova.thisrun[2,which(colnames(anova.thisrun)=="Pr(>Chisq)")],3)
-    title(main=paste("Two-way int, ","P=",p.trt_yr_int, sep=""), font.main=1, adj=0, cex.main=1, line=0.5)
+    title(main=bquote(Two-way~int.~italic(P)~"="~.(p.trt_yr_int)), font.main=1.4, adj=0, cex.main=1, line=0.5)
     
   } # close if 2-way signif
   
@@ -2455,18 +2464,19 @@ sd_pr<-predict(sd_mod1, newdata = sd_nd, se.fit = T)
 sd_nd<-data.frame(sd_nd, fit=sd_pr$fit, se=sd_pr$se.fit)
 sd_nd$lci<-sd_nd$fit-(sd_nd$se*1.96)
 sd_nd$uci<-sd_nd$fit+(sd_nd$se*1.96)
+head(sd_nd)
 
 # PLOT estimates:
 
 dev.new(width=6, height=4, dpi=100, pointsize=16,noRStudioGD = T)
-par(mfrow=c(1,1),mar=c(4,4,2.5,1), oma=c(0,0,0,6), mgp=c(2.5,1,0))
+par(mfrow=c(1,1),mar=c(4,4,1,1), oma=c(0,0,0,6), mgp=c(2.5,1,0))
 
 plot(1:6, sd_nd$fit, ylim=c(min(sd_nd$lci),max(sd_nd$uci)), las=1, type="p", xlim=c(0.75, 6.25),pch=15, xlab="", xaxt="n", ylab="Proportion sprayed",col=c("red","blue","cornflowerblue"))
 
 arrows(1:6, sd_nd$lci, 1:6, sd_nd$uci, code=3, length=0.05, angle=90,col=c("red","blue","cornflowerblue"))
 points(1:6, sd_nd$fit, pch=15, cex=1, col=c("red","blue","cornflowerblue"))
 axis(side=1, at=c(2, 5), labels=c("None","Mod-high"))
-title(xlab="STJW Density", mgp=c(2.3,1,0))
+title(xlab=bquote(italic(H.~perforatum)~density), mgp=c(2.3,1,0))
 arrows(c(3.5),0,c(3.5),1.5, length=0, col="grey70")
 
 p.trt<-round(anova(sd_mod1)[1,5],3)
@@ -2474,10 +2484,10 @@ p.mth<-round(anova(sd_mod1)[2,5],3)
 p.int<-round(anova(sd_mod1)[3,5],3)
 p.mth<-"< 0.001"
 
-title(main=paste("P values: STJW density = ",p.trt,"\nSpray method ",p.mth,"; Int. = ",p.int, sep=""), font.main=1, adj=0, cex.main=0.8, line=0.5)
+# title(main=paste("P values: STJW density = ",p.trt,"\nSpray method ",p.mth,"; Int. = ",p.int, sep=""), font.main=1, adj=0, cex.main=0.8, line=0.5)
 
 par(xpd=NA)
-legend(6.5,0.6,legend=c("Spot spray","Fine boom","Coarse boom"), col=c("red","blue","cornflowerblue"), pch=15, bty="n", pt.cex = 2.8)
+legend(6.5,0.45,legend=c("Spot spray","Fine boom","Coarse boom"), col=c("red","blue","cornflowerblue"), pch=15, bty="n", pt.cex = 2.7)
 par(xpd=F)
 
 # PLOT raw data:
