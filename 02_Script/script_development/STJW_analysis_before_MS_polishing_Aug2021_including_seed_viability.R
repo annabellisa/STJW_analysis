@@ -1072,66 +1072,7 @@ for (i in 1:ncol(data.update)){
 
 # close diversity calculation ----
 
-#  Spray drift ANALYSIS:    	# ----
-
-sdrift<-read.table("00_Data/Formatted_data/spray_drift.txt", header=T)
-head(sdrift,3); dim(sdrift)
-
-# fit model:
-sd_mod1<-lm(percent_sprayed~treatment*method, data=sdrift)
-summary(sd_mod1)
-anova(sd_mod1)
-
-# model estimates:
-
-# order new data as: spot, fine, coarse, so that it's in the same order as the plant results:
-sd_nd<-data.frame(treatment=rep(unique(sdrift$treatment),rep(3,2)),method=unique(sdrift$method)[c(2,1,3)])
-
-sd_pr<-predict(sd_mod1, newdata = sd_nd, se.fit = T)
-sd_nd<-data.frame(sd_nd, fit=sd_pr$fit, se=sd_pr$se.fit)
-sd_nd$lci<-sd_nd$fit-(sd_nd$se*1.96)
-sd_nd$uci<-sd_nd$fit+(sd_nd$se*1.96)
-head(sd_nd)
-
-# PLOT estimates:
-
-dev.new(width=6, height=4, dpi=100, pointsize=16,noRStudioGD = T)
-par(mfrow=c(1,1),mar=c(4,4,1,1), oma=c(0,0,0,6), mgp=c(2.5,1,0))
-
-plot(1:6, sd_nd$fit, ylim=c(min(sd_nd$lci),max(sd_nd$uci)), las=1, type="p", xlim=c(0.75, 6.25),pch=15, xlab="", xaxt="n", ylab="Proportion sprayed",col=c("red","blue","cornflowerblue"))
-
-arrows(1:6, sd_nd$lci, 1:6, sd_nd$uci, code=3, length=0.05, angle=90,col=c("red","blue","cornflowerblue"))
-points(1:6, sd_nd$fit, pch=15, cex=1, col=c("red","blue","cornflowerblue"))
-axis(side=1, at=c(2, 5), labels=c("None","Mod-high"))
-title(xlab=bquote(italic(H.~perforatum)~density), mgp=c(2.3,1,0))
-arrows(c(3.5),0,c(3.5),1.5, length=0, col="grey70")
-
-p.trt<-round(anova(sd_mod1)[1,5],3)
-p.mth<-round(anova(sd_mod1)[2,5],3)
-p.int<-round(anova(sd_mod1)[3,5],3)
-p.mth<-"< 0.001"
-
-# title(main=paste("P values: STJW density = ",p.trt,"\nSpray method ",p.mth,"; Int. = ",p.int, sep=""), font.main=1, adj=0, cex.main=0.8, line=0.5)
-
-par(xpd=NA)
-legend(6.5,0.45,legend=c("Spot spray","Fine boom","Coarse boom"), col=c("red","blue","cornflowerblue"), pch=15, bty="n", pt.cex = 2.7)
-par(xpd=F)
-
-# PLOT raw data:
-
-dev.new(width=5,height=4,noRStudioGD = T,dpi=80, pointsize=14)
-par(mfrow=c(1,1), mar=c(4,4,1,6), mgp=c(2.8,1,0))
-boxplot(sdrift$percent_sprayed~sdrift$method*as.factor(sdrift$treatment), col=c("darkorange","darkturquoise","darkolivegreen2"),las=2, xlab="", xaxt="n", ylab="Percent sprayed",at=c(0.7,1.7,2.7,4.3,5.3,6.3))
-axis(side=1, at=c(2, 5), labels=c("A","B"))
-title(xlab="Treatment", mgp=c(2.5,1,0))
-arrows(c(3.5),0,c(3.5),1.5, length=0, col="grey70")
-par(xpd=NA)
-legend(7.5,1,legend=c("Coarse boom","Fine boom","Spot spray"), col=c("darkorange","darkturquoise","darkolivegreen2"), pch=15, bty="n", pt.cex = 3)
-par(xpd=T)
-
-# close spray drift ----
-
-#  Richness & Diversity ANALYSIS:    	# ----
+#  ANALYSIS (COMPONENT 1):    	# ----
 
 # MODELLING SUMMARY:
 
@@ -1533,9 +1474,9 @@ gdf$invsimp2w_resM_coef<-ifelse(gdf$invsimp_3wayP>0.05,round(unlist(lapply(coef.
 
 # save.image("03_Workspaces/stjw_analysis_diversity.RData")
 
-# close richness & diversity ----
+# close analysis ----
 
-#  PLOT ESTIMATES (Richness & Diversity):    	# ----
+#  PLOT ESTIMATES (COMPONENT 1):    	# ----
 
 # Plot significant binomial models:
 
@@ -1701,8 +1642,7 @@ par(xpd=F)
 
 head(gdf,2)
 gdf$ylabn<-gdf$ylab
-gdf$ylabn[gdf$group=="sigB"]<-"Indicator B"
-gdf$ylabn[gdf$group=="exotic_legherb"]<-"Exotic legume forb"
+gdf$ylabn[gdf$group=="exotic"]<-"All exotic plants"
 
 dev.new(width=panel.size*3.5,height=panel.size*4,noRStudioGD = T,dpi=80, pointsize=(panel.size*4)*2)
 par(mfrow=c(3,2), mar=c(4,4,3,2), oma=c(0,0,0,6), mgp=c(2.5,1,0))
@@ -1713,14 +1653,10 @@ for(i in c(6,12,19)){
   pred.thisrun<-preds.invsimp[[i]]
   anova.thisrun<-anova.invsimp[[i]]
   coef.thisrun<-coef.invsimp[[i]]
-  ylab.thisrun<-gdf$ylabn[i]
+  ylab.thisrun<-gdf$ylab[i]
   meta.thisrun<-gdf[i,]
   xofs<-0.2
   arrowlgth<-0.02
-  
-  if(i==6) codes.thisrun<-letters[1:2] 
-  if(i==12) codes.thisrun<-letters[3:4] 
-  if(i==19) codes.thisrun<-letters[5:6] 
   
   head(pred.thisrun)
   
@@ -1738,7 +1674,7 @@ for(i in c(6,12,19)){
   arrows(mul.preds$DATE[mul.preds$Treatment=="A"],mul.preds$lci.resp[mul.preds$Treatment=="A"],mul.preds$DATE[mul.preds$Treatment=="A"],mul.preds$uci.resp[mul.preds$Treatment=="A"], code=3, angle=90, length=arrowlgth, col="red")
   points(mul.preds$DATE[mul.preds$Treatment=="B"]+xofs,mul.preds$fit.resp[mul.preds$Treatment=="B"], pch=15, col="blue")
   arrows(mul.preds$DATE[mul.preds$Treatment=="B"]+xofs,mul.preds$lci.resp[mul.preds$Treatment=="B"],mul.preds$DATE[mul.preds$Treatment=="B"]+xofs,mul.preds$uci.resp[mul.preds$Treatment=="B"], code=3, angle=90, length=arrowlgth, col="blue")
-  mtext(paste("(",codes.thisrun[1],") ", "Mulanggari",sep=""), side=3, line=1.2, adj=0, cex=0.7)
+  mtext("Mulanggari", side=3, line=1.5, adj=0, cex=0.9)
   
   # JERRA
   
@@ -1750,12 +1686,12 @@ for(i in c(6,12,19)){
   points(jerra.preds$DATE[jerra.preds$Treatment=="B"]+xofs,jerra.preds$fit.resp[jerra.preds$Treatment=="B"], pch=15, col="blue")
   arrows(jerra.preds$DATE[jerra.preds$Treatment=="B"]+xofs,jerra.preds$lci.resp[jerra.preds$Treatment=="B"],jerra.preds$DATE[jerra.preds$Treatment=="B"]+xofs,jerra.preds$uci.resp[jerra.preds$Treatment=="B"], code=3, angle=90, length=arrowlgth, col="blue")
   
-  mtext(paste("(",codes.thisrun[2],") ", "Jerrabomberra", sep=""), side=3, line=1.2, adj=0, cex=0.7)
+  mtext("Jerrabomberra", side=3, line=1.5, adj=0, cex=0.9)
   
   if (gdf$invsimp_3wayP[i]<0.05){
     
     p.trt_yr_int<-round(anova.thisrun[2,which(colnames(anova.thisrun)=="Pr(>Chi)")],3)
-    title(main=bquote(Three-way~int.~italic(P)~"="~.(p.trt_yr_int)), font.main=1, adj=0, cex.main=1, line=0.5)
+    title(main=paste("Three-way int, ","P=",p.trt_yr_int, sep=""), font.main=1, adj=0, cex.main=1, line=0.5)
     
   } # close if 3-way signif
   
@@ -1764,7 +1700,7 @@ for(i in c(6,12,19)){
   if (gdf$invsimp_2wayP[i]<0.05){
     
     p.trt_yr_int<-round(anova.thisrun[2,which(colnames(anova.thisrun)=="Pr(>Chi)")],3)
-    if (p.trt_yr_int<0.001) title(main=bquote(Two-way~int.~italic(P)~"<"~0.001), font.main=1, adj=0, cex.main=1, line=0.5) else title(main=bquote(Two-way~int.~italic(P)~"="~.(p.trt_yr_int)), font.main=1.4, adj=0, cex.main=1, line=0.5)
+    if (p.trt_yr_int<0.001) title(main=paste("Two-way int, ","P < 0.001", sep=""), font.main=1, adj=0, cex.main=1, line=0.5) else title(main=paste("Two-way int, ","P=",p.trt_yr_int, sep=""), font.main=1, adj=0, cex.main=1, line=0.5)
     
   } # close if 2-way signif
   
@@ -1774,7 +1710,75 @@ par(xpd=NA)
 legend(2.6,1.5,legend=c("Control","Spot spray","Boom spray"), col=c("black","red","blue"), pch=15, bty="n", pt.cex = 3)
 par(xpd=F)
 
-# close plot Richness & Diversity ----
+# Plot trends in invsimp models:
+
+dev.new(width=8,height=6,noRStudioGD = T,dpi=80, pointsize=12)
+par(mfrow=c(3,4), mar=c(4,4,3,2), oma=c(0,0,0,6), mgp=c(2.5,1,0))
+
+for(i in c(10, 11, 14, 24, 25)){
+  
+  resp.thisrun<-gdf$group[i]
+  pred.thisrun<-preds.invsimp[[i]]
+  anova.thisrun<-anova.invsimp[[i]]
+  coef.thisrun<-coef.invsimp[[i]]
+  ylab.thisrun<-gdf$ylab[i]
+  meta.thisrun<-gdf[i,]
+  xofs<-0.2
+  arrowlgth<-0.02
+  
+  head(pred.thisrun)
+  
+  mul.preds<-pred.thisrun[which(pred.thisrun$reserve=="M"),]
+  jerra.preds<-pred.thisrun[which(pred.thisrun$reserve=="J"),]
+  
+  # MULANGARRI
+  
+  plot(mul.preds$DATE[mul.preds$Treatment=="C"]-xofs,mul.preds$fit.resp[mul.preds$Treatment=="C"], pch=15, ylim=c(min(mul.preds$lci.resp), max(mul.preds$uci.resp)), xlim=c(-0.3,2.3), xaxt="n", xlab="Year", ylab=ylab.thisrun, las=1)
+  axis(side = 1, at=c(0,1,2), labels=c(2017,2018,2019))
+  
+  arrows(mul.preds$DATE[mul.preds$Treatment=="C"]-xofs,mul.preds$lci.resp[mul.preds$Treatment=="C"],mul.preds$DATE[mul.preds$Treatment=="C"]-xofs,mul.preds$uci.resp[mul.preds$Treatment=="C"], code=3, angle=90, length=arrowlgth)
+  
+  points(mul.preds$DATE[mul.preds$Treatment=="A"],mul.preds$fit.resp[mul.preds$Treatment=="A"], pch=15, col="red")
+  arrows(mul.preds$DATE[mul.preds$Treatment=="A"],mul.preds$lci.resp[mul.preds$Treatment=="A"],mul.preds$DATE[mul.preds$Treatment=="A"],mul.preds$uci.resp[mul.preds$Treatment=="A"], code=3, angle=90, length=arrowlgth, col="red")
+  points(mul.preds$DATE[mul.preds$Treatment=="B"]+xofs,mul.preds$fit.resp[mul.preds$Treatment=="B"], pch=15, col="blue")
+  arrows(mul.preds$DATE[mul.preds$Treatment=="B"]+xofs,mul.preds$lci.resp[mul.preds$Treatment=="B"],mul.preds$DATE[mul.preds$Treatment=="B"]+xofs,mul.preds$uci.resp[mul.preds$Treatment=="B"], code=3, angle=90, length=arrowlgth, col="blue")
+  mtext("Mulangarri", side=3, line=1.5, adj=0, cex=0.9)
+  
+  # JERRA
+  
+  plot(jerra.preds$DATE[jerra.preds$Treatment=="C"]-xofs,jerra.preds$fit.resp[jerra.preds$Treatment=="C"], pch=15, ylim=c(min(jerra.preds$lci.resp), max(jerra.preds$uci.resp)), xlim=c(-0.3,2.3), xaxt="n", xlab="Year", ylab=ylab.thisrun, las=1)
+  axis(side = 1, at=c(0,1,2), labels=c(2017,2018,2019))
+  arrows(jerra.preds$DATE[jerra.preds$Treatment=="C"]-xofs,jerra.preds$lci.resp[jerra.preds$Treatment=="C"],jerra.preds$DATE[jerra.preds$Treatment=="C"]-xofs,jerra.preds$uci.resp[jerra.preds$Treatment=="C"], code=3, angle=90, length=arrowlgth)
+  points(jerra.preds$DATE[jerra.preds$Treatment=="A"],jerra.preds$fit.resp[jerra.preds$Treatment=="A"], pch=15, col="red")
+  arrows(jerra.preds$DATE[jerra.preds$Treatment=="A"],jerra.preds$lci.resp[jerra.preds$Treatment=="A"],jerra.preds$DATE[jerra.preds$Treatment=="A"],jerra.preds$uci.resp[jerra.preds$Treatment=="A"], code=3, angle=90, length=arrowlgth, col="red")
+  points(jerra.preds$DATE[jerra.preds$Treatment=="B"]+xofs,jerra.preds$fit.resp[jerra.preds$Treatment=="B"], pch=15, col="blue")
+  arrows(jerra.preds$DATE[jerra.preds$Treatment=="B"]+xofs,jerra.preds$lci.resp[jerra.preds$Treatment=="B"],jerra.preds$DATE[jerra.preds$Treatment=="B"]+xofs,jerra.preds$uci.resp[jerra.preds$Treatment=="B"], code=3, angle=90, length=arrowlgth, col="blue")
+  
+  mtext("Jerrabomberra", side=3, line=1.5, adj=0, cex=0.9)
+  
+  if (gdf$invsimp_3wayP[i]<0.05){
+    
+    p.trt_yr_int<-round(anova.thisrun[2,which(colnames(anova.thisrun)=="Pr(>Chi)")],3)
+    title(main=paste("Three-way int, ","P=",p.trt_yr_int, sep=""), font.main=1, adj=0, cex.main=1, line=0.5)
+    
+  } # close if 3-way signif
+  
+  if(is.na(gdf$invsimp_2wayP[i])) next
+  
+  if (gdf$invsimp_2wayP[i]<0.1){
+    
+    p.trt_yr_int<-round(anova.thisrun[2,which(colnames(anova.thisrun)=="Pr(>Chi)")],3)
+    if (p.trt_yr_int<0.001) title(main=paste("Two-way int, ","P < 0.001", sep=""), font.main=1, adj=0, cex.main=1, line=0.5) else title(main=paste("Two-way int, ","P=",p.trt_yr_int, sep=""), font.main=1, adj=0, cex.main=1, line=0.5)
+    
+  } # close if 2-way signif
+  
+} # close plot invsimp trend
+
+par(xpd=NA)
+legend(2.6,2.5,legend=c("Control","Spot spray","Boom spray"), col=c("black","red","blue"), pch=15, bty="n", pt.cex = 3)
+par(xpd=F)
+
+# close plot component 1 ----
 
 #  INDIVIDUAL SPECIES data set-up:    	# ----
 
@@ -2090,6 +2094,39 @@ Tri_pyg_pr<-pred(model=two_way_Tri_pyg, new.data=nd1, se.fit=T,type="response")
 
 # save.image("03_Workspaces/stjw_analysis.RData")
 
+# Plots:
+
+# Plot species with significant interaction:
+# Plot effects for Mulangarri only. There was no significant three-way, so the effect is the same for both locations. There was no significant reserve effect for Des_var
+
+ind.sp[which(ind.sp$binom_3wayP<0.05),]
+ind.sp[which(ind.sp$binom_2wayP<0.05),]
+summary(two_way_Des_var) #final model
+head(Des_var_pr,3)
+
+dev.new(width=6, height=4, dpi=100, pointsize=16,noRStudioGD = T)
+par(mfrow=c(1,1),mar=c(4,4,1,1), oma=c(0,0,0,6), mgp=c(2.5,1,0))
+
+xofs<-0.2
+arrowlgth<-0.02
+
+Des_var_pr_M<-Des_var_pr[which(Des_var_pr$reserve=="M"),]
+
+## Des_var
+
+plot(Des_var_pr_M$DATE[Des_var_pr_M$Treatment=="C" ]-xofs,Des_var_pr_M$fit[Des_var_pr_M$Treatment=="C"], pch=15, ylim=c(min(Des_var_pr_M$lci), max(Des_var_pr_M$uci)), xlim=c(-0.3,2.3), xaxt="n", xlab="Year", ylab=bquote(italic("D. varians ")~.("occurence")), las=1)
+axis(side = 1, at=c(0,1,2), labels=c(2017,2018,2019))
+
+arrows(Des_var_pr_M$DATE[Des_var_pr_M$Treatment=="C"]-xofs,Des_var_pr_M$lci[Des_var_pr_M$Treatment=="C"],Des_var_pr_M$DATE[Des_var_pr_M$Treatment=="C"]-xofs,Des_var_pr_M$uci[Des_var_pr_M$Treatment=="C"], code=3, angle=90, length=arrowlgth)
+
+points(Des_var_pr_M$DATE[Des_var_pr_M$Treatment=="A"],Des_var_pr_M$fit[Des_var_pr_M$Treatment=="A"], pch=15, col="red")
+arrows(Des_var_pr_M$DATE[Des_var_pr_M$Treatment=="A"],Des_var_pr_M$lci[Des_var_pr_M$Treatment=="A"],Des_var_pr_M$DATE[Des_var_pr_M$Treatment=="A"],Des_var_pr_M$uci[Des_var_pr_M$Treatment=="A"], code=3, angle=90, length=arrowlgth, col="red")
+points(Des_var_pr_M$DATE[Des_var_pr_M$Treatment=="B"]+xofs,Des_var_pr_M$fit[Des_var_pr_M$Treatment=="B"], pch=15, col="blue")
+arrows(Des_var_pr_M$DATE[Des_var_pr_M$Treatment=="B"]+xofs,Des_var_pr_M$lci[Des_var_pr_M$Treatment=="B"],Des_var_pr_M$DATE[Des_var_pr_M$Treatment=="B"]+xofs,Des_var_pr_M$uci[Des_var_pr_M$Treatment=="B"], code=3, angle=90, length=arrowlgth, col="blue")
+par(xpd=NA)
+legend(2.6,0.5,legend=c("Control","Spot spray","Boom spray"), col=c("black","red","blue"), pch=15, bty="n", pt.cex = 3)
+par(xpd=F)
+
 # close binomial models ----
 
 # save.image("03_Workspaces/stjw_analysis.RData")
@@ -2174,7 +2211,7 @@ noint_dv_nb<-glmmadmb(Des_var~DATE+Treatment+reserve+(1|PLOT_ID), family="truncn
 
 # 3 way model did not converge, do not compare models; take the two-way to be the final model:
 # anova(three_way_dv_nb,two_way_dv_nb) #not signigicant 
-# but note there are fitting problems with this 2 way, possibly not enough abundance data (70)
+
 anova(two_way_dv_nb, noint_dv_nb) # significant 2 way
 
 Desvar_3waynb<-NA
@@ -2291,32 +2328,13 @@ head(Des_var_nbpr)
 
 # save.image("03_Workspaces/stjw_analysis.RData")
 
-# close abundance models ----
-
-#  PLOT INDIVIDUAL SPECIES:    	# ----
-
-# PLOT all on the same page (binomial and abundance)
-
-# BINOMIAL
-
-# For binomial, there were not significant 3 way interactions and only one significant 2 way (Des_var)
-ind.sp[which(ind.sp$binom_3wayP<0.05),]
-ind.sp[which(ind.sp$binom_2wayP<0.05),]
-
-# Des_var data
-Des_var_pr_M<-Des_var_pr[which(Des_var_pr$reserve=="M"),]
-Des_var_pr_J<-Des_var_pr[which(Des_var_pr$reserve=="J"),]
-DesvarP<-round(Des_var2way$"Pr(>Chisq)"[2],3)
-summary(two_way_Des_var) #final model
-head(Des_var_pr,3)
-
-# ABUNDANCE
+#PLots
 
 ind.sp[which(ind.sp$abund.3p<0.05),]
 ind.sp[which(ind.sp$abund.2p<0.05),]
 
 # Since Chr_api, Ery_ovi have significant 3 way interations, plot effects for both Mulangarri and Jerra. 
-# Des_var has significant 2-way interaction but the model has a poor fit - see abundance estimates
+# Des_var has significant 2-way interaction,so the effect is the same for both locations, plot for Mulangarri only
 
 summary(three_way_ca_nb) #final model
 summary(three_way_eo_nb) #final model
@@ -2335,82 +2353,52 @@ eo_nbpr_J<-Ery_ovi_nbpr[which(Ery_ovi_nbpr$reserve=="J"),]
 dv_nbpr_M<-Des_var_nbpr[which(Des_var_nbpr$reserve=="M"),]
 dv_nbpr_J<-Des_var_nbpr[which(Des_var_nbpr$reserve=="J"),]
 
-# save.image("03_Workspaces/stjw_analysis.RData")
-
-# PLOT
+#save.image("03_Workspaces/stjw_analysis.RData")
 
 xofs<-0.2
 arrowlgth<-0.02
 
-dev.new(width=panel.size*3.5,height=panel.size*4,noRStudioGD = T,dpi=80, pointsize=(panel.size*4)*2)
-par(mfrow=c(3,2), mar=c(4,4,3,2), oma=c(0,0,0,6), mgp=c(2.5,1,0))
-
-## Des_var (binomial)
-
-# Mulanggari
-plot(Des_var_pr_M$DATE[Des_var_pr_M$Treatment=="C" ]-xofs,Des_var_pr_M$fit[Des_var_pr_M$Treatment=="C"], pch=15, ylim=c(min(Des_var_pr_M$lci), max(Des_var_pr_M$uci)), xlim=c(-0.3,2.3), xaxt="n", xlab="Year", ylab=bquote(italic("D. varians ")~.("occurence")), las=1)
-axis(side = 1, at=c(0,1,2), labels=c(2017,2018,2019))
-
-arrows(Des_var_pr_M$DATE[Des_var_pr_M$Treatment=="C"]-xofs,Des_var_pr_M$lci[Des_var_pr_M$Treatment=="C"],Des_var_pr_M$DATE[Des_var_pr_M$Treatment=="C"]-xofs,Des_var_pr_M$uci[Des_var_pr_M$Treatment=="C"], code=3, angle=90, length=arrowlgth)
-
-points(Des_var_pr_M$DATE[Des_var_pr_M$Treatment=="A"],Des_var_pr_M$fit[Des_var_pr_M$Treatment=="A"], pch=15, col="red")
-arrows(Des_var_pr_M$DATE[Des_var_pr_M$Treatment=="A"],Des_var_pr_M$lci[Des_var_pr_M$Treatment=="A"],Des_var_pr_M$DATE[Des_var_pr_M$Treatment=="A"],Des_var_pr_M$uci[Des_var_pr_M$Treatment=="A"], code=3, angle=90, length=arrowlgth, col="red")
-points(Des_var_pr_M$DATE[Des_var_pr_M$Treatment=="B"]+xofs,Des_var_pr_M$fit[Des_var_pr_M$Treatment=="B"], pch=15, col="blue")
-arrows(Des_var_pr_M$DATE[Des_var_pr_M$Treatment=="B"]+xofs,Des_var_pr_M$lci[Des_var_pr_M$Treatment=="B"],Des_var_pr_M$DATE[Des_var_pr_M$Treatment=="B"]+xofs,Des_var_pr_M$uci[Des_var_pr_M$Treatment=="B"], code=3, angle=90, length=arrowlgth, col="blue")
-
-mtext(paste("(",letters[1],") ", "Mulanggari",sep=""), side=3, line=1.2, adj=0, cex=0.7)
-
-# JERRA
-plot(Des_var_pr_J$DATE[Des_var_pr_J$Treatment=="C" ]-xofs,Des_var_pr_J$fit[Des_var_pr_J$Treatment=="C"], pch=15, ylim=c(min(Des_var_pr_J$lci), max(Des_var_pr_J$uci)), xlim=c(-0.3,2.3), xaxt="n", xlab="Year", ylab=bquote(italic("D. varians ")~.("occurence")), las=1)
-axis(side = 1, at=c(0,1,2), labels=c(2017,2018,2019))
-
-arrows(Des_var_pr_J$DATE[Des_var_pr_J$Treatment=="C"]-xofs,Des_var_pr_J$lci[Des_var_pr_J$Treatment=="C"],Des_var_pr_J$DATE[Des_var_pr_J$Treatment=="C"]-xofs,Des_var_pr_J$uci[Des_var_pr_J$Treatment=="C"], code=3, angle=90, length=arrowlgth)
-
-points(Des_var_pr_J$DATE[Des_var_pr_J$Treatment=="A"],Des_var_pr_J$fit[Des_var_pr_J$Treatment=="A"], pch=15, col="red")
-arrows(Des_var_pr_J$DATE[Des_var_pr_J$Treatment=="A"],Des_var_pr_J$lci[Des_var_pr_J$Treatment=="A"],Des_var_pr_J$DATE[Des_var_pr_J$Treatment=="A"],Des_var_pr_J$uci[Des_var_pr_J$Treatment=="A"], code=3, angle=90, length=arrowlgth, col="red")
-points(Des_var_pr_J$DATE[Des_var_pr_J$Treatment=="B"]+xofs,Des_var_pr_J$fit[Des_var_pr_J$Treatment=="B"], pch=15, col="blue")
-arrows(Des_var_pr_J$DATE[Des_var_pr_J$Treatment=="B"]+xofs,Des_var_pr_J$lci[Des_var_pr_J$Treatment=="B"],Des_var_pr_J$DATE[Des_var_pr_J$Treatment=="B"]+xofs,Des_var_pr_J$uci[Des_var_pr_J$Treatment=="B"], code=3, angle=90, length=arrowlgth, col="blue")
-mtext(paste("(",letters[2],") ", "Jerrabomberra", sep=""), side=3, line=1.2, adj=0, cex=0.7)
-
-if (DesvarP<0.001) title(main=bquote(Two-way~int.~italic(P)~"<"~0.001), font.main=1, adj=0, cex.main=1, line=0.5) else title(main=bquote(Two-way~int.~italic(P)~"="~.(DesvarP)), font.main=1.4, adj=0, cex.main=1, line=0.5)
-
-## Chr_api Mulanggari
+## Chr_api Mulangarri-
+dev.new(width=10, height=4, dpi=100, pointsize=16,noRStudioGD = T)
+par(mfrow=c(1,2),mar=c(4,4,3,1), oma=c(0,0,0,6), mgp=c(2.5,1,0))
 
 plot(ca_nbpr_M$DATE[ca_nbpr_M$Treatment=="C" ]-xofs,ca_nbpr_M$fit.resp[ca_nbpr_M$Treatment=="C"], pch=15, ylim=c(min(ca_nbpr_M$lci.resp), max(ca_nbpr_M$uci.resp)), xlim=c(-0.3,2.3), xaxt="n", xlab="Year", ylab=bquote(italic("C. apiculatum")~.("abundance")), las=1)
 axis(side = 1, at=c(0,1,2), labels=c(2017,2018,2019))
+mtext("Mulangarri", side=3, line=1.5, adj=0, cex=0.9)
+p.Chrapi_3waynb<-round(Chrapi_3waynb[2,which(colnames(Chrapi_3waynb)=="Pr(>Chi)")],3)
+title(main=paste("Three-way int, ","P=",p.Chrapi_3waynb, sep=""), font.main=1, adj=0, cex.main=0.9, line=0.5)
 
 arrows(ca_nbpr_M$DATE[ca_nbpr_M$Treatment=="C"]-xofs,ca_nbpr_M$lci.resp[ca_nbpr_M$Treatment=="C"],ca_nbpr_M$DATE[ca_nbpr_M$Treatment=="C"]-xofs,ca_nbpr_M$uci.resp[ca_nbpr_M$Treatment=="C"], code=3, angle=90, length=arrowlgth)
 
 points(ca_nbpr_M$DATE[ca_nbpr_M$Treatment=="A"],ca_nbpr_M$fit.resp[ca_nbpr_M$Treatment=="A"], pch=15, col="red")
 arrows(ca_nbpr_M$DATE[ca_nbpr_M$Treatment=="A"],ca_nbpr_M$lci.resp[ca_nbpr_M$Treatment=="A"],ca_nbpr_M$DATE[ca_nbpr_M$Treatment=="A"],ca_nbpr_M$uci.resp[ca_nbpr_M$Treatment=="A"], code=3, angle=90, length=arrowlgth, col="red")
-
 points(ca_nbpr_M$DATE[ca_nbpr_M$Treatment=="B"]+xofs,ca_nbpr_M$fit.resp[ca_nbpr_M$Treatment=="B"], pch=15, col="blue")
 arrows(ca_nbpr_M$DATE[ca_nbpr_M$Treatment=="B"]+xofs,ca_nbpr_M$lci.resp[ca_nbpr_M$Treatment=="B"],ca_nbpr_M$DATE[ca_nbpr_M$Treatment=="B"]+xofs,ca_nbpr_M$uci.resp[ca_nbpr_M$Treatment=="B"], code=3, angle=90, length=arrowlgth, col="blue")
 
-mtext(paste("(",letters[3],") ", "Mulanggari",sep=""), side=3, line=1.2, adj=0, cex=0.7)
-
-## Chr_api Jerrabomberra
+##Chr_api Jerrabomberra
 plot(ca_nbpr_J$DATE[ca_nbpr_J$Treatment=="C" ]-xofs,ca_nbpr_J$fit.resp[ca_nbpr_J$Treatment=="C"], pch=15, ylim=c(min(ca_nbpr_J$lci.resp), max(ca_nbpr_J$uci.resp)), xlim=c(-0.3,2.3), xaxt="n", xlab="Year", ylab=bquote(italic("C. apiculatum")~.("abundance")), las=1)
 axis(side = 1, at=c(0,1,2), labels=c(2017,2018,2019))
+mtext("Jerrabomberra", side=3, line=1.5, adj=0, cex=0.9)
 
 arrows(ca_nbpr_J$DATE[ca_nbpr_J$Treatment=="C"]-xofs,ca_nbpr_J$lci.resp[ca_nbpr_J$Treatment=="C"],ca_nbpr_J$DATE[ca_nbpr_J$Treatment=="C"]-xofs,ca_nbpr_J$uci.resp[ca_nbpr_J$Treatment=="C"], code=3, angle=90, length=arrowlgth)
 
 points(ca_nbpr_J$DATE[ca_nbpr_J$Treatment=="A"],ca_nbpr_J$fit.resp[ca_nbpr_J$Treatment=="A"], pch=15, col="red")
 arrows(ca_nbpr_J$DATE[ca_nbpr_J$Treatment=="A"],ca_nbpr_J$lci.resp[ca_nbpr_J$Treatment=="A"],ca_nbpr_J$DATE[ca_nbpr_J$Treatment=="A"],ca_nbpr_J$uci.resp[ca_nbpr_J$Treatment=="A"], code=3, angle=90, length=arrowlgth, col="red")
-
 points(ca_nbpr_J$DATE[ca_nbpr_J$Treatment=="B"]+xofs,ca_nbpr_J$fit.resp[ca_nbpr_J$Treatment=="B"], pch=15, col="blue")
 arrows(ca_nbpr_J$DATE[ca_nbpr_J$Treatment=="B"]+xofs,ca_nbpr_J$lci.resp[ca_nbpr_J$Treatment=="B"],ca_nbpr_J$DATE[ca_nbpr_J$Treatment=="B"]+xofs,ca_nbpr_J$uci.resp[ca_nbpr_J$Treatment=="B"], code=3, angle=90, length=arrowlgth, col="blue")
 
-mtext(paste("(",letters[4],") ", "Jerrabomberra", sep=""), side=3, line=1.2, adj=0, cex=0.7)
+par(xpd=NA)
+legend(2.6,20,legend=c("Control","Spot spray","Boom spray"), col=c("black","red","blue"), pch=15, bty="n", pt.cex = 3)
+par(xpd=F)
 
-p.Chrapi_3waynb<-round(Chrapi_3waynb[2,which(colnames(Chrapi_3waynb)=="Pr(>Chi)")],3)
+##Ery_ovi Mulangarri 
 
-if (p.Chrapi_3waynb<0.001) title(main=bquote(Three-way~int.~italic(P)~"<"~0.001), font.main=1, adj=0, cex.main=1, line=0.5) else title(main=bquote(Three-way~int.~italic(P)~"="~.(p.Chrapi_3waynb)), font.main=1.4, adj=0, cex.main=1, line=0.5)
-
-## Ery_ovi Mulanggari 
-
+dev.new(width=10, height=4, dpi=100, pointsize=16,noRStudioGD = T)
+par(mfrow=c(1,2),mar=c(4,4,3,1), oma=c(0,0,0,6), mgp=c(2.5,1,0))
 plot(eo_nbpr_M$DATE[eo_nbpr_M$Treatment=="C" ]-xofs,eo_nbpr_M$fit.resp[eo_nbpr_M$Treatment=="C"], pch=15, ylim=c(min(eo_nbpr_M$lci.resp), max(eo_nbpr_M$uci.resp)), xlim=c(-0.3,2.3), xaxt="n", xlab="Year", ylab=bquote(italic("E. ovinum")~.("abundance")), las=1)
 axis(side = 1, at=c(0,1,2), labels=c(2017,2018,2019))
+mtext("Mulangarri", side=3, line=1.5, adj=0, cex=0.9)
+title(main=paste("Three-way int, ","P < 0.001", sep=""), font.main=1, adj=0, cex.main=0.9, line=0.5)
 
 arrows(eo_nbpr_M$DATE[eo_nbpr_M$Treatment=="C"]-xofs,eo_nbpr_M$lci.resp[eo_nbpr_M$Treatment=="C"],eo_nbpr_M$DATE[eo_nbpr_M$Treatment=="C"]-xofs,eo_nbpr_M$uci.resp[eo_nbpr_M$Treatment=="C"], code=3, angle=90, length=arrowlgth)
 
@@ -2419,11 +2407,10 @@ arrows(eo_nbpr_M$DATE[eo_nbpr_M$Treatment=="A"],eo_nbpr_M$lci.resp[eo_nbpr_M$Tre
 points(eo_nbpr_M$DATE[eo_nbpr_M$Treatment=="B"]+xofs,eo_nbpr_M$fit.resp[eo_nbpr_M$Treatment=="B"], pch=15, col="blue")
 arrows(eo_nbpr_M$DATE[eo_nbpr_M$Treatment=="B"]+xofs,eo_nbpr_M$lci.resp[eo_nbpr_M$Treatment=="B"],eo_nbpr_M$DATE[eo_nbpr_M$Treatment=="B"]+xofs,eo_nbpr_M$uci.resp[eo_nbpr_M$Treatment=="B"], code=3, angle=90, length=arrowlgth, col="blue")
 
-mtext(paste("(",letters[5],") ", "Mulanggari",sep=""), side=3, line=1.2, adj=0, cex=0.7)
-
-## Ery_ovi Jerrabomberra
+##Ery_ovi Jerrabomberra
 plot(eo_nbpr_J$DATE[eo_nbpr_J$Treatment=="C" ]-xofs,eo_nbpr_J$fit.resp[eo_nbpr_J$Treatment=="C"], pch=15, ylim=c(min(eo_nbpr_J$lci.resp), max(eo_nbpr_J$uci.resp)), xlim=c(-0.3,2.3), xaxt="n", xlab="Year", ylab=bquote(italic("E. ovinum")~.("abundance")), las=1)
 axis(side = 1, at=c(0,1,2), labels=c(2017,2018,2019))
+mtext("Jerrabomberra", side=3, line=1.5, adj=0, cex=0.9)
 
 arrows(eo_nbpr_J$DATE[eo_nbpr_J$Treatment=="C"]-xofs,eo_nbpr_J$lci.resp[eo_nbpr_J$Treatment=="C"],eo_nbpr_J$DATE[eo_nbpr_J$Treatment=="C"]-xofs,eo_nbpr_J$uci.resp[eo_nbpr_J$Treatment=="C"], code=3, angle=90, length=arrowlgth)
 
@@ -2432,41 +2419,11 @@ arrows(eo_nbpr_J$DATE[eo_nbpr_J$Treatment=="A"],eo_nbpr_J$lci.resp[eo_nbpr_J$Tre
 points(eo_nbpr_J$DATE[eo_nbpr_J$Treatment=="B"]+xofs,eo_nbpr_J$fit.resp[eo_nbpr_J$Treatment=="B"], pch=15, col="blue")
 arrows(eo_nbpr_J$DATE[eo_nbpr_J$Treatment=="B"]+xofs,eo_nbpr_J$lci.resp[eo_nbpr_J$Treatment=="B"],eo_nbpr_J$DATE[eo_nbpr_J$Treatment=="B"]+xofs,eo_nbpr_J$uci.resp[eo_nbpr_J$Treatment=="B"], code=3, angle=90, length=arrowlgth, col="blue")
 
-mtext(paste("(",letters[6],") ", "Jerrabomberra", sep=""), side=3, line=1.2, adj=0, cex=0.7)
-
-p.Eryovi_3waynb<-round(Eryovi_3waynb[2,which(colnames(Eryovi_3waynb)=="Pr(>Chi)")],3)
-
-if (p.Eryovi_3waynb<0.001) title(main=bquote(Three-way~int.~italic(P)~"<"~0.001), font.main=1, adj=0, cex.main=1, line=0.5) else title(main=bquote(Three-way~int.~italic(P)~"="~.(p.Eryovi_3waynb)), font.main=1.4, adj=0, cex.main=1, line=0.5)
-
 par(xpd=NA)
-legend(2.6,16,legend=c("Control","Spot spray","Boom spray"), col=c("black","red","blue"), pch=15, bty="n", pt.cex = 3)
+legend(2.6,20,legend=c("Control","Spot spray","Boom spray"), col=c("black","red","blue"), pch=15, bty="n", pt.cex = 3)
 par(xpd=F)
 
-# close invidividual species plots ----
-
-#save.image("03_Workspaces/stjw_analysis.RData")
-
-# Note: I still haven't figured out why the Des var abundance model is not fitting. There is plenty of data, so this doesn't make sense. Might have to look into this. 
-
-# this is the model code copied from above:
-# Des_var 
-three_way_dv_nb<-glmmadmb(Des_var~DATE+Treatment+reserve+DATE:Treatment+DATE:Treatment:reserve+(1|PLOT_ID),family="truncnbinom1", data=ct_ind2[ct_ind2$Des_var>0,])
-summary(three_way_dv_nb) #not significant
-
-ind.sp$converge_3way[ind.sp$Sp=="Des_var"]<-"no"
-
-two_way_dv_nb<-glmmadmb(Des_var~DATE+Treatment+reserve+DATE:Treatment+(1|PLOT_ID), family="truncnbinom1", data=ct_ind2[ct_ind2$Des_var>0,])
-summary(two_way_dv_nb) #not significant
-noint_dv_nb<-glmmadmb(Des_var~DATE+Treatment+reserve+(1|PLOT_ID), family="truncnbinom1", data=ct_ind2[ct_ind2$Des_var>0,])
-
-# 3 way model did not converge, do not compare models; take the two-way to be the final model:
-# anova(three_way_dv_nb,two_way_dv_nb) #not signigicant 
-# but note there are fitting problems with this 2 way, possibly not enough abundance data (70)
-anova(two_way_dv_nb, noint_dv_nb) # significant 2 way
-
-#  PLOT Des_var abundance:    	# ----
-
-## Des_var (predictions not reliable)
+##Des_var (predictions not reliable)
 
 dev.new(width=10, height=4, dpi=100, pointsize=16,noRStudioGD = T)
 par(mfrow=c(1,2),mar=c(4,4,3,1), oma=c(0,0,0,6), mgp=c(2.5,1,0))
@@ -2499,7 +2456,159 @@ par(xpd=NA)
 legend(2.6,20,legend=c("Control","Spot spray","Boom spray"), col=c("black","red","blue"), pch=15, bty="n", pt.cex = 3)
 par(xpd=F)
 
-# close Des_var unreliable ----
+# close abundance models ----
 
+#save.image("03_Workspaces/stjw_analysis.RData")
+
+#  COMPONENT 2 spray drift:    	# ----
+
+sdrift<-read.table("00_Data/Formatted_data/spray_drift.txt", header=T)
+head(sdrift,3); dim(sdrift)
+
+# fit model:
+sd_mod1<-lm(percent_sprayed~treatment*method, data=sdrift)
+summary(sd_mod1)
+anova(sd_mod1)
+
+# model estimates:
+
+# order new data as: spot, fine, coarse, so that it's in the same order as the plant results:
+sd_nd<-data.frame(treatment=rep(unique(sdrift$treatment),rep(3,2)),method=unique(sdrift$method)[c(2,1,3)])
+
+sd_pr<-predict(sd_mod1, newdata = sd_nd, se.fit = T)
+sd_nd<-data.frame(sd_nd, fit=sd_pr$fit, se=sd_pr$se.fit)
+sd_nd$lci<-sd_nd$fit-(sd_nd$se*1.96)
+sd_nd$uci<-sd_nd$fit+(sd_nd$se*1.96)
+head(sd_nd)
+
+# PLOT estimates:
+
+dev.new(width=6, height=4, dpi=100, pointsize=16,noRStudioGD = T)
+par(mfrow=c(1,1),mar=c(4,4,1,1), oma=c(0,0,0,6), mgp=c(2.5,1,0))
+
+plot(1:6, sd_nd$fit, ylim=c(min(sd_nd$lci),max(sd_nd$uci)), las=1, type="p", xlim=c(0.75, 6.25),pch=15, xlab="", xaxt="n", ylab="Proportion sprayed",col=c("red","blue","cornflowerblue"))
+
+arrows(1:6, sd_nd$lci, 1:6, sd_nd$uci, code=3, length=0.05, angle=90,col=c("red","blue","cornflowerblue"))
+points(1:6, sd_nd$fit, pch=15, cex=1, col=c("red","blue","cornflowerblue"))
+axis(side=1, at=c(2, 5), labels=c("None","Mod-high"))
+title(xlab=bquote(italic(H.~perforatum)~density), mgp=c(2.3,1,0))
+arrows(c(3.5),0,c(3.5),1.5, length=0, col="grey70")
+
+p.trt<-round(anova(sd_mod1)[1,5],3)
+p.mth<-round(anova(sd_mod1)[2,5],3)
+p.int<-round(anova(sd_mod1)[3,5],3)
+p.mth<-"< 0.001"
+
+# title(main=paste("P values: STJW density = ",p.trt,"\nSpray method ",p.mth,"; Int. = ",p.int, sep=""), font.main=1, adj=0, cex.main=0.8, line=0.5)
+
+par(xpd=NA)
+legend(6.5,0.45,legend=c("Spot spray","Fine boom","Coarse boom"), col=c("red","blue","cornflowerblue"), pch=15, bty="n", pt.cex = 2.7)
+par(xpd=F)
+
+# PLOT raw data:
+
+dev.new(width=5,height=4,noRStudioGD = T,dpi=80, pointsize=14)
+par(mfrow=c(1,1), mar=c(4,4,1,6), mgp=c(2.8,1,0))
+boxplot(sdrift$percent_sprayed~sdrift$method*as.factor(sdrift$treatment), col=c("darkorange","darkturquoise","darkolivegreen2"),las=2, xlab="", xaxt="n", ylab="Percent sprayed",at=c(0.7,1.7,2.7,4.3,5.3,6.3))
+axis(side=1, at=c(2, 5), labels=c("A","B"))
+title(xlab="Treatment", mgp=c(2.5,1,0))
+arrows(c(3.5),0,c(3.5),1.5, length=0, col="grey70")
+par(xpd=NA)
+legend(7.5,1,legend=c("Coarse boom","Fine boom","Spot spray"), col=c("darkorange","darkturquoise","darkolivegreen2"), pch=15, bty="n", pt.cex = 3)
+par(xpd=T)
+
+# close component 2 ----
+
+## Note there were some problems with the seed viability data and we might not end up including this component
+
+#  COMPONENT 4 seed viability:    	# ----
+
+sv<-read.table("00_Data/Formatted_data/seed_viability.txt", header=T)
+
+rahead(rich,4,7); dim(rich)
+
+# extract site data from richness data set
+sdat<-rich[,2:4]
+sdat$plot<-paste(sdat$PLOT_ID, sdat$Treatment, sep="")
+sdat<-sdat[-which(duplicated(sdat$plot)),]
+head(sdat); dim(sdat)
+
+# combine with seed viability data:
+sv$plot %in% sdat$plot
+sv_site<-sdat[-which(!sdat$plot %in% sv$plot),]
+sv_site$plot
+head(sv_site)
+head(sv); dim(sv)
+
+sv<-merge(sv, sv_site, by="plot", all.x=T, all.y=F)
+head(sv,3)
+
+# fit models:
+sv_mod1<-lmer(weight~Treatment+(1|reserve/PLOT_ID), data=sv)
+summary(sv_mod1)
+anova(sv_mod1)
+
+sv_mod2<-lmer(germ7~Treatment+(1|reserve/PLOT_ID), data=sv)
+summary(sv_mod2)
+anova(sv_mod2)
+
+sv_mod3<-lmer(germ21~Treatment+(1|reserve/PLOT_ID), data=sv)
+summary(sv_mod3)
+anova(sv_mod3)
+
+sv_nd<-data.frame(Treatment=factor(levels(sv$Treatment),levels=c("C","A","B")))
+sv_nd
+
+# model estimates:
+sv_pr1<-predictSE(sv_mod1, newdata = sv_nd, se.fit = T)
+sv_pr1<-data.frame(sv_nd,fit=sv_pr1$fit,se=sv_pr1$se.fit)
+sv_pr1$lci<-sv_pr1$fit-(sv_pr1$se*1.96)
+sv_pr1$uci<-sv_pr1$fit+(sv_pr1$se*1.96)
+
+sv_pr2<-predictSE(sv_mod2, newdata = sv_nd, se.fit = T)
+sv_pr2<-data.frame(sv_nd,fit=sv_pr2$fit,se=sv_pr2$se.fit)
+sv_pr2$lci<-sv_pr2$fit-(sv_pr2$se*1.96)
+sv_pr2$uci<-sv_pr2$fit+(sv_pr2$se*1.96)
+
+sv_pr3<-predictSE(sv_mod3, newdata = sv_nd, se.fit = T)
+sv_pr3<-data.frame(sv_nd,fit=sv_pr3$fit,se=sv_pr3$se.fit)
+sv_pr3$lci<-sv_pr3$fit-(sv_pr3$se*1.96)
+sv_pr3$uci<-sv_pr3$fit+(sv_pr3$se*1.96)
+
+# PLOT estimates:
+
+dev.new(width=8,height=8,noRStudioGD = T,dpi=80, pointsize=16)
+par(mfrow=c(2,2), mar=c(3,5,2,1), mgp=c(3.2,1,0))
+
+plot(1:3, sv_pr1$fit, ylim=c(min(sv_pr1$lci),max(sv_pr1$uci)), las=1, type="p", xlim=c(0.75, 3.25), pch=20, xlab="", xaxt="n", ylab="Sample weight (g)")
+arrows(1:3, sv_pr1$lci, 1:3, sv_pr1$uci, code=3, length=0.05, angle=90)
+axis(side=1, at=1:3, labels=levels(sv_pr1$Treatment), xlab="")
+title(xlab="Treatment", mgp=c(2,1,0))
+text(0.75, max(sv_pr1$uci),paste("P = ",round(anova(sv_mod1)$"Pr(>F)",3),sep=""), adj=0)
+mtext("A", side=3, line=0.5, cex=1, adj=0)
+
+plot(1:3, sv_pr2$fit, ylim=c(min(sv_pr2$lci),max(sv_pr2$uci)), las=1, type="p", xlim=c(0.75, 3.25), pch=20, xlab="", xaxt="n", ylab="Germination at 7d / g")
+arrows(1:3, sv_pr2$lci, 1:3, sv_pr2$uci, code=3, length=0.05, angle=90)
+axis(side=1, at=1:3, labels=levels(sv_pr2$Treatment), xlab="")
+title(xlab="Treatment", mgp=c(2,1,0))
+text(0.75, max(sv_pr2$uci),paste("P = ",round(anova(sv_mod2)$"Pr(>F)",3),sep=""), adj=0)
+mtext("B", side=3, line=0.5, cex=1, adj=0)
+
+plot(1:3, sv_pr3$fit, ylim=c(min(sv_pr3$lci),max(sv_pr3$uci)), las=1, type="p", xlim=c(0.75, 3.25), pch=20, xlab="", xaxt="n", ylab="Germination at 21d / g")
+arrows(1:3, sv_pr3$lci, 1:3, sv_pr3$uci, code=3, length=0.05, angle=90)
+axis(side=1, at=1:3, labels=levels(sv_pr3$Treatment), xlab="")
+title(xlab="Treatment", mgp=c(2,1,0))
+text(0.75, max(sv_pr3$uci),paste("P = ",round(anova(sv_mod3)$"Pr(>F)",3),sep=""), adj=0)
+mtext("C", side=3, line=0.5, cex=1, adj=0)
+
+# PLOT raw data:
+
+dev.new(width=8,height=8,noRStudioGD = T,dpi=80, pointsize=12)
+par(mfrow=c(2,2), mar=c(2,4,4,1), mgp=c(2.5,1,0))
+plot(sv$Treatment, sv$weight, ylab="Weight")
+plot(sv$Treatment, sv$germ7, ylab="Germ. 7")
+plot(sv$Treatment, sv$germ21, ylab="Germ. 21")
+
+# close component 4 ----
 
 
