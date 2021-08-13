@@ -2283,7 +2283,7 @@ type="response"
 summary(three_way_eo_nb)$coefficients
 Ery_ovi_nbpr<-pred(model=three_way_eo_nb,new.data = nd1, se.fit=T, type="response")
 
-#Des_var (predictions not reliable; too many zeros > 50%)
+#Des_var (predictions not reliable)
 model=two_way_dv_nb
 new.data=nd1
 se.fit=T
@@ -2446,6 +2446,62 @@ par(xpd=F)
 
 # close invidividual species plots ----
 
+#save.image("03_Workspaces/stjw_analysis.RData")
+
+# Note: I still haven't figured out why the Des var abundance model is not fitting. There is plenty of data, so this doesn't make sense. Might have to look into this. 
+
+# this is the model code copied from above:
+# Des_var 
+three_way_dv_nb<-glmmadmb(Des_var~DATE+Treatment+reserve+DATE:Treatment+DATE:Treatment:reserve+(1|PLOT_ID),family="truncnbinom1", data=ct_ind2[ct_ind2$Des_var>0,])
+summary(three_way_dv_nb) #not significant
+
+ind.sp$converge_3way[ind.sp$Sp=="Des_var"]<-"no"
+
+two_way_dv_nb<-glmmadmb(Des_var~DATE+Treatment+reserve+DATE:Treatment+(1|PLOT_ID), family="truncnbinom1", data=ct_ind2[ct_ind2$Des_var>0,])
+summary(two_way_dv_nb) #not significant
+noint_dv_nb<-glmmadmb(Des_var~DATE+Treatment+reserve+(1|PLOT_ID), family="truncnbinom1", data=ct_ind2[ct_ind2$Des_var>0,])
+
+# 3 way model did not converge, do not compare models; take the two-way to be the final model:
+# anova(three_way_dv_nb,two_way_dv_nb) #not signigicant 
+# but note there are fitting problems with this 2 way, possibly not enough abundance data (70)
+anova(two_way_dv_nb, noint_dv_nb) # significant 2 way
+
+#  PLOT Des_var abundance:    	# ----
+
+## Des_var (predictions not reliable)
+
+dev.new(width=10, height=4, dpi=100, pointsize=16,noRStudioGD = T)
+par(mfrow=c(1,2),mar=c(4,4,3,1), oma=c(0,0,0,6), mgp=c(2.5,1,0))
+plot(dv_nbpr_M$DATE[dv_nbpr_M$Treatment=="C" ]-xofs,dv_nbpr_M$fit.resp[dv_nbpr_M$Treatment=="C"], pch=15, ylim=c(min(dv_nbpr_M$lci.resp), 26), xlim=c(-0.3,2.3), xaxt="n", xlab="Year", ylab=bquote(italic("D. varians")~.("abundance")), las=1)
+axis(side = 1, at=c(0,1,2), labels=c(2017,2018,2019))
+mtext("Mulangarri", side=3, line=1.5, adj=0, cex=0.9)
+p.Desvar_2waynb<-round(Desvar_2waynb[2,which(colnames(Desvar_2waynb)=="Pr(>Chi)")],3)
+title(main=paste("Two-way int, ","P=",p.Desvar_2waynb, sep=""), font.main=1, adj=0, cex.main=0.9, line=0.5)
+
+arrows(dv_nbpr_M$DATE[dv_nbpr_M$Treatment=="C"]-xofs,dv_nbpr_M$lci.resp[dv_nbpr_M$Treatment=="C"],dv_nbpr_M$DATE[dv_nbpr_M$Treatment=="C"]-xofs,dv_nbpr_M$uci.resp[dv_nbpr_M$Treatment=="C"], code=3, angle=90, length=arrowlgth)
+
+points(dv_nbpr_M$DATE[dv_nbpr_M$Treatment=="A"],dv_nbpr_M$fit.resp[dv_nbpr_M$Treatment=="A"], pch=15, col="red")
+arrows(dv_nbpr_M$DATE[dv_nbpr_M$Treatment=="A"],dv_nbpr_M$lci.resp[dv_nbpr_M$Treatment=="A"],dv_nbpr_M$DATE[dv_nbpr_M$Treatment=="A"],dv_nbpr_M$uci.resp[dv_nbpr_M$Treatment=="A"], code=3, angle=90, length=arrowlgth, col="red")
+points(dv_nbpr_M$DATE[dv_nbpr_M$Treatment=="B"]+xofs,dv_nbpr_M$fit.resp[dv_nbpr_M$Treatment=="B"], pch=15, col="blue")
+arrows(dv_nbpr_M$DATE[dv_nbpr_M$Treatment=="B"]+xofs,dv_nbpr_M$lci.resp[dv_nbpr_M$Treatment=="B"],dv_nbpr_M$DATE[dv_nbpr_M$Treatment=="B"]+xofs,dv_nbpr_M$uci.resp[dv_nbpr_M$Treatment=="B"], code=3, angle=90, length=arrowlgth, col="blue")
+
+##Des_var Jerrabomberra
+plot(dv_nbpr_J$DATE[dv_nbpr_J$Treatment=="C" ]-xofs,dv_nbpr_J$fit.resp[dv_nbpr_J$Treatment=="C"], pch=15, ylim=c(min(dv_nbpr_J$lci.resp), max(dv_nbpr_J$uci.resp)), xlim=c(-0.3,2.3), xaxt="n", xlab="Year", ylab=bquote(italic("D. varians")~.("abundance")), las=1)
+axis(side = 1, at=c(0,1,2), labels=c(2017,2018,2019))
+mtext("Jerrabomberra", side=3, line=1.5, adj=0, cex=0.9)
+
+arrows(dv_nbpr_J$DATE[dv_nbpr_J$Treatment=="C"]-xofs,dv_nbpr_J$lci.resp[dv_nbpr_J$Treatment=="C"],dv_nbpr_J$DATE[dv_nbpr_J$Treatment=="C"]-xofs,dv_nbpr_J$uci.resp[dv_nbpr_J$Treatment=="C"], code=3, angle=90, length=arrowlgth)
+
+points(dv_nbpr_J$DATE[dv_nbpr_J$Treatment=="A"],dv_nbpr_J$fit.resp[dv_nbpr_J$Treatment=="A"], pch=15, col="red")
+arrows(dv_nbpr_J$DATE[dv_nbpr_J$Treatment=="A"],dv_nbpr_J$lci.resp[dv_nbpr_J$Treatment=="A"],dv_nbpr_J$DATE[dv_nbpr_J$Treatment=="A"],dv_nbpr_J$uci.resp[dv_nbpr_J$Treatment=="A"], code=3, angle=90, length=arrowlgth, col="red")
+points(dv_nbpr_J$DATE[dv_nbpr_J$Treatment=="B"]+xofs,dv_nbpr_J$fit.resp[dv_nbpr_J$Treatment=="B"], pch=15, col="blue")
+arrows(dv_nbpr_J$DATE[dv_nbpr_J$Treatment=="B"]+xofs,dv_nbpr_J$lci.resp[dv_nbpr_J$Treatment=="B"],dv_nbpr_J$DATE[dv_nbpr_J$Treatment=="B"]+xofs,dv_nbpr_J$uci.resp[dv_nbpr_J$Treatment=="B"], code=3, angle=90, length=arrowlgth, col="blue")
+
+par(xpd=NA)
+legend(2.6,20,legend=c("Control","Spot spray","Boom spray"), col=c("black","red","blue"), pch=15, bty="n", pt.cex = 3)
+par(xpd=F)
+
+# close Des_var unreliable ----
 
 
 
