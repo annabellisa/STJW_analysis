@@ -6,8 +6,6 @@
 ### Analysis of chemical control experiment from STJW project
 ### Author: Annabel Smith & Raagini Muddaiah
 
-# Add in a new line here
-
 # Load functions:
 invisible(lapply(paste("01_Functions/",dir("01_Functions"),sep=""), function(x) source(x)))
 
@@ -820,6 +818,8 @@ table(colnames(cv18)==colnames(cv19))
 
 cv_dat<-rbind(cv17, cv18, cv19)
 rahead(cv_dat,3,7); dim(cv_dat)
+rahead(ct_dat,3,7); dim(ct_dat)
+
 
 # save.image("03_Workspaces/stjw_analysis.RData")
 # save.image("03_Workspaces/stjw_analysis_diversity.RData")
@@ -1078,6 +1078,51 @@ for (i in 1:ncol(data.update)){
 
 sdrift<-read.table("00_Data/Formatted_data/spray_drift.txt", header=T)
 head(sdrift,3); dim(sdrift)
+
+# fit beta regression model in mgcv:
+library(mgcv)
+
+sd_mod2a<-gam(percent_sprayed~treatment*method, family=betar,data=sdrift)
+summary(sd_mod2a)
+anova(sd_mod2a)
+
+
+# beta reg model estimates:
+
+# order new data as: spot, fine, coarse, so that it's in the same order as the plant results:
+sd_nd<-data.frame(treatment=rep(unique(sdrift$treatment),rep(3,2)),method=unique(sdrift$method)[c(2,1,3)])
+
+sd_pr<-predict(sd_mod2a, newdata = sd_nd, se.fit = T)
+sd_nd<-data.frame(sd_nd, fit=sd_pr$fit, se=sd_pr$se.fit)
+sd_nd$lci<-sd_nd$fit-(sd_nd$se*1.96)
+sd_nd$uci<-sd_nd$fit+(sd_nd$se*1.96)
+head(sd_nd)
+
+# PLOT estimates:
+
+dev.new(width=6, height=4, dpi=100, pointsize=16,noRStudioGD = T)
+par(mfrow=c(1,1),mar=c(4,4,1,1), oma=c(0,0,0,6), mgp=c(2.5,1,0))
+
+plot(1:6, sd_nd$fit, ylim=c(min(sd_nd$lci),max(sd_nd$uci)), las=1, type="p", xlim=c(0.75, 6.25),pch=15, xlab="", xaxt="n", ylab="Proportion sprayed",col=c("red","blue","cornflowerblue"))
+
+arrows(1:6, sd_nd$lci, 1:6, sd_nd$uci, code=3, length=0.05, angle=90,col=c("red","blue","cornflowerblue"))
+points(1:6, sd_nd$fit, pch=15, cex=1, col=c("red","blue","cornflowerblue"))
+axis(side=1, at=c(2, 5), labels=c("None","Mod-high"))
+title(xlab=bquote(italic(H.~perforatum)~density), mgp=c(2.3,1,0))
+arrows(c(3.5),0,c(3.5),1.5, length=0, col="grey70")
+
+p.trt<-round(anova(sd_mod1)[1,5],3)
+p.mth<-round(anova(sd_mod1)[2,5],3)
+p.int<-round(anova(sd_mod1)[3,5],3)
+p.mth<-"< 0.001"
+
+# title(main=paste("P values: STJW density = ",p.trt,"\nSpray method ",p.mth,"; Int. = ",p.int, sep=""), font.main=1, adj=0, cex.main=0.8, line=0.5)
+
+par(xpd=NA)
+legend(6.5,0.45,legend=c("Spot spray","Fine boom","Coarse boom"), col=c("red","blue","cornflowerblue"), pch=15, bty="n", pt.cex = 2.7)
+par(xpd=F)
+
+
 
 # fit model:
 sd_mod1<-lm(percent_sprayed~treatment*method, data=sdrift)
@@ -1849,6 +1894,40 @@ head(pinfo,3); dim(pinfo)
 
 # In total, 14 native forb species were used to define the study plots:
 ind.sp<-data.frame(ind_species=c("Eryngium ovinum", "Chrysocephalum apiculatum", "Arthropodium fimbriatum", "Wurmbea dioica", "Desmodium varians", "Plantago varia", "Tricoryne elatior", "Triptilodiscus pygmaeus","Lomandra filiformis coriacea", "Lomandra bracteata", "Lomandra filiformis","Lomandra multiflora","Glycine clandestina","Glycine tabacina"))
+
+# Typically how many of each of the 14 species were present in the study plots at the start of the experiment?
+rahead(ct_dat,3,7); dim(ct_dat)
+unique(ct_dat$DATE)
+indsp
+head(ind.sp,2)
+
+ct_exp<-ct_dat[ct_dat$DATE==2017,c(1:4,which(colnames(ct_dat) %in% indsp))]
+rahead(ct_exp,3,7); dim(ct_exp)
+colSums(ct_exp[,5:length(ct_exp)])
+range(apply(ct_exp[,5:length(ct_exp)], 1, function(x) length(which(x>0))))
+summary(rowSums(ct_exp[,5:length(ct_exp)]))
+# colSums(ct_dat[,5:length(ct_dat)])
+
+# What if we only include the five species from RM's methods doc (that's also excluding Gly_cla which had only 7 records at the start of the study (or the 8 species that we  modelled):
+# Or even adding Gly_cla back in?
+indsp5<-c("Chr_api","Ery_ovi", "Tri_ela", "Des_var", "Gly_tab")
+indsp6<-c("Chr_api","Ery_ovi", "Tri_ela", "Des_var", "Gly_tab","Gly_cla")
+indsp8<-c(indsp5,"Lom_cor", "Pla_var" , "Tri_pyg")
+
+ct_exp5<-ct_dat[ct_dat$DATE==2017,c(1:4,which(colnames(ct_dat) %in% indsp5))]
+rahead(ct_exp5,3,7); dim(ct_exp5)
+range(apply(ct_exp5[,5:length(ct_exp5)], 1, function(x) length(which(x>0))))
+summary(apply(ct_exp5[,5:length(ct_exp5)], 1, function(x) length(which(x>0))))
+
+# Adding Gly_cla back in doesn't change the minimum number:
+ct_exp6<-ct_dat[ct_dat$DATE==2017,c(1:4,which(colnames(ct_dat) %in% indsp6))]
+rahead(ct_exp6,3,7); dim(ct_exp6)
+range(apply(ct_exp6[,5:length(ct_exp6)], 1, function(x) length(which(x>0))))
+summary(range(apply(ct_exp6[,5:length(ct_exp6)], 1, function(x) length(which(x>0)))))
+
+ct_exp8<-ct_dat[ct_dat$DATE==2017,c(1:4,which(colnames(ct_dat) %in% indsp8))]
+rahead(ct_exp8,3,7); dim(ct_exp8)
+range(apply(ct_exp8[,5:length(ct_exp8)], 1, function(x) length(which(x>0))))
 
 # These should all be TRUE:
 table(ind.sp$ind_species %in% pinfo$Species)
