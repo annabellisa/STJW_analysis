@@ -1,6 +1,6 @@
 # STJW Analysis
 
-Analysis of non-target impacts of St John's Wort (Hypericum perforatum) management
+Analysis of non-target impacts of herbicide control of St John's Wort (Hypericum perforatum)
 
 ## Content Description
 
@@ -20,11 +20,11 @@ Annabel Smith and Raagini Muddaiah Kanjithanda (unless otherwise stated within s
 
 ## Manuscript
 
-Smith, A.L., Kanjithanda, R. & Milner, R.N.C. in preparation. Off-target impacts of herbicide application on resident plant communities in threatened temperate grasslands.
+Smith, A.L., Kanjithanda, R.M. & Milner, R.N.C. in preparation. Off-target impacts of herbicide application on resident plant communities in threatened temperate grasslands.
 
 ## License
 
-The STJW_Analysis project by Annabel Smith, Raagini Kanjithanda and Richard Milner is licensed under a Creative Commons Attribution-NonCommercial 4.0 International License.
+The STJW Analysis project by Annabel Smith, Raagini Kanjithanda and Richard Milner is licensed under a Creative Commons Attribution-NonCommercial 4.0 International License.
 
 Based on a work at https://github.com/annabellisa/STJW_analysis.
 

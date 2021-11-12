@@ -897,6 +897,7 @@ exotic_c3<-as.character(pinfo$Sp[which(pinfo$func_grp=="C3" & pinfo$Status=="E")
 sed_rus<-as.character(pinfo$Sp[which(pinfo$func_grp=="Sedge_Rush")])
 
 # Categories to analyse
+# Indicator is actually a direct combination of sigA and sigB and should not be included in the analysis. I haven't updated it in the code, I've just removed it from the MS. 
 group_df<-data.frame(group=c("all","native","exotic","indic","sigA","sigB","sigC","sigXY","sigZ","native_herb","exotic_herb","exann_herb","exper_herb","natann_herb","natper_herb","native_nonlegherb","exotic_nonlegherb","native_legherb","exotic_legherb","native_grass","exotic_grass","exotic_anngrass","exotic_perengrass","c3_grass","native_c3","native_c4","exotic_c3","sed_rus"))
 
 # save.image("03_Workspaces/stjw_analysis_diversity.RData")
@@ -1072,13 +1073,77 @@ for (i in 1:ncol(data.update)){
 #  Spray drift ANALYSIS:    	# ----
 
 sdrift<-read.table("00_Data/Formatted_data/spray_drift.txt", header=T)
+sdrift$method<-factor(sdrift$method, levels=c("Spot", "Fine","Coarse"))
+sdrift$treatment<-as.factor(sdrift$treatment)
 head(sdrift,3); dim(sdrift)
 
 # fit beta regression model in mgcv:
-
+# The Intercept is treatmentA (no STJW) and Spot spray
 sd_mod2a<-gam(percent_sprayed~treatment*method, family=betar,data=sdrift)
 summary(sd_mod2a)
 anova(sd_mod2a)
+
+### ----- CONTRASTS
+
+summary(sd_mod2a)$p.table
+
+# For spray drift, there are two treatments (A, B, relating to no and mod/high STJW density) and three methods (coarse, fine, spot) making 6 treatments total and 15 contrasts. 
+choose(6,2)
+
+### Create a "unique model matrix":
+
+spray.z.mat<-lm(percent_sprayed~treatment*method,data=sdrift,x=T)$x
+head(spray.z.mat)
+spray.uzm<-unique(spray.z.mat)
+rownames(spray.uzm)<-1:nrow(spray.uzm)
+spray.uzm; dim(spray.uzm)
+
+# Re-order the uzm so that the baseline (i.e. the rows with zeros) come out first - this will make naming and interpretation easier
+spray.uzm<-spray.uzm[c(2,1,3,5,4,6),]
+rownames(spray.uzm)<-1:nrow(spray.uzm)
+spray.uzm; dim(spray.uzm)
+
+### Create a "difference matrix"
+
+# each row must be a vector with a length equal to the number of rows in the coefficient table. I.e. 6 numbers for this spray drift model. 15 contrasts=15 rows. Each row will specify ONE contrast. 
+
+summary(sd_mod2a)$p.table
+
+spray.z.diff<-rbind(
+  # first year treatment differences:
+  c(-1,1,0,0,0,0),
+  c(-1,0,1,0,0,0),
+  c(-1,0,0,1,0,0),
+  c(-1,0,0,0,1,0),
+  c(-1,0,0,0,0,1),
+  c(0,-1,1,0,0,0),
+  c(0,-1,0,1,0,0),
+  c(0,-1,0,0,1,0),
+  c(0,-1,0,0,0,1),
+  c(0,0,-1,1,0,0),
+  c(0,0,-1,0,1,0),
+  c(0,0,-1,0,0,1),
+  c(0,0,0,-1,1,0),
+  c(0,0,0,-1,0,1),
+  c(0,0,0,0,-1,1)
+)
+
+# Now we have our unique model matrix
+spray.uzm
+
+# And our difference matrix:
+spray.z.diff
+
+# Create names for the contrasts:
+# This has to relate to how the uzm and the z.diff are set up, so make sure they are re-ordered in the same way?
+
+spray.lt<-c(paste(levels(sdrift$method),levels(sdrift$treatment)[1],sep=""),paste(levels(sdrift$method),levels(sdrift$treatment)[2],sep=""))
+spray.lt<-paste(combn(spray.lt,2)[1,],combn(spray.lt,2)[2,],sep=" vs ")
+
+# Difference estimates, SE and CI:
+spray.nd1<-data.frame(diff.est(sd_mod2a,spray.uzm, spray.z.diff),Contrast=spray.lt)
+spray.nd1$diff<-ifelse(sign(spray.nd1$lci)==sign(spray.nd1$uci),1,0)
+summary(sd_mod2a)$p.table
 
 # beta reg model estimates:
 
@@ -1111,6 +1176,12 @@ p.mth<-"< 0.001"
 
 par(xpd=NA)
 legend(6.5,0.45,legend=c("Spot spray","Fine boom","Coarse boom"), col=c("red","blue","cornflowerblue"), pch=15, bty="n", pt.cex = 2.7)
+par(xpd=F)
+
+# Use the contrasts to manually add grouping numbers
+spray.nd1[,c("Contrast","diff")]
+par(xpd=NA)
+text(1:6,1.07,labels = rep(c("a","b","b"),2), pos=2,offset=-0.2)
 par(xpd=F)
 
 # PLOT raw data:
@@ -1499,12 +1570,15 @@ gdf[which(gdf$invsimp_2wayP>0.05 & gdf$invsimp_2wayP<0.1),]
 
 # P values and coefficient for binomial models
 # The coefficient for M is shown for reserve effects; if it's positive there is a higher probability of detecting that group at Mulanggari
+head(gdf,3); dim(gdf)
 
 gdf$bin_resP<-NA
 gdf$bin_resM_coef<-NA
+gdf$bin_resM_se<-NA
 
 gdf$bin_resP<-ifelse(gdf$fit_bin=="yes",round(unlist(lapply(coef.binom,FUN=function(x) x[which(x$term=="reserveM"),"P"])),4),gdf$bin_resP)
 gdf$bin_resM_coef<-ifelse(gdf$fit_bin=="yes",round(unlist(lapply(coef.binom,FUN=function(x) x[which(x$term=="reserveM"),"est"])),4),gdf$bin_resP)
+gdf$bin_resM_se<-ifelse(gdf$fit_bin=="yes",round(unlist(lapply(coef.binom,FUN=function(x) x[which(x$term=="reserveM"),"se"])),4),gdf$bin_resP)
 
 gdf[which(gdf$fit_bin=="yes"),]
 
@@ -1513,19 +1587,23 @@ gdf[which(gdf$fit_bin=="yes"),]
 
 gdf$rich2w_resP<-NA
 gdf$rich2w_resM_coef<-NA
+gdf$rich2w_resM_se<-NA
 
 head(gdf,5)
 gdf$rich2w_resP<-ifelse(gdf$rich_3wayP>0.05,round(unlist(lapply(coef.rich,FUN=function(x) x[which(x$term=="reserveM"),"P"])),4),gdf$rich2w_resP)
 gdf$rich2w_resM_coef<-ifelse(gdf$rich_3wayP>0.05,round(unlist(lapply(coef.rich,FUN=function(x) x[which(x$term=="reserveM"),"est"])),4),gdf$rich2w_resP)
+gdf$rich2w_resM_se<-ifelse(gdf$rich_3wayP>0.05,round(unlist(lapply(coef.rich,FUN=function(x) x[which(x$term=="reserveM"),"se"])),4),gdf$rich2w_resP)
 
 # P values and coefficient for diversity models (two-way models only)
 # The P value and coefficient are not shown for models with three way interactions, because the reserve effect is captured in the three way term
 
 gdf$invsimp2w_resP<-NA
 gdf$invsimp2w_resM_coef<-NA
+gdf$invsimp2w_resM_se<-NA
 
 gdf$invsimp2w_resP<-ifelse(gdf$invsimp_3wayP>0.05,round(unlist(lapply(coef.invsimp,FUN=function(x) x[which(x$term=="reserveM"),"P"])),4),gdf$invsimp2w_resP)
 gdf$invsimp2w_resM_coef<-ifelse(gdf$invsimp_3wayP>0.05,round(unlist(lapply(coef.invsimp,FUN=function(x) x[which(x$term=="reserveM"),"est"])),4),gdf$invsimp2w_resP)
+gdf$invsimp2w_resM_se<-ifelse(gdf$invsimp_3wayP>0.05,round(unlist(lapply(coef.invsimp,FUN=function(x) x[which(x$term=="reserveM"),"se"])),4),gdf$invsimp2w_resP)
 
 # write.table(gdf, "div_sum.txt", sep="\t", quote=F, row.names = F)
 
