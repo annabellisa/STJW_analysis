@@ -13,10 +13,7 @@ invisible(lapply(paste("01_Functions/",dir("01_Functions"),sep=""), function(x) 
 library(lme4); library(vegan); library(AICcmodavg); library(lmerTest); library(glmmADMB); library(mgcv)
 
 # Load workspace
-load("03_Workspaces/stjw_analysis.RData")
-
-# The diversity workspace has only the diversity anaysis (not individual species):
-load("03_Workspaces/stjw_analysis_diversity.RData")
+load("03_Workspaces/stjw_analysis_R1.RData")
 
 #  IMPORT, clean & transform data:    	# ----
 
@@ -532,9 +529,8 @@ rahead(ct17,6,6); dim(ct17)
 rahead(ct18,6,6); dim(ct18)
 rahead(ct19,6,6); dim(ct19)
 
-# save.image("03_Workspaces/stjw_analysis_diversity.RData")
+# save.image("03_Workspaces/stjw_analysis_R1.RData")
 
-# save.image("03_Workspaces/stjw_analysis.RData")
 # close import data ----
 
 #  FORMAT data:    	# ----
@@ -815,9 +811,7 @@ cv_dat<-rbind(cv17, cv18, cv19)
 rahead(cv_dat,3,7); dim(cv_dat)
 rahead(ct_dat,3,7); dim(ct_dat)
 
-
-# save.image("03_Workspaces/stjw_analysis.RData")
-# save.image("03_Workspaces/stjw_analysis_diversity.RData")
+# save.image("03_Workspaces/stjw_analysis_R1.RData")
 
 # close format data ----
 
@@ -900,7 +894,7 @@ sed_rus<-as.character(pinfo$Sp[which(pinfo$func_grp=="Sedge_Rush")])
 # Indicator is actually a direct combination of sigA and sigB and should not be included in the analysis. I haven't updated it in the code, I've just removed it from the MS. 
 group_df<-data.frame(group=c("all","native","exotic","indic","sigA","sigB","sigC","sigXY","sigZ","native_herb","exotic_herb","exann_herb","exper_herb","natann_herb","natper_herb","native_nonlegherb","exotic_nonlegherb","native_legherb","exotic_legherb","native_grass","exotic_grass","exotic_anngrass","exotic_perengrass","c3_grass","native_c3","native_c4","exotic_c3","sed_rus"))
 
-# save.image("03_Workspaces/stjw_analysis_diversity.RData")
+# save.image("03_Workspaces/stjw_analysis_R1.RData")
 
 # close diversity groups ----
 
@@ -984,7 +978,7 @@ gdf
 
 gdf$ylab<-c("All","Native","Exotic","Indicator","Significance A","Significance B","Common/Increaser","Significance X/Y","Significance Z","Native forb", "Exotic forb","Exotic annual forb","Exotic perennial forb","Native annual forb","Native perennial forb","Native non-leg. forb","Exotic non-leg. forb","Native leg. forb","Exotic leg. forb","Native grass","Exotic grass","Exotic annual grass","Exotic perennial grass","C3 grass","Native C3 grass","Native C4 grass","Exotic C3 grass","Sedge/Rush")
 
-# save.image("03_Workspaces/stjw_analysis_diversity.RData")
+# save.image("03_Workspaces/stjw_analysis_R1.RData")
 
 # **** SCALE DATE:
 
@@ -1066,7 +1060,7 @@ for (i in 1:ncol(data.update)){
   hist(data.thisrun, main=sp.thisrun)
 } # close
 
-# save.image("03_Workspaces/stjw_analysis_diversity.RData")
+# save.image("03_Workspaces/stjw_analysis_R1.RData")
 
 # close diversity calculation ----
 
@@ -1249,7 +1243,7 @@ rahead(rich,3,6)
 gdf$fit_pos<-ifelse(gdf$rich_records<=length(unique(paste(rich$PLOT_ID,rich$Treatment,sep=""))), "no", "yes")
 
 # new data for model estimates (same for models with a date:treatment interaction only and models with a three way interaction; you can also use the same newdata frame for richness and shannon's):
-nd1<-data.frame(DATE=rep(c(0,1,2),rep(3,3)),Treatment=as.factor(c("C","A","B")),reserve=c(rep("J",9),rep("M",9)))
+nd1<-data.frame(DATE=rep(c(0,1,2),rep(3,3)),Treatment=factor(c("C","A","B"),levels=c("C","A","B")),reserve=factor(c(rep("J",9),rep("M",9)),levels=c("J","M")))
 
 # lists for storing model fits, coefficients, anova tables and model estimates:
 fits.binom<-list()
@@ -1285,11 +1279,17 @@ rahead(rich_sc,4,7); dim(rich_sc)
 rahead(invsimp_sc,4,7); dim(invsimp_sc)
 
 # save workspace:
-# save.image("03_Workspaces/stjw_analysis_diversity.RData")
+# save.image("03_Workspaces/stjw_analysis_R1.RData")
+
+## *** Nov 2021 update:
+# Re-running with correct levels for nd1 c("C","A","B"). The binomial model, using predictSE, automatically put the levels at the same as the fitted model. 
+# The problem was in the glmmadmb models where we were using the custom pred() function with hand-calculated back transformations; this used the original levels of nd1 which was causing problems with plotting. 
+
+# save.image("03_Workspaces/stjw_analysis_R1.RData")
 
 ## RUN FULL ANALYSIS LOOP:
 
-## TAKES approx 15 min; i==27 might have errors
+## TAKES approx 15 min; i==27 and 28 have errors (all C3 grass is n)
 
 for (i in 1:nrow(gdf)){
   
@@ -1507,7 +1507,7 @@ for (i in 1:nrow(gdf)){
 } # close ANALYSIS loop
 
 # save workspace:
-# save.image("03_Workspaces/stjw_analysis_diversity.RData")
+# save.image("03_Workspaces/stjw_analysis_R1.RData")
 
 anova.binom
 fits.binom
@@ -1605,11 +1605,281 @@ gdf$invsimp2w_resP<-ifelse(gdf$invsimp_3wayP>0.05,round(unlist(lapply(coef.invsi
 gdf$invsimp2w_resM_coef<-ifelse(gdf$invsimp_3wayP>0.05,round(unlist(lapply(coef.invsimp,FUN=function(x) x[which(x$term=="reserveM"),"est"])),4),gdf$invsimp2w_resP)
 gdf$invsimp2w_resM_se<-ifelse(gdf$invsimp_3wayP>0.05,round(unlist(lapply(coef.invsimp,FUN=function(x) x[which(x$term=="reserveM"),"se"])),4),gdf$invsimp2w_resP)
 
+# Model results are exactly the same after update, the only difference should be in the predictions:
+
 # write.table(gdf, "div_sum.txt", sep="\t", quote=F, row.names = F)
 
-# save.image("03_Workspaces/stjw_analysis_diversity.RData")
+# save.image("03_Workspaces/stjw_analysis_R1.RData")
 
 # close richness & diversity ----
+
+#  CONTRASTS (Richness & Diversity):    	# ----
+
+# BINOMIAL MODELS (two signif models)
+# Native legume forb (index 18), three-way
+# Exotic legume forb (index 19), two-way
+
+head(gdf,2)
+gdf[18:19,]
+coef.binom[[18]]
+coef.binom[[19]]
+fits.binom[[18]]
+fits.binom[[19]]
+
+# For all models, there are three treatments (C, A, B), one date date variable with three years (0:3, linear numeric), and two reserves (J, M).
+
+# For BOTH the two-way AND the three-way interaction, this will equal a total of 45 contrasts - i.e. 15 contrasts per year, bewteen all treatements.
+
+# This means we can use the same difference matrix for all of the calculations. 
+
+# We need two different uzm matrices for the three-way and two-way models. 
+
+### Create a "unique model matrix" THREE-WAY:
+
+int3way.z.mat<-lm(native_legherb~Treatment + DATE + reserve + Treatment:DATE +Treatment:DATE:reserve,data=rich_sc,x=T)$x
+int3way.uzm<-unique(int3way.z.mat)
+rownames(int3way.uzm)<-1:nrow(int3way.uzm)
+int3way.uzm; dim(int3way.uzm)
+
+# The natural order for this difference matrix is:
+# C, A, B, yr 0, Jerra 
+# C, A, B, yr 0, Mulang 
+# C, A, B, yr 1, Jerra 
+# C, A, B, yr 1, Mulang 
+# C, A, B, yr 2, Jerra 
+# C, A, B, yr 2, Mulang 
+
+# So there is no need to re-order
+head(int3way.uzm); dim(int3way.uzm)
+
+### Create a "difference matrix"
+
+# each row must be a vector with a length equal to the number of rows in the uzm matrix, i.e. 18; 45 contrasts=45 rows. Each row will specify ONE contrast. 
+
+coef.binom[[18]]
+
+int.z.diff<-rbind(
+  # year 0 treatment differences:
+  c(rep(0,0),-1,1,0,0,0,0,rep(0,12)),
+  c(rep(0,0),-1,0,1,0,0,0,rep(0,12)),
+  c(rep(0,0),-1,0,0,1,0,0,rep(0,12)),
+  c(rep(0,0),-1,0,0,0,1,0,rep(0,12)),
+  c(rep(0,0),-1,0,0,0,0,1,rep(0,12)),
+  c(rep(0,0),0,-1,1,0,0,0,rep(0,12)),
+  c(rep(0,0),0,-1,0,1,0,0,rep(0,12)),
+  c(rep(0,0),0,-1,0,0,1,0,rep(0,12)),
+  c(rep(0,0),0,-1,0,0,0,1,rep(0,12)),
+  c(rep(0,0),0,0,-1,1,0,0,rep(0,12)),
+  c(rep(0,0),0,0,-1,0,1,0,rep(0,12)),
+  c(rep(0,0),0,0,-1,0,0,1,rep(0,12)),
+  c(rep(0,0),0,0,0,-1,1,0,rep(0,12)),
+  c(rep(0,0),0,0,0,-1,0,1,rep(0,12)),
+  c(rep(0,0),0,0,0,0,-1,1,rep(0,12)),
+
+  # year 1 treatment differences:
+  c(rep(0,6),-1,1,0,0,0,0,rep(0,6)),
+  c(rep(0,6),-1,0,1,0,0,0,rep(0,6)),
+  c(rep(0,6),-1,0,0,1,0,0,rep(0,6)),
+  c(rep(0,6),-1,0,0,0,1,0,rep(0,6)),
+  c(rep(0,6),-1,0,0,0,0,1,rep(0,6)),
+  c(rep(0,6),0,-1,1,0,0,0,rep(0,6)),
+  c(rep(0,6),0,-1,0,1,0,0,rep(0,6)),
+  c(rep(0,6),0,-1,0,0,1,0,rep(0,6)),
+  c(rep(0,6),0,-1,0,0,0,1,rep(0,6)),
+  c(rep(0,6),0,0,-1,1,0,0,rep(0,6)),
+  c(rep(0,6),0,0,-1,0,1,0,rep(0,6)),
+  c(rep(0,6),0,0,-1,0,0,1,rep(0,6)),
+  c(rep(0,6),0,0,0,-1,1,0,rep(0,6)),
+  c(rep(0,6),0,0,0,-1,0,1,rep(0,6)),
+  c(rep(0,6),0,0,0,0,-1,1,rep(0,6)),
+  
+  # year 2 treatment differences:
+  c(rep(0,12),-1,1,0,0,0,0,rep(0,0)),
+  c(rep(0,12),-1,0,1,0,0,0,rep(0,0)),
+  c(rep(0,12),-1,0,0,1,0,0,rep(0,0)),
+  c(rep(0,12),-1,0,0,0,1,0,rep(0,0)),
+  c(rep(0,12),-1,0,0,0,0,1,rep(0,0)),
+  c(rep(0,12),0,-1,1,0,0,0,rep(0,0)),
+  c(rep(0,12),0,-1,0,1,0,0,rep(0,0)),
+  c(rep(0,12),0,-1,0,0,1,0,rep(0,0)),
+  c(rep(0,12),0,-1,0,0,0,1,rep(0,0)),
+  c(rep(0,12),0,0,-1,1,0,0,rep(0,0)),
+  c(rep(0,12),0,0,-1,0,1,0,rep(0,0)),
+  c(rep(0,12),0,0,-1,0,0,1,rep(0,0)),
+  c(rep(0,12),0,0,0,-1,1,0,rep(0,0)),
+  c(rep(0,12),0,0,0,-1,0,1,rep(0,0)),
+  c(rep(0,12),0,0,0,0,-1,1,rep(0,0))
+)
+
+# Now we have our unique model matrix
+int3way.uzm
+
+# And our difference matrix:
+int.z.diff
+
+# Create names for the contrasts:
+
+# This has to relate to how the uzm and the z.diff are set up, so make sure they are re-ordered in the same way
+# C, A, B, yr 0, Jerra 
+# C, A, B, yr 0, Mulang 
+# C, A, B, yr 1, Jerra 
+# C, A, B, yr 1, Mulang 
+# C, A, B, yr 2, Jerra 
+# C, A, B, yr 2, Mulang 
+
+coef.binom[[18]]
+
+# For each year, there are 15 contrasts
+# Yr 0: CJer vs AJer
+# Yr 0: CJer vs BJer
+# Yr 0: CJer vs CMul
+# Yr 0: CJer vs AMul
+# Yr 0: CJer vs BMul
+
+# Yr 0: AJer vs BJer
+# Yr 0: AJer vs CMul
+# Yr 0: AJer vs AMul
+# Yr 0: AJer vs BMul
+
+# Yr 0: BJer vs CMul
+# Yr 0: BJer vs AMul
+# Yr 0: BJer vs BMul
+
+# Yr 0: CMul vs AMul
+# Yr 0: CMul vs BMul
+# Yr 0: AMul vs BMul
+
+int.names<-data.frame(Year=c(rep(0,15),rep(1,15),rep(2,15)),Contrast=c("CJer vs AJer","CJer vs BJer","CJer vs CMul","CJer vs AMul","CJer vs BMul","AJer vs BJer","AJer vs CMul","AJer vs AMul","AJer vs BMul","BJer vs CMul","BJer vs AMul","BJer vs BMul","CMul vs AMul","CMul vs BMul","AMul vs BMul"),res=c("Jer:Jer","Jer:Jer","Jer:Mul","Jer:Mul","Jer:Mul","Jer:Jer","Jer:Mul","Jer:Mul","Jer:Mul","Jer:Mul","Jer:Mul","Jer:Mul","Mul:Mul","Mul:Mul","Mul:Mul"),trt=c("C:A","C:B","C:C","C:A","C:B","A:B","A:C","A:A","A:B","B:C","B:A","B:B","C:A","C:B","A:B"))
+
+# Difference estimates, SE and CI:
+# Native legume forb (index 18), three-way BINOMIAL
+
+natlegforb.diff<-data.frame(diff.est(fits.binom[[18]],int3way.uzm, int.z.diff),int.names)
+natlegforb.diff$diff<-ifelse(sign(natlegforb.diff$lci)==sign(natlegforb.diff$uci),1,0)
+natlegforb.diff
+
+# Compare differences estimates with inbuilt contrasts function in lsmeans:
+natlegforb<-fits.binom[[18]]
+summary(natlegforb)$coefficients
+library(lsmeans)
+xx<-emmeans(natlegforb, pairwise~Treatment:reserve, by="DATE", adjust="tukey")
+xx
+
+# Cannot figure out how to use lsmeans to get the per year contrasts. It's not subsetting by year because DATE is numeric; it estimates at the mean of the numeric variable (i.e. year 1). However, the main reason I wanted to use this was to explore whether my hand calculations were correct, so I can do this by comparing the year 1 contrasts from both methods:
+
+# The following shows they are exactly the same - my method is correct:
+
+# Year 1 contrasts from lsmeans:
+xx$contrasts
+
+# Year 1 contrasts from my method:
+binom.nd1[16:30,c(1:4,length(binom.nd1))]
+
+# For the two-way interaction, this gives 7 coef lines and 21 contrasts
+choose(7,2)
+
+### Create a "unique model matrix" TWO-WAY:
+coef.binom[[19]]
+summary(fits.binom[[19]])
+
+int2way.z.mat<-lm(exotic_legherb~Treatment + DATE + reserve + Treatment:DATE ,data=rich_sc,x=T)$x
+int2way.uzm<-unique(int2way.z.mat)
+rownames(int2way.uzm)<-1:nrow(int2way.uzm)
+int2way.uzm; dim(int2way.uzm)
+
+# The natural order for this difference matrix is:
+# C, A, B, yr 0, Jerra 
+# C, A, B, yr 0, Mulang 
+# C, A, B, yr 1, Jerra 
+# C, A, B, yr 1, Mulang 
+# C, A, B, yr 2, Jerra 
+# C, A, B, yr 2, Mulang 
+
+# So there is no need to re-order
+head(int2way.uzm); dim(int2way.uzm)
+
+# Now we have our unique model matrix
+int2way.uzm
+
+# Our difference matrix (from above):
+int.z.diff
+
+# And our names (from above):
+int.names
+
+# Difference estimates, SE and CI:
+# Exotic legume forb (index 19), two-way (binomial)
+
+exlegforb.diff<-data.frame(diff.est(fits.binom[[19]],int2way.uzm, int.z.diff),int.names)
+exlegforb.diff$diff<-ifelse(sign(exlegforb.diff$lci)==sign(exlegforb.diff$uci),1,0)
+exlegforb.diff
+
+# RICHNESS CONTRASTS
+coef.rich[[3]] # All exotic two-way
+coef.rich[[11]] # Exotic forb two-way
+coef.rich[[12]] # Exotic annual forb three-way
+
+# All exotic RICHNESS two-way
+allex.diff<-data.frame(diff.est(fits.rich[[3]],int2way.uzm, int.z.diff),int.names)
+allex.diff$diff<-ifelse(sign(allex.diff$lci)==sign(allex.diff$uci),1,0)
+allex.diff
+
+# Exotic forb RICHNESS two-way
+exforb.diff<-data.frame(diff.est(fits.rich[[11]],int2way.uzm, int.z.diff),int.names)
+exforb.diff$diff<-ifelse(sign(exforb.diff$lci)==sign(exforb.diff$uci),1,0)
+exforb.diff
+
+# Exotic annual forb RICHNESS two-way
+exannforb.diff<-data.frame(diff.est(fits.rich[[12]],int3way.uzm, int.z.diff),int.names)
+exannforb.diff$diff<-ifelse(sign(exannforb.diff$lci)==sign(exannforb.diff$uci),1,0)
+exannforb.diff
+
+# DIVERSITY CONTRASTS
+coef.invsimp[[6]] # Sig B three-way
+coef.invsimp[[12]] # Exotic annual forb three-way
+coef.invsimp[[19]] # Exotic leg. forb two-way
+
+# Significance B inv.simp three-way
+sigB.diff<-data.frame(diff.est(fits.invsimp[[6]],int3way.uzm, int.z.diff),int.names)
+sigB.diff$diff<-ifelse(sign(sigB.diff$lci)==sign(sigB.diff$uci),1,0)
+sigB.diff
+
+# Exotic annual forb inv.simp three-way
+exanfbDIV.diff<-data.frame(diff.est(fits.invsimp[[12]],int3way.uzm, int.z.diff),int.names)
+exanfbDIV.diff$diff<-ifelse(sign(exanfbDIV.diff$lci)==sign(exanfbDIV.diff$uci),1,0)
+exanfbDIV.diff
+
+# Exotic legume forb inv.simp two-way
+exlegfbDIV.diff<-data.frame(diff.est(fits.invsimp[[19]],int2way.uzm, int.z.diff),int.names)
+exlegfbDIV.diff$diff<-ifelse(sign(exlegfbDIV.diff$lci)==sign(exlegfbDIV.diff$uci),1,0)
+exlegfbDIV.diff
+
+# Reduce to within reserve contrasts:
+# binomial
+nlf.diff<-natlegforb.diff[-which(natlegforb.diff$res=="Jer:Mul"),]
+exlf.diff<-exlegforb.diff[-which(exlegforb.diff$res=="Jer:Mul"),]
+# richness
+allex.diff<-allex.diff[-which(allex.diff$res=="Jer:Mul"),]
+exfb.diff<-exforb.diff[-which(exforb.diff$res=="Jer:Mul"),]
+exaf.diff<-exannforb.diff[-which(exannforb.diff$res=="Jer:Mul"),]
+# inv.simp
+sigB.diff2<-sigB.diff[-which(sigB.diff$res=="Jer:Mul"),]
+exanfbDIV.diff2<-exanfbDIV.diff[-which(exanfbDIV.diff$res=="Jer:Mul"),]
+exlegfbDIV.diff2<-exlegfbDIV.diff[-which(exlegfbDIV.diff$res=="Jer:Mul"),]
+
+
+nlf.diff<-tidy.df(nlf.diff)
+exlf.diff<-tidy.df(exlf.diff)
+
+allex.diff<-tidy.df(allex.diff)
+exfb.diff<-tidy.df(exfb.diff)
+exaf.diff<-tidy.df(exaf.diff)
+
+sigB.diff2<-tidy.df(sigB.diff2)
+exanfbDIV.diff2<-tidy.df(exanfbDIV.diff2)
+exlegfbDIV.diff2<-tidy.df(exlegfbDIV.diff2)
+
+# close contrasts ----
 
 #  PLOT ESTIMATES (Richness & Diversity):    	# ----
 
@@ -1621,6 +1891,22 @@ head(gdf,2)
 gdf$ylabn<-gdf$ylab
 gdf$ylabn[gdf$group=="native_legherb"]<-"Native legume forb"
 gdf$ylabn[gdf$group=="exotic_legherb"]<-"Exotic legume forb"
+
+# Contrasts
+# The only significant contrast for the native leg forb model is for C:A at Mul in yr 2
+nlf.diff
+coef.binom[[18]]
+
+# HOWEVER, boundary issues have caused a problems computing confidence intervals because many of the plots had complete cover of native leg herbs; therefore it would be worth indicating this on the plot
+
+# nat leg herb
+nlh_dat<-rich_sc[,c(1:4,which(colnames(rich_sc)=="native_legherb"))]
+nlh_dat$nlh<-nlh_dat$native_legherb
+nlh_dat$nlh<- ifelse(nlh_dat$nlh>0,1,0)
+head(nlh_dat)
+table(nlh_dat$nlh>0, nlh_dat$reserve,nlh_dat$DATE,nlh_dat)
+nlh_sum<-aggregate(nlh~Treatment:DATE:reserve, data=nlh_dat,FUN=function(x) length(which(x>0)))
+nlh_sum$prop<-nlh_sum$nlh/8
 
 panel.size<-2
 
@@ -1659,6 +1945,16 @@ for(i in 18:19){
   arrows(mul.preds$DATE[mul.preds$Treatment=="B"]+xofs,mul.preds$lci[mul.preds$Treatment=="B"],mul.preds$DATE[mul.preds$Treatment=="B"]+xofs,mul.preds$uci[mul.preds$Treatment=="B"], code=3, angle=90, length=arrowlgth, col="blue")
   mtext(paste("(",codes.thisrun[1],") ", "Mulanggari",sep=""), side=3, line=1.2, adj=0, cex=0.9)
   
+  # Add star for significant differences
+  nlf.diff
+  exlf.diff
+
+  # A is different to control in yr 1 and yr 2
+  if (i==18) points(mul.preds$DATE[mul.preds$Treatment=="A"][c(3)],mul.preds$uci[mul.preds$Treatment=="A"][c(3)]+0.1, pch="*", cex=1.5,col="black")
+  if (i==18) points((mul.preds$DATE[mul.preds$Treatment=="C"]-xofs)[c(2)],(mul.preds$lci[mul.preds$Treatment=="C"])[c(2)]-0.15, pch="†", cex=1,col="black")
+  
+  if (i==19) points(mul.preds$DATE[mul.preds$Treatment=="A"][c(2,3)],mul.preds$uci[mul.preds$Treatment=="A"][c(2,3)]+0.1, pch="*", cex=1.5,col="black")
+  
   # JERRA
   
   plot(jerra.preds$DATE[jerra.preds$Treatment=="C"]-xofs,jerra.preds$fit[jerra.preds$Treatment=="C"], pch=15, ylim=c(min(jerra.preds$lci), max(jerra.preds$uci)), xlim=c(-0.3,2.3), xaxt="n", xlab="Year", ylab=ylab.thisrun, las=1)
@@ -1670,6 +1966,12 @@ for(i in 18:19){
   arrows(jerra.preds$DATE[jerra.preds$Treatment=="B"]+xofs,jerra.preds$lci[jerra.preds$Treatment=="B"],jerra.preds$DATE[jerra.preds$Treatment=="B"]+xofs,jerra.preds$uci[jerra.preds$Treatment=="B"], code=3, angle=90, length=arrowlgth, col="blue")
   
   mtext(paste("(",codes.thisrun[2],") ", "Jerrabomberra", sep=""), side=3, line=1.2, adj=0, cex=0.9)
+  
+  # Add star for only significant difference
+  if (i==18) points((jerra.preds$DATE[jerra.preds$Treatment=="C"]-xofs)[c(2,3)],(jerra.preds$uci[jerra.preds$Treatment=="C"])[c(2,3)]-0.15, pch="†", cex=1,col="black")
+  
+  exlf.diff
+  if (i==19) points(jerra.preds$DATE[jerra.preds$Treatment=="A"][c(2,3)],jerra.preds$uci[jerra.preds$Treatment=="A"][c(2,2)]+0.1, pch="*", cex=1.5,col="black")
   
   if (gdf$bin_3wayP[i]<0.05){
     
@@ -1701,6 +2003,10 @@ head(gdf,2)
 gdf$ylabn<-gdf$ylab
 gdf$ylabn[gdf$group=="exotic"]<-"All exotic plants"
 
+allex.diff
+exfb.diff
+exaf.diff
+
 dev.new(width=panel.size*3.5,height=panel.size*4,noRStudioGD = T,dpi=80, pointsize=(panel.size*4)*2)
 par(mfrow=c(3,2), mar=c(4,4,3,2), oma=c(0,0,0,6), mgp=c(2.5,1,0))
 
@@ -1726,7 +2032,7 @@ for(i in c(3,11,12)){
   
   # Mulanggari
   
-  plot(mul.preds$DATE[mul.preds$Treatment=="C"]-xofs,mul.preds$fit.resp[mul.preds$Treatment=="C"], pch=15, ylim=c(min(mul.preds$lci.resp), max(mul.preds$uci.resp)), xlim=c(-0.3,2.3), xaxt="n", xlab="Year", ylab=ylab.thisrun, las=1)
+  plot(mul.preds$DATE[mul.preds$Treatment=="C"]-xofs,mul.preds$fit.resp[mul.preds$Treatment=="C"], pch=15, ylim=c(min(mul.preds$lci.resp), max(mul.preds$uci.resp)+1), xlim=c(-0.3,2.3), xaxt="n", xlab="Year", ylab=ylab.thisrun, las=1)
   axis(side = 1, at=c(0,1,2), labels=c(2017,2018,2019))
   
   arrows(mul.preds$DATE[mul.preds$Treatment=="C"]-xofs,mul.preds$lci.resp[mul.preds$Treatment=="C"],mul.preds$DATE[mul.preds$Treatment=="C"]-xofs,mul.preds$uci.resp[mul.preds$Treatment=="C"], code=3, angle=90, length=arrowlgth)
@@ -1737,9 +2043,20 @@ for(i in c(3,11,12)){
   arrows(mul.preds$DATE[mul.preds$Treatment=="B"]+xofs,mul.preds$lci.resp[mul.preds$Treatment=="B"],mul.preds$DATE[mul.preds$Treatment=="B"]+xofs,mul.preds$uci.resp[mul.preds$Treatment=="B"], code=3, angle=90, length=arrowlgth, col="blue")
   mtext(paste("(",codes.thisrun[1],") ", "Mulanggari",sep=""), side=3, line=1.2, adj=0, cex=0.7)
   
+  # Add star for significant differences
+  allex.diff[allex.diff$res=="Mul:Mul",]  # [[3]] # All exotic two-way
+  exfb.diff[allex.diff$res=="Mul:Mul",] # [[11]] # Exotic forb two-way
+  exaf.diff[allex.diff$res=="Mul:Mul",] # [[12]] # Exotic annual forb three-way
+  
+  # A is different to control in yr 1 and yr 2
+  if (i==3) points(mul.preds$DATE[mul.preds$Treatment=="A"][c(2,3)],mul.preds$uci.resp[mul.preds$Treatment=="A"][c(2,3)]+1, pch="*", cex=1.5,col="black")
+  
+  if (i==11) points(mul.preds$DATE[mul.preds$Treatment=="A"][c(3)],mul.preds$uci.resp[mul.preds$Treatment=="A"][c(3)]+1, pch="*", cex=1.5,col="black")
+  
   # JERRA
   
-  plot(jerra.preds$DATE[jerra.preds$Treatment=="C"]-xofs,jerra.preds$fit.resp[jerra.preds$Treatment=="C"], pch=15, ylim=c(min(jerra.preds$lci.resp), max(jerra.preds$uci.resp)), xlim=c(-0.3,2.3), xaxt="n", xlab="Year", ylab=ylab.thisrun, las=1)
+  if(i==12) jerra.maxlim<-max(jerra.preds$uci.resp)+1 else jerra.maxlim<-max(jerra.preds$uci.resp) 
+  plot(jerra.preds$DATE[jerra.preds$Treatment=="C"]-xofs,jerra.preds$fit.resp[jerra.preds$Treatment=="C"], pch=15, ylim=c(min(jerra.preds$lci.resp), jerra.maxlim), xlim=c(-0.3,2.3), xaxt="n", xlab="Year", ylab=ylab.thisrun, las=1)
   axis(side = 1, at=c(0,1,2), labels=c(2017,2018,2019))
   arrows(jerra.preds$DATE[jerra.preds$Treatment=="C"]-xofs,jerra.preds$lci.resp[jerra.preds$Treatment=="C"],jerra.preds$DATE[jerra.preds$Treatment=="C"]-xofs,jerra.preds$uci.resp[jerra.preds$Treatment=="C"], code=3, angle=90, length=arrowlgth)
   points(jerra.preds$DATE[jerra.preds$Treatment=="A"],jerra.preds$fit.resp[jerra.preds$Treatment=="A"], pch=15, col="red")
@@ -1748,6 +2065,18 @@ for(i in c(3,11,12)){
   arrows(jerra.preds$DATE[jerra.preds$Treatment=="B"]+xofs,jerra.preds$lci.resp[jerra.preds$Treatment=="B"],jerra.preds$DATE[jerra.preds$Treatment=="B"]+xofs,jerra.preds$uci.resp[jerra.preds$Treatment=="B"], code=3, angle=90, length=arrowlgth, col="blue")
   
   mtext(paste("(",codes.thisrun[2],") ", "Jerrabomberra", sep=""), side=3, line=1.2, adj=0, cex=0.7)
+  
+  # Add star for significant differences
+  allex.diff[allex.diff$res=="Jer:Jer",] # [[3]] # All exotic two-way
+  exfb.diff[allex.diff$res=="Jer:Jer",] # [[11]] # Exotic forb two-way
+  exaf.diff[allex.diff$res=="Jer:Jer",] # [[12]] # Exotic annual forb three-way
+  
+  # A is different to control in yr 1 and yr 2
+  if (i==3) points(jerra.preds$DATE[jerra.preds$Treatment=="A"][c(2,3)],jerra.preds$uci.resp[jerra.preds$Treatment=="A"][c(2,3)]+1, pch="*", cex=1.5,col="black")
+  
+  if (i==11) points(jerra.preds$DATE[jerra.preds$Treatment=="A"][c(3)],jerra.preds$uci.resp[jerra.preds$Treatment=="A"][c(3)]+1, pch="*", cex=1.5,col="black")
+  
+  if (i==12) points(jerra.preds$DATE[jerra.preds$Treatment=="A"][c(2,3)],jerra.preds$uci.resp[jerra.preds$Treatment=="A"][c(2,3)]+1, pch="*", cex=1.5,col="black")
   
   if (gdf$rich_3wayP[i]<0.05){
     
@@ -1779,6 +2108,14 @@ head(gdf,2)
 gdf$ylabn<-gdf$ylab
 gdf$ylabn[gdf$group=="sigB"]<-"Indicator B"
 gdf$ylabn[gdf$group=="exotic_legherb"]<-"Exotic legume forb"
+
+# For sigB and exotic leg forb, none of the within year, within reserve contrasts were significant. The interactions were driven by differences between reserves
+sigB.diff2 # 6
+exanfbDIV.diff2 # 12
+exlegfbDIV.diff2 # 19
+
+sigB.diff # e.g. CMul vs CJer
+exlegfbDIV.diff # e.g. CMul vs AJer 
 
 dev.new(width=panel.size*3.5,height=panel.size*4,noRStudioGD = T,dpi=80, pointsize=(panel.size*4)*2)
 par(mfrow=c(3,2), mar=c(4,4,3,2), oma=c(0,0,0,6), mgp=c(2.5,1,0))
@@ -1818,7 +2155,8 @@ for(i in c(6,12,19)){
   
   # JERRA
   
-  plot(jerra.preds$DATE[jerra.preds$Treatment=="C"]-xofs,jerra.preds$fit.resp[jerra.preds$Treatment=="C"], pch=15, ylim=c(min(jerra.preds$lci.resp), max(jerra.preds$uci.resp)), xlim=c(-0.3,2.3), xaxt="n", xlab="Year", ylab=ylab.thisrun, las=1)
+  if(i==12) jerra.maxlim<-max(jerra.preds$uci.resp)+1 else jerra.maxlim<-max(jerra.preds$uci.resp) 
+  plot(jerra.preds$DATE[jerra.preds$Treatment=="C"]-xofs,jerra.preds$fit.resp[jerra.preds$Treatment=="C"], pch=15, ylim=c(min(jerra.preds$lci.resp), jerra.maxlim), xlim=c(-0.3,2.3), xaxt="n", xlab="Year", ylab=ylab.thisrun, las=1)
   axis(side = 1, at=c(0,1,2), labels=c(2017,2018,2019))
   arrows(jerra.preds$DATE[jerra.preds$Treatment=="C"]-xofs,jerra.preds$lci.resp[jerra.preds$Treatment=="C"],jerra.preds$DATE[jerra.preds$Treatment=="C"]-xofs,jerra.preds$uci.resp[jerra.preds$Treatment=="C"], code=3, angle=90, length=arrowlgth)
   points(jerra.preds$DATE[jerra.preds$Treatment=="A"],jerra.preds$fit.resp[jerra.preds$Treatment=="A"], pch=15, col="red")
@@ -1827,6 +2165,11 @@ for(i in c(6,12,19)){
   arrows(jerra.preds$DATE[jerra.preds$Treatment=="B"]+xofs,jerra.preds$lci.resp[jerra.preds$Treatment=="B"],jerra.preds$DATE[jerra.preds$Treatment=="B"]+xofs,jerra.preds$uci.resp[jerra.preds$Treatment=="B"], code=3, angle=90, length=arrowlgth, col="blue")
   
   mtext(paste("(",codes.thisrun[2],") ", "Jerrabomberra", sep=""), side=3, line=1.2, adj=0, cex=0.7)
+  
+  exanfbDIV.diff2 
+  
+  if (i==12) points(jerra.preds$DATE[jerra.preds$Treatment=="A"][c(3)],jerra.preds$uci.resp[jerra.preds$Treatment=="A"][c(3)]+1, pch="*", cex=1.5,col="black")
+  if (i==12) points((jerra.preds$DATE[jerra.preds$Treatment=="B"]+xofs)[c(3)],jerra.preds$uci.resp[jerra.preds$Treatment=="B"][c(3)]+1, pch="*", cex=1.5,col="black")
   
   if (gdf$invsimp_3wayP[i]<0.05){
     
@@ -1852,6 +2195,9 @@ par(xpd=F)
 
 # close plot Richness & Diversity ----
 
+# For individual species:
+# load("03_Workspaces/stjw_analysis.RData")
+
 #  INDIVIDUAL SPECIES data set-up:    	# ----
 
 # Need to check with RM: why was Desmodium varians classified as a legume rather than a native leg forb?
@@ -1860,14 +2206,13 @@ par(xpd=F)
 # And it is the ONLY species in the Legume category
 table(pinfo$func_grp)
 
-# save.image("03_Workspaces/stjw_analysis.RData")
-
 # CHECK DATA
 
 # Make sure all species data columns match:
 
 rahead(ct_dat,3,7); dim(ct_dat)
 rahead(cv_dat,3,7); dim(cv_dat)
+
 # The species data columns in cover and count are not in the same order (but we can work around this):
 table(colnames(ct_dat)[5:ncol(ct_dat)]==colnames(cv_dat)[5:ncol(cv_dat)])
 
@@ -1913,8 +2258,6 @@ for (i in 1:length(sp.totest)){
 
 # NO more problems in re-formatted data. 
 sp.testout
-
-# save.image("03_Workspaces/stjw_analysis.RData")
 
 # Individual species to model:
 head(pinfo,3); dim(pinfo)
@@ -2032,6 +2375,7 @@ rahead(ind_po,6,6); dim(ind_po)
 
 # close data to model ----
 
+# This is the workspace with the individual species:
 # save.image("03_Workspaces/stjw_analysis.RData")
 
 #  INDIVIDUAL SPECIES BINOMIAL MODELS:    	# ----
@@ -2187,7 +2531,9 @@ ind.sp$binom_2wayP[which(ind.sp$Sp=="Tri_pyg")]<-Tri_pyg2way[2,8]
 # save.image("03_Workspaces/stjw_analysis.RData")
 
 # predictions  
-nd1<-data.frame(DATE=rep(c(0,1,2),rep(3,3)),Treatment=as.factor(c("C","A","B")),reserve=c(rep("J",9),rep("M",9)))
+# use nd1 from above so the levels are correct:
+nd1<-data.frame(DATE=rep(c(0,1,2),rep(3,3)),Treatment=factor(c("C","A","B"),levels=c("C","A","B")),reserve=factor(c(rep("J",9),rep("M",9)),levels=c("J","M")))
+str(nd1)
 
 Chr_api_pr<-pred(model=two_way_Chr_api,new.data=nd1,se.fit=T,type="response")
 Des_var_pr<-pred(model=two_way_Des_var, new.data=nd1, se.fit=T, type="response")
@@ -2201,8 +2547,6 @@ Tri_pyg_pr<-pred(model=two_way_Tri_pyg, new.data=nd1, se.fit=T,type="response")
 # save.image("03_Workspaces/stjw_analysis.RData")
 
 # close binomial models ----
-
-# save.image("03_Workspaces/stjw_analysis.RData")
 
 #  INDIVIDUAL SPECIES ABUNDANCE MODELS:    	# ----
 
@@ -2403,6 +2747,33 @@ head(Des_var_nbpr)
 
 # close abundance models ----
 
+#  INDIVIDUAL SPECIES CONTRASTS:    	# ----
+
+# Final models to plot:
+summary(two_way_dv_nb) # Des_var two-way (binomial)
+summary(three_way_ca_nb) # Chr_api three-way (abund)
+summary(three_way_eo_nb) # Ery_ovi three-way (abund)
+
+# Des_var two-way (binomial)
+dv.diff<-data.frame(diff.est(two_way_dv_nb,int2way.uzm, int.z.diff),int.names)
+dv.diff$diff<-ifelse(sign(dv.diff$lci)==sign(dv.diff$uci),1,0)
+dv.diff<-dv.diff[-which(dv.diff$res=="Jer:Mul"),]
+dv.diff
+
+# Chr_api three-way (abund)
+ca.diff<-data.frame(diff.est(three_way_ca_nb,int3way.uzm, int.z.diff),int.names)
+ca.diff$diff<-ifelse(sign(ca.diff$lci)==sign(ca.diff$uci),1,0)
+ca.diff<-ca.diff[-which(ca.diff$res=="Jer:Mul"),]
+ca.diff
+
+# Ery_ovi three-way (abund)
+eo.diff<-data.frame(diff.est(three_way_eo_nb,int3way.uzm, int.z.diff),int.names)
+eo.diff$diff<-ifelse(sign(eo.diff$lci)==sign(eo.diff$uci),1,0)
+eo.diff<-eo.diff[-which(eo.diff$res=="Jer:Mul"),]
+eo.diff
+
+# close CONTRASTS ----
+
 #  PLOT INDIVIDUAL SPECIES:    	# ----
 
 # PLOT all on the same page (binomial and abundance)
@@ -2447,13 +2818,20 @@ dv_nbpr_J<-Des_var_nbpr[which(Des_var_nbpr$reserve=="J"),]
 
 # save.image("03_Workspaces/stjw_analysis.RData")
 
+# CONTRASTS
+dv.diff
+ca.diff
+eo.diff
+
 # PLOT
 
 xofs<-0.2
 arrowlgth<-0.02
 
-dev.new(width=panel.size*3.5,height=panel.size*4,noRStudioGD = T,dpi=80, pointsize=(panel.size*4)*2)
-par(mfrow=c(3,2), mar=c(4,4,3,2), oma=c(0,0,0,6), mgp=c(2.5,1,0))
+panel.size<-2
+
+dev.new(width=panel.size*3.5,height=panel.size*3,noRStudioGD = T,dpi=80, pointsize=(panel.size*3.5)*2)
+par(mfrow=c(2,2), mar=c(4,4,3,2), oma=c(0,0,0,6), mgp=c(2.5,1,0))
 
 ## Des_var (binomial)
 
@@ -2468,7 +2846,12 @@ arrows(Des_var_pr_M$DATE[Des_var_pr_M$Treatment=="A"],Des_var_pr_M$lci[Des_var_p
 points(Des_var_pr_M$DATE[Des_var_pr_M$Treatment=="B"]+xofs,Des_var_pr_M$fit[Des_var_pr_M$Treatment=="B"], pch=15, col="blue")
 arrows(Des_var_pr_M$DATE[Des_var_pr_M$Treatment=="B"]+xofs,Des_var_pr_M$lci[Des_var_pr_M$Treatment=="B"],Des_var_pr_M$DATE[Des_var_pr_M$Treatment=="B"]+xofs,Des_var_pr_M$uci[Des_var_pr_M$Treatment=="B"], code=3, angle=90, length=arrowlgth, col="blue")
 
-mtext(paste("(",letters[1],") ", "Mulanggari",sep=""), side=3, line=1.2, adj=0, cex=0.7)
+mtext(paste("(",letters[1],") ", "Mulanggari",sep=""), side=3, line=1.2, adj=0, cex=0.9)
+
+# Add star for significant differences
+dv.diff[dv.diff$res=="Mul:Mul",]
+
+points(Des_var_pr_M$DATE[Des_var_pr_M$Treatment=="A"][c(2,3)],Des_var_pr_M$uci[Des_var_pr_M$Treatment=="A"][c(2,3)]+0.1, pch="*", cex=1.5,col="black")
 
 # JERRA
 plot(Des_var_pr_J$DATE[Des_var_pr_J$Treatment=="C" ]-xofs,Des_var_pr_J$fit[Des_var_pr_J$Treatment=="C"], pch=15, ylim=c(min(Des_var_pr_J$lci), max(Des_var_pr_J$uci)), xlim=c(-0.3,2.3), xaxt="n", xlab="Year", ylab=bquote(italic("D. varians ")~.("occurence")), las=1)
@@ -2480,9 +2863,14 @@ points(Des_var_pr_J$DATE[Des_var_pr_J$Treatment=="A"],Des_var_pr_J$fit[Des_var_p
 arrows(Des_var_pr_J$DATE[Des_var_pr_J$Treatment=="A"],Des_var_pr_J$lci[Des_var_pr_J$Treatment=="A"],Des_var_pr_J$DATE[Des_var_pr_J$Treatment=="A"],Des_var_pr_J$uci[Des_var_pr_J$Treatment=="A"], code=3, angle=90, length=arrowlgth, col="red")
 points(Des_var_pr_J$DATE[Des_var_pr_J$Treatment=="B"]+xofs,Des_var_pr_J$fit[Des_var_pr_J$Treatment=="B"], pch=15, col="blue")
 arrows(Des_var_pr_J$DATE[Des_var_pr_J$Treatment=="B"]+xofs,Des_var_pr_J$lci[Des_var_pr_J$Treatment=="B"],Des_var_pr_J$DATE[Des_var_pr_J$Treatment=="B"]+xofs,Des_var_pr_J$uci[Des_var_pr_J$Treatment=="B"], code=3, angle=90, length=arrowlgth, col="blue")
-mtext(paste("(",letters[2],") ", "Jerrabomberra", sep=""), side=3, line=1.2, adj=0, cex=0.7)
+mtext(paste("(",letters[2],") ", "Jerrabomberra", sep=""), side=3, line=1.2, adj=0, cex=0.9)
 
 if (DesvarP<0.001) title(main=bquote(Two-way~int.~italic(P)~"<"~0.001), font.main=1, adj=0, cex.main=1, line=0.5) else title(main=bquote(Two-way~int.~italic(P)~"="~.(DesvarP)), font.main=1.4, adj=0, cex.main=1, line=0.5)
+
+# Add star for significant differences
+dv.diff[dv.diff$res=="Jer:Jer",]
+
+points(Des_var_pr_J$DATE[Des_var_pr_J$Treatment=="A"][c(2,3)],Des_var_pr_J$uci[Des_var_pr_J$Treatment=="A"][c(2,3)]+0.1, pch="*", cex=1.5,col="black")
 
 ## Chr_api Mulanggari
 
@@ -2497,7 +2885,10 @@ arrows(ca_nbpr_M$DATE[ca_nbpr_M$Treatment=="A"],ca_nbpr_M$lci.resp[ca_nbpr_M$Tre
 points(ca_nbpr_M$DATE[ca_nbpr_M$Treatment=="B"]+xofs,ca_nbpr_M$fit.resp[ca_nbpr_M$Treatment=="B"], pch=15, col="blue")
 arrows(ca_nbpr_M$DATE[ca_nbpr_M$Treatment=="B"]+xofs,ca_nbpr_M$lci.resp[ca_nbpr_M$Treatment=="B"],ca_nbpr_M$DATE[ca_nbpr_M$Treatment=="B"]+xofs,ca_nbpr_M$uci.resp[ca_nbpr_M$Treatment=="B"], code=3, angle=90, length=arrowlgth, col="blue")
 
-mtext(paste("(",letters[3],") ", "Mulanggari",sep=""), side=3, line=1.2, adj=0, cex=0.7)
+mtext(paste("(",letters[3],") ", "Mulanggari",sep=""), side=3, line=1.2, adj=0, cex=0.9)
+
+# Add star for significant differences (none for this one)
+ca.diff[ca.diff$res=="Mul:Mul",]
 
 ## Chr_api Jerrabomberra
 plot(ca_nbpr_J$DATE[ca_nbpr_J$Treatment=="C" ]-xofs,ca_nbpr_J$fit.resp[ca_nbpr_J$Treatment=="C"], pch=15, ylim=c(min(ca_nbpr_J$lci.resp), max(ca_nbpr_J$uci.resp)), xlim=c(-0.3,2.3), xaxt="n", xlab="Year", ylab=bquote(italic("C. apiculatum")~.("abundance")), las=1)
@@ -2511,15 +2902,37 @@ arrows(ca_nbpr_J$DATE[ca_nbpr_J$Treatment=="A"],ca_nbpr_J$lci.resp[ca_nbpr_J$Tre
 points(ca_nbpr_J$DATE[ca_nbpr_J$Treatment=="B"]+xofs,ca_nbpr_J$fit.resp[ca_nbpr_J$Treatment=="B"], pch=15, col="blue")
 arrows(ca_nbpr_J$DATE[ca_nbpr_J$Treatment=="B"]+xofs,ca_nbpr_J$lci.resp[ca_nbpr_J$Treatment=="B"],ca_nbpr_J$DATE[ca_nbpr_J$Treatment=="B"]+xofs,ca_nbpr_J$uci.resp[ca_nbpr_J$Treatment=="B"], code=3, angle=90, length=arrowlgth, col="blue")
 
-mtext(paste("(",letters[4],") ", "Jerrabomberra", sep=""), side=3, line=1.2, adj=0, cex=0.7)
+mtext(paste("(",letters[4],") ", "Jerrabomberra", sep=""), side=3, line=1.2, adj=0, cex=0.9)
+
+# Add star for significant differences
+ca.diff[ca.diff$res=="Jer:Jer",]
+
+points(ca_nbpr_J$DATE[ca_nbpr_J$Treatment=="A"][c(3)],ca_nbpr_J$uci.resp[ca_nbpr_J$Treatment=="A"][c(3)]+3, pch="*", cex=1.5,col="black")
 
 p.Chrapi_3waynb<-round(Chrapi_3waynb[2,which(colnames(Chrapi_3waynb)=="Pr(>Chi)")],3)
 
 if (p.Chrapi_3waynb<0.001) title(main=bquote(Three-way~int.~italic(P)~"<"~0.001), font.main=1, adj=0, cex.main=1, line=0.5) else title(main=bquote(Three-way~int.~italic(P)~"="~.(p.Chrapi_3waynb)), font.main=1.4, adj=0, cex.main=1, line=0.5)
 
+par(xpd=NA)
+legend(2.6,16,legend=c("Control","Spot spray","Boom spray"), col=c("black","red","blue"), pch=15, bty="n", pt.cex = 3)
+par(xpd=F)
+
+
+
+
+## Ery_ovi for SI
+
+xofs<-0.2
+arrowlgth<-0.02
+
+panel.size<-2
+
+dev.new(width=9,height=4,noRStudioGD = T,dpi=100, pointsize=14)
+par(mfrow=c(1,2), mar=c(4,4,3,2), oma=c(0,0,0,6), mgp=c(2.5,1,0))
+
 ## Ery_ovi Mulanggari 
 
-plot(eo_nbpr_M$DATE[eo_nbpr_M$Treatment=="C" ]-xofs,eo_nbpr_M$fit.resp[eo_nbpr_M$Treatment=="C"], pch=15, ylim=c(min(eo_nbpr_M$lci.resp), max(eo_nbpr_M$uci.resp)), xlim=c(-0.3,2.3), xaxt="n", xlab="Year", ylab=bquote(italic("E. ovinum")~.("abundance")), las=1)
+plot(eo_nbpr_M$DATE[eo_nbpr_M$Treatment=="C" ]-xofs,eo_nbpr_M$fit.resp[eo_nbpr_M$Treatment=="C"], pch=15, ylim=c(min(eo_nbpr_M$lci.resp), max(eo_nbpr_M$uci.resp)+10), xlim=c(-0.3,2.3), xaxt="n", xlab="Year", ylab=bquote(italic("E. ovinum")~.("abundance")), las=1)
 axis(side = 1, at=c(0,1,2), labels=c(2017,2018,2019))
 
 arrows(eo_nbpr_M$DATE[eo_nbpr_M$Treatment=="C"]-xofs,eo_nbpr_M$lci.resp[eo_nbpr_M$Treatment=="C"],eo_nbpr_M$DATE[eo_nbpr_M$Treatment=="C"]-xofs,eo_nbpr_M$uci.resp[eo_nbpr_M$Treatment=="C"], code=3, angle=90, length=arrowlgth)
@@ -2529,7 +2942,12 @@ arrows(eo_nbpr_M$DATE[eo_nbpr_M$Treatment=="A"],eo_nbpr_M$lci.resp[eo_nbpr_M$Tre
 points(eo_nbpr_M$DATE[eo_nbpr_M$Treatment=="B"]+xofs,eo_nbpr_M$fit.resp[eo_nbpr_M$Treatment=="B"], pch=15, col="blue")
 arrows(eo_nbpr_M$DATE[eo_nbpr_M$Treatment=="B"]+xofs,eo_nbpr_M$lci.resp[eo_nbpr_M$Treatment=="B"],eo_nbpr_M$DATE[eo_nbpr_M$Treatment=="B"]+xofs,eo_nbpr_M$uci.resp[eo_nbpr_M$Treatment=="B"], code=3, angle=90, length=arrowlgth, col="blue")
 
-mtext(paste("(",letters[5],") ", "Mulanggari",sep=""), side=3, line=1.2, adj=0, cex=0.7)
+mtext(paste("(",letters[1],") ", "Mulanggari",sep=""), side=3, line=1.2, adj=0, cex=1)
+
+# Add star for significant differences
+eo.diff[eo.diff$res=="Mul:Mul",]
+
+points((eo_nbpr_M$DATE[eo_nbpr_M$Treatment=="B"]+xofs)[c(1,2,3)],eo_nbpr_M$uci.resp[eo_nbpr_M$Treatment=="B"][c(1,2,3)]+5, pch="*", cex=1.5,col="black")
 
 ## Ery_ovi Jerrabomberra
 plot(eo_nbpr_J$DATE[eo_nbpr_J$Treatment=="C" ]-xofs,eo_nbpr_J$fit.resp[eo_nbpr_J$Treatment=="C"], pch=15, ylim=c(min(eo_nbpr_J$lci.resp), max(eo_nbpr_J$uci.resp)), xlim=c(-0.3,2.3), xaxt="n", xlab="Year", ylab=bquote(italic("E. ovinum")~.("abundance")), las=1)
@@ -2542,7 +2960,12 @@ arrows(eo_nbpr_J$DATE[eo_nbpr_J$Treatment=="A"],eo_nbpr_J$lci.resp[eo_nbpr_J$Tre
 points(eo_nbpr_J$DATE[eo_nbpr_J$Treatment=="B"]+xofs,eo_nbpr_J$fit.resp[eo_nbpr_J$Treatment=="B"], pch=15, col="blue")
 arrows(eo_nbpr_J$DATE[eo_nbpr_J$Treatment=="B"]+xofs,eo_nbpr_J$lci.resp[eo_nbpr_J$Treatment=="B"],eo_nbpr_J$DATE[eo_nbpr_J$Treatment=="B"]+xofs,eo_nbpr_J$uci.resp[eo_nbpr_J$Treatment=="B"], code=3, angle=90, length=arrowlgth, col="blue")
 
-mtext(paste("(",letters[6],") ", "Jerrabomberra", sep=""), side=3, line=1.2, adj=0, cex=0.7)
+mtext(paste("(",letters[2],") ", "Jerrabomberra", sep=""), side=3, line=1.2, adj=0, cex=1)
+
+# Add star for significant differences
+eo.diff[eo.diff$res=="Jer:Jer",]
+
+points((eo_nbpr_J$DATE[eo_nbpr_J$Treatment=="B"]+xofs)[c(1)],eo_nbpr_J$uci.resp[eo_nbpr_J$Treatment=="B"][c(1)]+5, pch="*", cex=1.5,col="black")
 
 p.Eryovi_3waynb<-round(Eryovi_3waynb[2,which(colnames(Eryovi_3waynb)=="Pr(>Chi)")],3)
 
