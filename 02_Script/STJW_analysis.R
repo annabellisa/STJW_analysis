@@ -811,6 +811,20 @@ cv_dat<-rbind(cv17, cv18, cv19)
 rahead(cv_dat,3,7); dim(cv_dat)
 rahead(ct_dat,3,7); dim(ct_dat)
 
+# Check that all species have been recorded
+head(spdat); dim(spdat)
+spcounts<-spdat[,c("Sp","sum_ct17","sum_ct18","sum_ct19")]
+spcounts<-tidy.df(spcounts)
+which(rowSums(spcounts[,2:4])==0)
+head(pinfo,3); dim(pinfo)
+table(pinfo$Status)
+
+# Calculate the number of species for each group:
+head(gdf,2)
+no_sp<-gdf[,c("group","ylabn")]
+no_sp$no_sp<-unlist(lapply(gdf$group,FUN=function(x) length(get(x))))
+# write.table(no_sp,"no_sp.txt",quote=F, row.names = F, sep="\t")
+
 # save.image("03_Workspaces/stjw_analysis_R1.RData")
 
 # close format data ----
