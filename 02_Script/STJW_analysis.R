@@ -1627,6 +1627,9 @@ gdf$invsimp2w_resM_se<-ifelse(gdf$invsimp_3wayP>0.05,round(unlist(lapply(coef.in
 
 # close richness & diversity ----
 
+# If we need to re-do the contrasts to deal with the boundary issue, we could try either fitting the binomial models in glmmADMB or try doing the contrasts with multicomp
+# https://cran.r-project.org/web/packages/multcomp/multcomp.pdf
+
 #  CONTRASTS (Richness & Diversity):    	# ----
 
 # BINOMIAL MODELS (two signif models)
