@@ -15,6 +15,42 @@ library(lme4); library(vegan); library(AICcmodavg); library(lmerTest); library(g
 # Load workspace
 load("03_Workspaces/stjw_analysis_R1.RData")
 
+#  POST-ANALYSIS, summaries for paper:    	# ----
+
+rahead(ct_dat,3,7); dim(ct_dat)
+rahead(cv_dat,3,7); dim(cv_dat)
+
+head(pinfo,3)
+
+# Themeda = 1 species (The_tri)
+# Austrostipa = 3 species (Aus_big, Aus_den, Aus_sca)
+# Rytidosperma = 8 species ("Ryt_cae" "Ryt_car" "Ryt_lae" "Ryt_rac" "Ryt_sp." "Ryt_sp3" "Ryt_sp4" "Ryt_sp2")
+
+aus_rty<-cv_dat[,c(1:4,c(grep("Ryt_", colnames(cv_dat)),grep("Aus_", colnames(cv_dat))))]
+aus_rty$Ryt_Aus_ALL<-rowSums(aus_rty[,5:ncol(aus_rty)])
+head(aus_rty,3); dim(aus_rty)
+
+aus_rty$tag<-paste(aus_rty$DATE,aus_rty$reserve,aus_rty$PLOT_ID,aus_rty$Treatment, sep="_")
+ar_all<-aus_rty[,c("Ryt_Aus_ALL", "tag")]
+head(ar_all,3); dim(ar_all)
+
+them<-cv_dat[,c(1:4,grep("The_", colnames(cv_dat)))]
+them$tag<-paste(them$DATE,them$reserve,them$PLOT_ID,them$Treatment, sep="_")
+head(them,3); dim(them)
+
+table(ar_all$tag %in% them$tag)
+table(them$tag %in% ar_all$tag)
+
+mul_grass<-merge(them, ar_all, by="tag", all.x=T, all.y=F)
+mul_grass<-mul_grass[which(mul_grass$reserve=="M"),]
+mul_grass<-tidy.df(mul_grass)
+mul_grass$RA_dom<-mul_grass$Ryt_Aus_ALL>mul_grass$The_tri
+head(mul_grass,3); dim(mul_grass)
+
+table(mul_grass$RA_dom, mul_grass$DATE)
+
+# close data summaries ----
+
 #  IMPORT, clean & transform data:    	# ----
 
 data_dir<-"00_Data/Formatted_data/"
@@ -834,6 +870,8 @@ no_sp$no_sp<-unlist(lapply(gdf$group,FUN=function(x) length(get(x))))
 head(pinfo,3); dim(pinfo)
 str(pinfo)
 table(pinfo$func_grp)
+exotic_legherb
+native_legherb
 
 # Set-up vectors for grouping:
 
