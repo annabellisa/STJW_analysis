@@ -3,8 +3,6 @@
 # ---------- STJW ANALYSIS  ---------- #
 # ------------------------------------ #
 
-# checking new ssh key
-
 ### Analysis of herbicide control experiment from STJW project
 ### Author: Annabel Smith & Raagini Muddaiah
 
