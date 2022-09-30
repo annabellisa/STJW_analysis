@@ -3,8 +3,6 @@
 # ---------- STJW ANALYSIS  ---------- #
 # ------------------------------------ #
 
-# testing push on new laptop
-
 ### Analysis of herbicide control experiment from STJW project
 ### Author: Annabel Smith & Raagini Muddaiah
 
@@ -18,6 +16,8 @@ library(lme4); library(vegan); library(AICcmodavg); library(lmerTest); library(g
 load("03_Workspaces/stjw_analysis_R1.RData")
 
 #  POST-ANALYSIS, summaries for paper:    	# ----
+
+# This section investigates the proportions of C3 and C4 dominant grasses across the two reserves. There is an unfinished figure which I'm currently not including in the MS, opting for a text reporting of the mean and range instead. 
 
 rahead(ct_dat,3,7); dim(ct_dat)
 rahead(cv_dat,3,7); dim(cv_dat)
@@ -47,9 +47,47 @@ mul_grass<-merge(them, ar_all, by="tag", all.x=T, all.y=F)
 mul_grass<-mul_grass[which(mul_grass$reserve=="M"),]
 mul_grass<-tidy.df(mul_grass)
 mul_grass$RA_dom<-mul_grass$Ryt_Aus_ALL>mul_grass$The_tri
+
+jerra_grass<-merge(them, ar_all, by="tag", all.x=T, all.y=F)
+jerra_grass<-jerra_grass[which(jerra_grass$reserve=="J"),]
+jerra_grass<-tidy.df(jerra_grass)
+jerra_grass$RA_dom<-jerra_grass$Ryt_Aus_ALL>jerra_grass$The_tri
+
+mul_grass$Them_prop<-mul_grass$The_tri/(mul_grass$The_tri+mul_grass$Ryt_Aus_ALL)
+mul_grass$RA_prop<-1-mul_grass$Them_prop
+
+jerra_grass$Them_prop<-jerra_grass$The_tri/(jerra_grass$The_tri+jerra_grass$Ryt_Aus_ALL)
+jerra_grass$RA_prop<-1-jerra_grass$Them_prop
+
+
 head(mul_grass,3); dim(mul_grass)
+head(jerra_grass,3); dim(jerra_grass)
+
+summary(mul_grass$Them_prop)
+
+summary(jerra_grass$Them_prop)
+
+sd(mul_grass$Them_prop)/mean(mul_grass$Them_prop)
 
 table(mul_grass$RA_dom, mul_grass$DATE)
+table(jerra_grass$RA_dom, jerra_grass$DATE)
+
+dev.new(width=12,height=6,noRStudioGD = T,dpi=80, pointsize=16)
+par(mfrow=c(2,1), mar=c(4,4,1,2), oma=c(0,0,0,6), mgp=c(2,0,-1))
+dat.toplot<-t(as.matrix(mul_grass[,c("Them_prop","RA_prop")]))
+barplot(dat.toplot,cex.axis=1,col=c("cornflowerblue","grey80"),space=0,border="grey80",xaxt="n",las=1,ylab="Proportion \ndominant grass",cex.lab=1)
+arrows(1:ncol(dat.toplot),0,1:ncol(dat.toplot),0.995,code=0,lwd=0.05)
+# Draw a box:
+arrows(0,1,ncol(dat.toplot),1,code=0,lwd=0.8)
+arrows(0,0,ncol(dat.toplot),0,code=0,lwd=0.5)
+arrows(ncol(dat.toplot),0,ncol(dat.toplot),1,code=0,lwd=0.5)
+dat.toplot<-t(as.matrix(jerra_grass[,c("Them_prop","RA_prop")]))
+barplot(dat.toplot,cex.axis=1,col=c("cornflowerblue","grey80"),space=0,border="grey80",xaxt="n",las=1,ylab="Proportion \ndominant grass",cex.lab=1)
+arrows(1:ncol(dat.toplot),0,1:ncol(dat.toplot),0.995,code=0,lwd=0.05)
+# Draw a box:
+arrows(0,1,ncol(dat.toplot),1,code=0,lwd=0.8)
+arrows(0,0,ncol(dat.toplot),0,code=0,lwd=0.5)
+arrows(ncol(dat.toplot),0,ncol(dat.toplot),1,code=0,lwd=0.5)
 
 # close data summaries ----
 
