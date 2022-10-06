@@ -17,7 +17,7 @@ load("03_Workspaces/stjw_analysis_R1.RData")
 
 #  POST-ANALYSIS, summaries for paper:    	# ----
 
-# This section investigates the proportions of C3 and C4 dominant grasses across the two reserves. There is an unfinished figure which I'm currently not including in the MS, opting for a text reporting of the mean and range instead. 
+# This section investigates the proportions of C3 and C4 dominant grasses across the two reserves. # First, we examine the proportions of the dominant grasses which were used to set up the experiment: Themeda vs Aus/Ryt. 
 
 rahead(ct_dat,3,7); dim(ct_dat)
 rahead(cv_dat,3,7); dim(cv_dat)
@@ -59,12 +59,7 @@ mul_grass$RA_prop<-1-mul_grass$Them_prop
 jerra_grass$Them_prop<-jerra_grass$The_tri/(jerra_grass$The_tri+jerra_grass$Ryt_Aus_ALL)
 jerra_grass$RA_prop<-1-jerra_grass$Them_prop
 
-
-head(mul_grass,3); dim(mul_grass)
-head(jerra_grass,3); dim(jerra_grass)
-
 summary(mul_grass$Them_prop)
-
 summary(jerra_grass$Them_prop)
 
 sd(mul_grass$Them_prop)/mean(mul_grass$Them_prop)
@@ -72,8 +67,92 @@ sd(mul_grass$Them_prop)/mean(mul_grass$Them_prop)
 table(mul_grass$RA_dom, mul_grass$DATE)
 table(jerra_grass$RA_dom, jerra_grass$DATE)
 
+# mul_grass and jerra_grass includes the proportions of Aust_Ryt (i.e. the 8 species listed above) and Themeda grasses only 
+
+head(mul_grass,3); dim(mul_grass)
+head(jerra_grass,3); dim(jerra_grass)
+
+# The next section calculates the proportions of all native C3 and C4 grasses:
+native_c3
+native_c4
+
+rahead(cv_dat,3,7); dim(cv_dat)
+
+nc3<-cv_dat[,c(1:4,which(colnames(cv_dat) %in% native_c3))]
+nc3$c3all<-rowSums(nc3[,5:ncol(nc3)])
+
+nc4<-cv_dat[,c(1:4,which(colnames(cv_dat) %in% native_c4))]
+nc4$c4all<-rowSums(nc4[,5:ncol(nc4)])
+head(nc4,3); dim(nc4)
+
+nc3$tag<-paste(nc3$DATE,nc3$reserve,nc3$PLOT_ID,nc3$Treatment, sep="_")
+c3_all<-nc3[,c("c3all", "tag")]
+head(c3_all,3); dim(c3_all)
+
+nc4$tag<-paste(nc4$DATE,nc4$reserve,nc4$PLOT_ID,nc4$Treatment, sep="_")
+c4_all<-nc4[,c("DATE","reserve","PLOT_ID","Treatment","c4all", "tag")]
+head(c4_all,3); dim(c4_all)
+
+# Should all be true:
+table(c3_all$tag %in% c4_all$tag)
+table(c4_all$tag %in% c3_all$tag)
+
+all_grass<-merge(c4_all, c3_all, by="tag", all.x=T, all.y=F)
+head(all_grass,3); dim(all_grass)
+
+mul_all<-all_grass[which(all_grass$reserve=="M"),]
+mul_all<-tidy.df(mul_all)
+
+jer_all<-all_grass[which(all_grass$reserve=="J"),]
+jer_all<-tidy.df(jer_all)
+
+mul_all$c4prop<-mul_all$c4all/(mul_all$c4all+mul_all$c3all)
+mul_all$c3prop<-1-mul_all$c4prop
+
+jer_all$c4prop<-jer_all$c4all/(jer_all$c4all+jer_all$c3all)
+jer_all$c3prop<-1-jer_all$c4prop
+
+# Should sum to 1
+range(rowSums(mul_all[,c("c4prop","c3prop")]))
+range(rowSums(jer_all[,c("c4prop","c3prop")]))
+
+head(mul_all,3); dim(mul_all)
+head(jer_all,3); dim(jer_all)
+
+# Plots of all native C3 and native C4 grasses:
 dev.new(width=12,height=6,noRStudioGD = T,dpi=80, pointsize=16)
-par(mfrow=c(2,1), mar=c(4,4,1,2), oma=c(0,0,0,6), mgp=c(2,0,-1))
+par(mfrow=c(2,1), mar=c(2,4,2,0), oma=c(0,0,0,6), mgp=c(1.8,0,-1))
+dat.toplot<-t(as.matrix(mul_all[,c("c4prop","c3prop")]))
+barplot(dat.toplot,cex.axis=1,col=c("cornflowerblue","grey80"),space=0,border="grey80",xaxt="n",las=1,ylab="Proportion \ndominant grass",cex.lab=1)
+arrows(1:ncol(dat.toplot),0,1:ncol(dat.toplot),0.995,code=0,lwd=0.05)
+# Draw a box:
+arrows(0,1,ncol(dat.toplot),1,code=0,lwd=0.8)
+arrows(0,0,ncol(dat.toplot),0,code=0,lwd=0.5)
+arrows(ncol(dat.toplot),0,ncol(dat.toplot),1,code=0,lwd=0.5)
+mtext("(a) Mulanggari",side=3, line=0.5, adj=0)
+
+par(xpd=NA)
+legend(ncol(dat.toplot),1,legend = c("C3 all","C4 all"),col=c("grey80","cornflowerblue"), pch=15)
+par(xpd=F)
+
+dat.toplot<-t(as.matrix(jer_all[,c("c4prop","c3prop")]))
+barplot(dat.toplot,cex.axis=1,col=c("cornflowerblue","grey80"),space=0,border="grey80",xaxt="n",las=1,ylab="Proportion \ndominant grass",cex.lab=1)
+arrows(1:ncol(dat.toplot),0,1:ncol(dat.toplot),0.995,code=0,lwd=0.05)
+# Draw a box:
+arrows(0,1,ncol(dat.toplot),1,code=0,lwd=0.8)
+arrows(0,0,ncol(dat.toplot),0,code=0,lwd=0.5)
+arrows(ncol(dat.toplot),0,ncol(dat.toplot),1,code=0,lwd=0.5)
+mtext("(b) Jerrabomberra",side=3, line=0.5, adj=0)
+
+par(xpd=NA)
+legend(ncol(dat.toplot),1,legend = c("C3 all","C4 all"),col=c("grey80","cornflowerblue"), pch=15)
+par(xpd=F)
+
+
+# Plots with only Themeda and Aus/Ryt species :
+
+dev.new(width=12,height=6,noRStudioGD = T,dpi=80, pointsize=16)
+par(mfrow=c(2,1), mar=c(2,4,2,0), oma=c(0,0,0,6), mgp=c(1.8,0,-1))
 dat.toplot<-t(as.matrix(mul_grass[,c("Them_prop","RA_prop")]))
 barplot(dat.toplot,cex.axis=1,col=c("cornflowerblue","grey80"),space=0,border="grey80",xaxt="n",las=1,ylab="Proportion \ndominant grass",cex.lab=1)
 arrows(1:ncol(dat.toplot),0,1:ncol(dat.toplot),0.995,code=0,lwd=0.05)
@@ -81,6 +160,12 @@ arrows(1:ncol(dat.toplot),0,1:ncol(dat.toplot),0.995,code=0,lwd=0.05)
 arrows(0,1,ncol(dat.toplot),1,code=0,lwd=0.8)
 arrows(0,0,ncol(dat.toplot),0,code=0,lwd=0.5)
 arrows(ncol(dat.toplot),0,ncol(dat.toplot),1,code=0,lwd=0.5)
+mtext("(a) Mulanggari",side=3, line=0.5, adj=0)
+
+par(xpd=NA)
+legend(ncol(dat.toplot),1,legend = c("Aust/Ryt","Themeda"),col=c("grey80","cornflowerblue"), pch=15)
+par(xpd=F)
+
 dat.toplot<-t(as.matrix(jerra_grass[,c("Them_prop","RA_prop")]))
 barplot(dat.toplot,cex.axis=1,col=c("cornflowerblue","grey80"),space=0,border="grey80",xaxt="n",las=1,ylab="Proportion \ndominant grass",cex.lab=1)
 arrows(1:ncol(dat.toplot),0,1:ncol(dat.toplot),0.995,code=0,lwd=0.05)
@@ -88,6 +173,13 @@ arrows(1:ncol(dat.toplot),0,1:ncol(dat.toplot),0.995,code=0,lwd=0.05)
 arrows(0,1,ncol(dat.toplot),1,code=0,lwd=0.8)
 arrows(0,0,ncol(dat.toplot),0,code=0,lwd=0.5)
 arrows(ncol(dat.toplot),0,ncol(dat.toplot),1,code=0,lwd=0.5)
+
+mtext("(b) Jerrabomberra",side=3, line=0.5, adj=0)
+
+par(xpd=NA)
+legend(ncol(dat.toplot),1,legend = c("Aust/Ryt","Themeda"),col=c("grey80","cornflowerblue"), pch=15)
+par(xpd=F)
+
 
 # close data summaries ----
 
