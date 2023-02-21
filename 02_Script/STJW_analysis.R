@@ -24,6 +24,11 @@ rahead(cv_dat,3,7); dim(cv_dat)
 
 head(pinfo,3)
 
+hper<-cv_dat[,c(1:4,which(colnames(cv_dat)=="Hyp_per"))]
+head(hper,3); dim(hper)
+
+plot(hper$reserve,hper$Hyp_per)
+
 # Themeda = 1 species (The_tri)
 # Austrostipa = 3 species (Aus_big, Aus_den, Aus_sca)
 # Rytidosperma = 8 species ("Ryt_cae" "Ryt_car" "Ryt_lae" "Ryt_rac" "Ryt_sp." "Ryt_sp3" "Ryt_sp4" "Ryt_sp2")
@@ -1708,10 +1713,10 @@ fits.invsimp
 coef.invsimp
 preds.invsimp
 
-head(gdf,4); dim(gdf)
+head(gdf,6); dim(gdf)
 
 # Binomial models:
-
+# testing change
 # 18 native leg herb three way
 # 19 exotic leg herb two way
 
