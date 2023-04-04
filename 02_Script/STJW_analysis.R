@@ -4,7 +4,7 @@
 # ------------------------------------ #
 
 ### Analysis of herbicide control experiment from STJW project
-### Author: Annabel Smith & Raagini Muddaiah
+### Code authors: Annabel Smith & Raagini Muddaiah
 
 # Load functions:
 invisible(lapply(paste("01_Functions/",dir("01_Functions"),sep=""), function(x) source(x)))
@@ -15,7 +15,7 @@ library(lme4); library(vegan); library(AICcmodavg); library(lmerTest); library(g
 # Load workspace
 load("03_Workspaces/stjw_analysis_R1.RData")
 
-#  POST-ANALYSIS, summaries for paper:    	# ----
+#  POST-ANALYSIS, C3/C4 proportions:    	# ----
 
 # This section investigates the proportions of C3 and C4 dominant grasses across the two reserves. # First, we examine the proportions of the dominant grasses which were used to set up the experiment: Themeda vs Aus/Ryt. 
 
@@ -153,7 +153,6 @@ par(xpd=NA)
 legend(ncol(dat.toplot),1,legend = c("C3 all","C4 all"),col=c("grey80","cornflowerblue"), pch=15)
 par(xpd=F)
 
-
 # Plots with only Themeda and Aus/Ryt species :
 
 dev.new(width=12,height=6,noRStudioGD = T,dpi=80, pointsize=16)
@@ -185,8 +184,7 @@ par(xpd=NA)
 legend(ncol(dat.toplot),1,legend = c("Aust/Ryt","Themeda"),col=c("grey80","cornflowerblue"), pch=15)
 par(xpd=F)
 
-
-# close data summaries ----
+# close C3/C4 summary ----
 
 #  IMPORT, clean & transform data:    	# ----
 
@@ -2392,8 +2390,8 @@ par(xpd=F)
 
 #  INDIVIDUAL SPECIES data set-up:    	# ----
 
-# Need to check with RM: why was Desmodium varians classified as a legume rather than a native leg forb?
-# Is it OK for us to classify it as native leg forb (I have done this above in the 'format data' section)?
+# Desmodium varians was classified as a legume rather than a native leg forb
+# I classified it as native leg forb (above in the 'format data' section)
 # PlantNet classifies it as a "Prostrate or climbing herb"
 # And it is the ONLY species in the Legume category
 table(pinfo$func_grp)
@@ -3108,9 +3106,6 @@ if (p.Chrapi_3waynb<0.001) title(main=bquote(Three-way~int.~italic(P)~"<"~0.001)
 par(xpd=NA)
 legend(2.6,16,legend=c("Control","Spot spray","Boom spray"), col=c("black","red","blue"), pch=15, bty="n", pt.cex = 3)
 par(xpd=F)
-
-
-
 
 ## Ery_ovi for SI
 

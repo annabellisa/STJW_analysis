@@ -20,7 +20,7 @@ Annabel Smith and Raagini Muddaiah Kanjithanda (unless otherwise stated within s
 
 ## Manuscript
 
-Smith, A.L., Kanjithanda, R.M. & Milner, R.N.C. in preparation. Off-target impacts of herbicide application on resident plant communities in threatened temperate grasslands.
+Smith AL, Kanjithanda RM, Hayashi T, French J, Milner RNC (submitted). Reducing herbicide input and optimising spray method can minimise non-target impacts on native grassland plant species. Ecological Applications.
 
 ## License
 
