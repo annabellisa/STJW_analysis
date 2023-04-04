@@ -16,7 +16,7 @@ Analysis of non-target impacts of herbicide control of St John's Wort (Hypericum
 
 ## Code Authors
 
-Annabel Smith and Raagini Muddaiah Kanjithanda (unless otherwise stated within script)
+Annabel Smith, Raagini Muddaiah Kanjithanda and Richard Milner (unless otherwise stated within script)
 
 ## Manuscript
 
