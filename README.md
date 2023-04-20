@@ -20,7 +20,7 @@ Annabel Smith, Raagini Muddaiah Kanjithanda and Richard Milner (unless otherwise
 
 ## Manuscript
 
-Smith AL, Kanjithanda RM, Hayashi T, French J, Milner RNC (submitted). Reducing herbicide input and optimising spray method can minimise non-target impacts on native grassland plant species. Ecological Applications.
+Smith AL, Kanjithanda RM, Hayashi T, French J, Milner RNC (2023). Reducing herbicide input and optimising spray method can minimise non-target impacts on native grassland plant species. Ecological Applications. Accepted 19/4/2023.
 
 ## License
 
